@@ -1,18 +1,10 @@
 from .typing import *
 import itertools
 import operator
-from functools import cached_property
 
 """
 TODO:
-- weight of V as a class, natural numbers
-- <= operator
-- index_of method
 - OrbitWeightSd method (needs multiset_permutations)
-
-Remarque :
-- WeightV -> Weight
-- WeightU -> Root
 """
 
 class Weight(Sequence[int]):
@@ -31,6 +23,17 @@ class Weight(Sequence[int]):
         for idx, w in enumerate(itertools.product(*(range(di) for di in d))):
             yield Weight(w, idx)
 
+    @staticmethod
+    def from_index(d: Sequence[int], index: int) -> "Weight":
+        """ Generate the weight of given index in the lexicographical order """
+        weights = []
+        tmp_index = index
+        stride = tuple(itertools.accumulate(reversed(d[1:]), operator.mul, initial=1))
+        for si in reversed(stride):
+            weights.append(tmp_index // si)
+            tmp_index -= weights[-1] * si
+        return Weight(weights, index)
+
     def index_in(self, d: Sequence[int]) -> int:
         """ Returns index of this weight in the lexicographical order for given dimensions (see `all` method)"""
         stride = itertools.accumulate(reversed(d[1:]), operator.mul, initial=1)
@@ -45,11 +48,15 @@ class Weight(Sequence[int]):
     def __iter__(self) -> Iterator[int]:
         return iter(self._weights)
 
+    def __le__(self, other: "Weight") -> bool:
+        """ Implementation of self <= other (partial ordering)"""
+        return all(ws >= wo for ws, wo in zip(self, other))
 
-def all_weights_U(d: Iterable[int]) -> Iterable[WeightU]:
-    """ Returns all possible weights of U for a given sequence of length """
-    # TODO: verify that the actual definition of this weight are so that i < j
-    for k, l in enumerate(d):
-        for i, j in itertools.combinations(range(l), 2):
-            yield k, i, j
+    def __ge__(self, other: "Weight") -> bool:
+        """ Implementation of self >= other (partial ordering)"""
+        return all(ws <= wo for ws, wo in zip(self, other))
+    
+    def __eq__(self, other: "Weight") -> bool:
+        """ Equality between two weights (ignoring index) """
+        return self._weights == other._weights
 
