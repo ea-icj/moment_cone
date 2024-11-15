@@ -20,5 +20,5 @@ def trim_zeros(s: Sequence[int]) -> Sequence[int]:
         if v != 0:
             return s[:len(s) - i]
     else:
-        return s
+        return ()
     
