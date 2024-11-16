@@ -16,7 +16,7 @@ class Partition(Sequence[int]):
     @property
     def is_valid(self) -> bool:
         """ Check if partition is decreasing and positive """
-        return is_decreasing(self._data) and self._data[-1] >= 0
+        return len(self) == 0 or (is_decreasing(self._data) and self._data[-1] >= 0)
 
     def __len__(self) -> int:
         return len(self._data)
@@ -29,6 +29,9 @@ class Partition(Sequence[int]):
     
     def __repr__(self) -> str:
         return f"Partition({self._data})"
+    
+    def __eq__(self, other) -> bool:
+        return len(self) == len(other) and self._data == other._data
     
     def pad(self, length: int) -> tuple[int, ...]:
         """ Returns a padded version of this partition """
