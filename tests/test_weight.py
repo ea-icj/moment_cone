@@ -50,6 +50,8 @@ class TestWeight(unittest.TestCase):
         for i, w in enumerate(all_weights):
             self.assertEqual(i, w.index)
             self.assertEqual(w, Weight.from_index(d, i))
+            self.assertEqual(i, w.index_in(d))
+            self.assertEqual(i, w.index_in(d, use_internal_index=False))
             self.assertEqual(i, Weight(list(w)).index_in(d))
 
         

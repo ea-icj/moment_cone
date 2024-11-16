@@ -34,10 +34,18 @@ class Weight(Sequence[int]):
             tmp_index -= weights[-1] * si
         return Weight(weights, index)
 
-    def index_in(self, d: Dimension) -> int:
-        """ Returns index of this weight in the lexicographical order for given dimensions (see `all` method)"""
-        stride = itertools.accumulate(reversed(d[1:]), operator.mul, initial=1)
-        return sum(v * s for v, s in zip(reversed(self._weights), stride))
+    def index_in(self, d: Dimension, use_internal_index: bool = True) -> int:
+        """
+        Returns index of this weight in the lexicographical order for given dimensions (see `all` method)
+        
+        By default, it will returns the index attribute (if not None) assuming that it has been defined
+        for the same dimensions. `use_internal_index` can be set to `False` in order to force the computation
+        of the index for the given dimension. In that case, the internal index will be updated for later reuse.
+        """
+        if not use_internal_index or self.index is None:
+            stride = itertools.accumulate(reversed(d[1:]), operator.mul, initial=1)
+            self.index = sum(v * s for v, s in zip(reversed(self._weights), stride))
+        return self.index
     
     def __len__(self) -> int:
         return len(self._weights)
