@@ -5,8 +5,16 @@ def is_decreasing(l: Iterable[int]) -> bool:
     """ Check if a given sequence is not increasing """
     return all(a >= b for a, b in itertools.pairwise(l))
 
+def is_increasing(l: Iterable[int]) -> bool:
+    """ Check if a given sequence is not decreasing """
+    return all(a <= b for a, b in itertools.pairwise(l))
+
 def compress(values: Iterable[T]) -> Iterable[tuple[T, int]]:
-    """ Compress sequence of values by consecutive identical values and multiplicities """
+    """
+    Compress sequence of values by consecutive identical values and multiplicities
+    
+    For each block, returns a pair of (value, multiplicity).
+    """
     for value, group in itertools.groupby(values):
         yield value, sum(1 for _ in group)
 
