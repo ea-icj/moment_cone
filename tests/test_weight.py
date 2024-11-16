@@ -54,6 +54,25 @@ class TestWeight(unittest.TestCase):
             self.assertEqual(i, w.index_in(d, use_internal_index=False))
             self.assertEqual(i, Weight(list(w)).index_in(d))
 
-        
+    
+    def test_all_mod_sym_dim(self):
+        from itertools import pairwise
+
+        d = 4, 4, 4, 2, 2
+        mod_weights = list(Weight.all_mod_sym_dim(d))
+
+        mod_weights_ref = []
+        for w in Weight.all(d):
+            wl = tuple(w)
+            if all(a >= b for a, b in pairwise(wl[:3])) and all(a >= b for a, b in pairwise(wl[3:])):
+                mod_weights_ref.append(w)
+
+        self.assertEqual(len(mod_weights), len(mod_weights_ref))
+        self.assertTrue(all(w in mod_weights_ref for w in mod_weights))
+
+        self.assertEqual(mod_weights[0], Weight((3, 3, 3, 1, 1)))
+        self.assertEqual(mod_weights[4], Weight((3, 3, 2, 1, 0)))
+        self.assertEqual(mod_weights[-1], Weight((0, 0, 0, 0, 0)))
+
 
         

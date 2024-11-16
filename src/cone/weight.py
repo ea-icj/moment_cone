@@ -24,6 +24,32 @@ class Weight(Sequence[int]):
             yield Weight(w, idx)
 
     @staticmethod
+    def all_mod_sym_dim(d: Dimension) -> Iterable["Weight"]:
+        """
+        Returns all decreasing weights modulo the symmetries of d
+        
+        It assumes that d is arranged so that blocks are contiguous.
+        """
+        # Using Partition to generate all decreasing weights within a block.
+        # The whole weights will be defined as the Cartesian product of the weights for each block.
+        from .partition import Partition
+        from .utils import compress
+
+        def pad(p: Partition, l: int) -> tuple[int, ...]:
+            return p.pad(l)
+        
+        block_weights = tuple(
+            tuple( # Converting to tuple (instead of a map) seems necessary to keep the right hi (FIXME)
+                p.pad(hi) # Adding trailing zeros if necessary
+                for p in Partition.all_of_height(hi, di - 1)
+            )
+            for di, hi in compress(d) # Compress returns (value, multiplicity) for each block of d
+        )
+
+        for w in itertools.product(*block_weights):
+            yield Weight(sum(w, start=())) # Summing tuples is concatenating them
+
+    @staticmethod
     def from_index(d: Dimension, index: int) -> "Weight":
         """ Generate the weight of given index in the lexicographical order """
         weights = []
@@ -67,4 +93,7 @@ class Weight(Sequence[int]):
     def __eq__(self, other: "Weight") -> bool:
         """ Equality between two weights (ignoring index) """
         return self._weights == other._weights
+    
+    def __repr__(self) -> str:
+        return f"Weight({self._weights}" + (f", {self.index}" if self.index is not None else "") + ")"
 
