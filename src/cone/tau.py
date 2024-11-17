@@ -60,7 +60,7 @@ class Tau:
         return self._components.sizes
     
     @cached_property
-    def components(self) -> Sequence[Sequence[int]]:
+    def components(self) -> tuple[list[int], ...]:
         """ Sequence of the components of tau """
         return self._components.columns
     
@@ -154,6 +154,17 @@ class Tau:
             if p >= 0:
                 result.setdefault(p, []).append(chi)
         return result
+    
+    @cached_property
+    def sort_mod_sym_dim(self) -> "Tau":
+        """ Sort tau by block of the dimensions """
+        from .utils import compress
+        col_split = itertools.accumulate((length for _, length in compress(self.d)), initial=0)
+        columns = itertools.chain.from_iterable(
+            sorted(self.components[a:b])
+            for a, b in itertools.pairwise(col_split)
+        )
+        return Tau(tuple(columns), self.ccomponent)
 
 
 class ReducedTau:
