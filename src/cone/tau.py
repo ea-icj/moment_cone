@@ -109,10 +109,25 @@ class Tau:
         return all(all(a >= b for a, b in itertools.pairwise(c)) for c in self.components)
     
     @cached_property
-    def is_normalized(self) -> bool:
-        """ Check if the sum of coefficients in each block is zero """
-        return all(sum(c) == 0 for c in self.components)
-    
+    def sl_representative(self) -> "Tau":
+        """ Returns representative of tau in C^* x (SLn)^3 """
+        assert self.ccomponent is not None
+        from math import lcm, gcd
+        tau_lcm = lcm(*self.flattened)
+        ccomponent = self.ccomponent * tau_lcm
+        columns = []
+        for dj, cj in zip(self.d, self.components):
+            column_sum = sum(cj)
+            shift = column_sum * tau_lcm // dj
+            columns.append([tau_lcm * cji - shift for cji in cj])
+            ccomponent += shift
+        
+        res_gcd = gcd(ccomponent, *itertools.chain.from_iterable(columns))
+        return Tau(
+            tuple(tuple(v // res_gcd for v in cj) for cj in columns),
+            ccomponent // res_gcd
+        )
+
     def positive_weights(self, weights: Iterable[Weight]) -> dict[int, list[Weight]]:
         """ Inverse image of each non-zero p = <w, tau> for each w in weights """
         result = {}
