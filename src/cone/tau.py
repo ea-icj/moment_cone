@@ -15,7 +15,7 @@ TODO:
 
 class Tau:
     """ Tuple of partition along with a coefficient """
-    __slots__ = 'ccomponent', '_components'
+    #__slots__ = 'ccomponent', '_components' # FIXME cached_property cannot work without __dict__ ... => self managed cache or removing __slots__
     ccomponent: Optional[int]
     _components: PartialMatrix[int]
 
