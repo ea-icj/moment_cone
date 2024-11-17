@@ -93,7 +93,7 @@ class Tau:
         return cast(int, ccomponent) + sum(c[wi] for c, wi in zip(self.components, weight))
     
     def dot_root(self, root: Root) -> int:
-        """ Scalar product of tau with a weight of U """
+        """ Scalar product of tau with a root of U """
         c = self.components[root.k]
         return c[root.i] - c[root.j]
     
@@ -191,7 +191,7 @@ class ReducedTau:
     def __len__(self) -> int:
         return self.values.shape[1]
     
-    @cached_property
+    @property
     def small_d(self) -> Dimension:
         return self.values.sizes
     
