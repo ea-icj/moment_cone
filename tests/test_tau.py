@@ -41,8 +41,8 @@ class TestTau(unittest.TestCase):
         self.assertFalse(tau2.is_dominant)
         self.assertTrue(tau3.is_dominant)
 
-        self.assertFalse(tau1.is_regular)
-        self.assertTrue(tau3.is_regular)
+        self.assertFalse(tau1.is_dom_reg)
+        self.assertTrue(tau3.is_dom_reg)
         
     def test_representative(self):
         d = Dimension((3, 3, 3))

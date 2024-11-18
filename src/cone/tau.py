@@ -98,10 +98,9 @@ class Tau:
         return c[root.i] - c[root.j]
     
     @cached_property
-    def is_regular(self) -> bool:
-        """ Check if tau is regular assuming it is dominant """
-        # FIXME: why not just all(a > b for ...) then?
-        return not any(any(a == b for a, b in itertools.pairwise(c)) for c in self.components)
+    def is_dom_reg(self) -> bool:
+        """ Check if tau is dominant and regular """
+        return all(all(a > b for a, b in itertools.pairwise(c)) for c in self.components)
     
     @cached_property
     def is_dominant(self) -> bool:
