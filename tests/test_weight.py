@@ -1,6 +1,7 @@
 import unittest
 
 from cone.weight import Weight
+from cone.dimension import Dimension
 
 class TestWeight(unittest.TestCase):
 
@@ -39,7 +40,7 @@ class TestWeight(unittest.TestCase):
     def test_all_index(self):
         import functools
         import operator
-        d = (4, 2, 3)
+        d = Dimension((4, 2, 3))
 
         all_weights = list(Weight.all(d))
 
@@ -58,7 +59,7 @@ class TestWeight(unittest.TestCase):
     def test_all_mod_sym_dim(self):
         from itertools import pairwise
 
-        d = 4, 4, 4, 2, 2
+        d = Dimension((4, 4, 4, 2, 2))
         mod_weights = list(Weight.all_mod_sym_dim(d))
 
         mod_weights_ref = []

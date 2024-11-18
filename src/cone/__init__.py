@@ -6,6 +6,10 @@ from .utils import *
 from .typing import *
 from .matrix import PartialMatrix
 from .partition import Partition
+from .dimension import Dimension
+from .tau import Tau, ReducedTau
+from .weight import Weight
+from .root import Root
 
     
 

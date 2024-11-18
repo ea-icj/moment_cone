@@ -1,4 +1,5 @@
 from .typing import *
+from .dimension import Dimension
 from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)

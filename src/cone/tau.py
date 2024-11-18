@@ -1,4 +1,5 @@
 from .typing import *
+from .dimension import Dimension
 from .matrix import PartialMatrix
 from .weight import Weight
 from .root import Root
@@ -33,10 +34,9 @@ class Tau:
     def from_flatten(s: Iterable[int], d: Dimension) -> "Tau":
         """ Returns tau from its flattened version """
         all_components = tuple(s)
-        sum_dim = sum(d)
-        if len(all_components) == sum_dim:
+        if len(all_components) == d.sum:
             ccomponent = None
-        elif len(all_components) == sum_dim + 1:
+        elif len(all_components) == d.sum + 1:
             ccomponent = all_components[0]
             all_components = all_components[1:]
         else:
@@ -57,7 +57,7 @@ class Tau:
     @cached_property
     def d(self) -> Dimension:
         """ Length of each component """
-        return self._components.sizes
+        return Dimension(self._components.sizes)
     
     @cached_property
     def components(self) -> tuple[list[int], ...]:
@@ -158,8 +158,7 @@ class Tau:
     @cached_property
     def sort_mod_sym_dim(self) -> "Tau":
         """ Sort tau by block of the dimensions """
-        from .utils import group_by_block
-        col_split = itertools.accumulate((length for _, length in group_by_block(self.d)), initial=0)
+        col_split = itertools.accumulate(self.d.symmetries, initial=0)
         columns = itertools.chain.from_iterable(
             sorted(self.components[a:b])
             for a, b in itertools.pairwise(col_split)
@@ -193,7 +192,7 @@ class ReducedTau:
     
     @property
     def small_d(self) -> Dimension:
-        return self.values.sizes
+        return Dimension(self.values.sizes)
     
     def __getitem__(self, idx: tuple[int, int]) -> tuple[int, int]:
         return self.values[idx], self.mult[idx]

@@ -1,4 +1,6 @@
 from .typing import *
+from .dimension import Dimension
+
 import itertools
 import operator
 

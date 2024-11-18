@@ -2,12 +2,14 @@ import unittest
 
 from cone.tau import Tau, ReducedTau
 from cone.matrix import PartialMatrix
+from cone.dimension import Dimension
 
 class TestTau(unittest.TestCase):
 
     def test_init(self):
+        d = Dimension((3, 2, 4))
         tau_columns = Tau(((3, 2, 1), (2, 3), (1, 4, 5, 3)), 3)
-        tau_flatten = Tau.from_flatten((3, 3, 2, 1, 2, 3, 1, 4, 5, 3), (3, 2, 4))
+        tau_flatten = Tau.from_flatten((3, 3, 2, 1, 2, 3, 1, 4, 5, 3), d)
         
         matrix = PartialMatrix(4, 3)
         matrix.extend(0, (3, 2, 1))
@@ -43,7 +45,8 @@ class TestTau(unittest.TestCase):
         self.assertTrue(tau3.is_regular)
         
     def test_representative(self):
-        tau = Tau.from_flatten([1, 3, 2, 1, 4, 1, 2, 5, 3, 1], (3, 3, 3))
+        d = Dimension((3, 3, 3))
+        tau = Tau.from_flatten([1, 3, 2, 1, 4, 1, 2, 5, 3, 1], d)
         self.assertEqual(repr(tau.sl_representative), "25 | 3 0 -3 | 5 -4 -1 | 6 0 -6")
         self.assertEqual(repr(tau.end0_representative), "5 | 2 1 0 | 2 -1 0 | 4 2 0")
 
@@ -52,7 +55,8 @@ class TestTau(unittest.TestCase):
         pass
 
     def test_sort_mod_sd(self):
-        tau = Tau.from_flatten([1,6,2,1,4,1,2,5,3,1], (2, 2, 2, 1, 1, 1))
+        d = Dimension((2, 2, 2, 1, 1, 1))
+        tau = Tau.from_flatten([1,6,2,1,4,1,2,5,3,1], d)
         self.assertEqual(repr(tau.sort_mod_sym_dim), "1 | 1 2 | 1 4 | 6 2 | 1 | 3 | 5")
 
     def test_reduced_tau(self):
