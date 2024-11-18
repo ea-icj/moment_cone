@@ -41,5 +41,6 @@ class Permutation(tuple[int, ...]):
     @staticmethod
     def all_of_length(n: int, l: int) -> Iterable["Permutation"]:
         """ Returns all permutations of S_n with given length l """
-        return NotImplemented
+        # More efficient way ?
+        return filter(lambda p: p.length == l, Permutation.all(n))
     

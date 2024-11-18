@@ -19,3 +19,7 @@ class TestPermutation(unittest.TestCase):
         self.assertEqual(s, tuple(range(21)))
 
         self.assertEqual(p.inverse(p(range(21))), tuple(range(21)))
+
+    def test_all(self) -> None:
+        # TODO: testing generators
+        pass
