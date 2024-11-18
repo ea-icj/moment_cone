@@ -29,11 +29,11 @@ class TestUtils(unittest.TestCase):
     def test_compression(self):
         s = (2, 2, 2, 3, 3, 1, 1, 1, 1, 5, 6, 6)
         
-        sc = tuple(compress(s))
+        sc = tuple(group_by_block(s))
         self.assertEqual(sc, ((2, 3), (3, 2), (1, 4), (5, 1), (6, 2)))
 
-        sd = tuple(decompress(*zip(*sc)))
+        sd = tuple(expand_blocks(*zip(*sc)))
         self.assertEqual(sd, s)
 
-        self.assertEqual(tuple(compress(())), ())
-        self.assertEqual(tuple(decompress((), ())), ())
+        self.assertEqual(tuple(group_by_block(())), ())
+        self.assertEqual(tuple(expand_blocks((), ())), ())

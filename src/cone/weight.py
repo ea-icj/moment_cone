@@ -33,7 +33,7 @@ class Weight(Sequence[int]):
         # Using Partition to generate all decreasing weights within a block.
         # The whole weights will be defined as the Cartesian product of the weights for each block.
         from .partition import Partition
-        from .utils import compress
+        from .utils import group_by_block
 
         def pad(p: Partition, l: int) -> tuple[int, ...]:
             return p.pad(l)
@@ -43,7 +43,7 @@ class Weight(Sequence[int]):
                 p.pad(hi) # Adding trailing zeros if necessary
                 for p in Partition.all_of_height(hi, di - 1)
             )
-            for di, hi in compress(d) # Compress returns (value, multiplicity) for each block of d
+            for di, hi in group_by_block(d) # Compress returns (value, multiplicity) for each block of d
         )
 
         for w in itertools.product(*block_weights):

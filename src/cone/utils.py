@@ -9,7 +9,7 @@ def is_increasing(l: Iterable[int]) -> bool:
     """ Check if a given sequence is not decreasing """
     return all(a <= b for a, b in itertools.pairwise(l))
 
-def compress(values: Iterable[T]) -> Iterable[tuple[T, int]]:
+def group_by_block(values: Iterable[T]) -> Iterable[tuple[T, int]]:
     """
     Compress sequence of values by consecutive identical values and multiplicities
     
@@ -18,8 +18,8 @@ def compress(values: Iterable[T]) -> Iterable[tuple[T, int]]:
     for value, group in itertools.groupby(values):
         yield value, sum(1 for _ in group)
 
-def decompress(values: Iterable[T], mult: Iterable[int]) -> Iterable[T]:
-    """ Decompress output from compress to the initial sequence """
+def expand_blocks(values: Iterable[T], mult: Iterable[int]) -> Iterable[T]:
+    """ Decompress output from `group_by_block` to the initial sequence """
     return itertools.chain.from_iterable(itertools.repeat(v, m) for v, m in zip(values, mult))
 
 def trim_zeros(s: Sequence[int]) -> Sequence[int]:

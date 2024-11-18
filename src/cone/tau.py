@@ -158,8 +158,8 @@ class Tau:
     @cached_property
     def sort_mod_sym_dim(self) -> "Tau":
         """ Sort tau by block of the dimensions """
-        from .utils import compress
-        col_split = itertools.accumulate((length for _, length in compress(self.d)), initial=0)
+        from .utils import group_by_block
+        col_split = itertools.accumulate((length for _, length in group_by_block(self.d)), initial=0)
         columns = itertools.chain.from_iterable(
             sorted(self.components[a:b])
             for a, b in itertools.pairwise(col_split)
@@ -175,12 +175,12 @@ class ReducedTau:
     mult: PartialMatrix[int]
 
     def __init__(self, tau: Tau):
-        from .utils import compress
+        from .utils import group_by_block
         values: PartialMatrix[int] = PartialMatrix(max(tau.d), len(tau))
         mult: PartialMatrix[int] = PartialMatrix(max(tau.d), len(tau))
 
         for j, component in enumerate(tau.components):
-            for v, m in compress(component):
+            for v, m in group_by_block(component):
                 values.append(j, v)
                 mult.append(j, cast(int, m))
 
