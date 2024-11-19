@@ -1,4 +1,6 @@
 from .typing import *
+from .utils import count
+
 from functools import cached_property
 import itertools
 
@@ -8,14 +10,18 @@ class Permutation(tuple[int, ...]):
 
     So that length computation is faster.
     """
-
+    @property
+    def inversions(self) -> Iterable[tuple[int, int]]:
+        """ Sequence of the indexes of all the inversions """
+        return filter(
+            lambda ij: self[ij[0]] > self[ij[1]],
+            itertools.combinations(range(len(self)), 2)
+        )
+    
     @cached_property
     def length(self) -> int:
         """ Length of the permutation, ie number of inversions """
-        return sum(
-            1 if self[i] > self[j] else 0
-            for i, j in itertools.combinations(range(len(self)), 2)
-        )
+        return count(self.inversions)
     
     @cached_property
     def inverse(self) -> "Permutation":
