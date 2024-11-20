@@ -53,7 +53,13 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         )
     
     def orbit_symmetries(self, symmetries: Iterable[int]) -> Iterable["Permutation"]:
-        """ Permutation inside each block of given sizes """
+        """
+        Permutation inside each block of given sizes
+        
+        If this is too slow, we may consider the remarks/propositions from:
+        - https://stackoverflow.com/questions/19676109/how-to-generate-all-the-permutations-of-a-multiset/
+        - https://stackoverflow.com/questions/70057504/speed-up-multiset-permutations
+        """
         from sympy.utilities.iterables import multiset_permutations
         indexes = itertools.accumulate(symmetries, initial=0)
         blocks = (multiset_permutations(self[i:j]) for i, j in itertools.pairwise(indexes))
