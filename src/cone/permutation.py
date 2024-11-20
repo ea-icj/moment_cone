@@ -1,22 +1,22 @@
 from .typing import *
-from .utils import count
+from .utils import count, group_by_block
 
 from functools import cached_property
 import itertools
 
-class Permutation(tuple[int, ...]):
+class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tuple
     """
     Permutation represented using the one-line notation.
 
     So that length computation is faster.
     """
-    @property
-    def inversions(self) -> Iterable[tuple[int, int]]:
+    @cached_property
+    def inversions(self) -> tuple[tuple[int, int], ...]:
         """ Sequence of the indexes of all the inversions """
-        return filter(
+        return tuple(filter(
             lambda ij: self[ij[0]] > self[ij[1]],
             itertools.combinations(range(len(self)), 2)
-        )
+        ))
     
     @cached_property
     def length(self) -> int:
@@ -29,7 +29,9 @@ class Permutation(tuple[int, ...]):
         inv = [0] * len(self)
         for i, pi in enumerate(self):
             inv[pi] = i
-        return Permutation(inv)
+        p_inv = Permutation(inv)
+        p_inv.inverse = self
+        return p_inv
 
     def __call__(self, s: Sequence[T]) -> tuple[T, ...]:
         """ Apply the permutation to a given sequence """
