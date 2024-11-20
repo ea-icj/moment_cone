@@ -48,7 +48,62 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
 
     @staticmethod
     def all_of_length(n: int, l: int) -> Iterable["Permutation"]:
-        """ Returns all permutations of S_n with given length l """
+        """
+        Returns all permutations of S_n with given length l
+
+        Better use AllPermutationsByLength for a repeated call with difference lengths
+        """
         # More efficient way ?
         return filter(lambda p: p.length == l, Permutation.all(n))
     
+
+class AllPermutationsByLength:
+    """
+    Catalogue of all permutations of S_n sorted by increasing length
+
+    Since Permutation use a cache for its properties, that means
+    this catalogue can use lot of memory to store each permutation,
+    it's list of inversion, it's length, ...
+    """
+    __slots__ = 'permutations', 'indexes'
+    permutations: tuple[Permutation, ...]
+    indexes: tuple[int, ...]
+
+    def __init__(self, n: int):
+        self.permutations = tuple(sorted(
+            Permutation.all(n),
+            key=lambda p: p.length
+        ))
+
+        # Storing index when each length begins
+        # Note that it assumes that there is not hole in the lengths (must be the case)
+        self.indexes = tuple(itertools.accumulate(
+            (size for value, size in group_by_block(p.length for p in self.permutations)),
+            initial=0
+        ))
+
+    def __len__(self) -> int:
+        """
+        Returns the number of different lengths (from 0 to maximal length included)
+        """
+        return len(self.indexes) - 1
+    
+    @property
+    def max_length(self) -> int:
+        """ Returns the maximal length of a permutation """
+        return len(self) - 1
+    
+    def __getitem__(self, idx: int | slice) -> tuple[Permutation, ...]:
+        """ Access permutations by length or range of length """
+        def fix_neg(i: int) -> int:
+            return len(self) + i if i < 0 else i
+        
+        if isinstance(idx, slice):
+            assert idx.step in (None, 1), "Only contiguous slice are supported"
+            start = 0 if idx.start is None else fix_neg(idx.start)
+            stop = len(self) if idx.stop is None else fix_neg(idx.stop)
+            return self.permutations[self.indexes[start]:self.indexes[stop]]
+        else:
+            idx = fix_neg(idx)
+            return self.permutations[self.indexes[idx]:self.indexes[idx + 1]]
+        
