@@ -8,6 +8,7 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
     """
     Permutation of S_n represented using the one-line notation.
 
+    The coefficients are the image of range(n) by the permutation.
     So that length computation is faster.
     """
     @property
