@@ -1,5 +1,14 @@
 from .typing import *
 
+"""
+TODO: it seems that this partial matrix representation is not really needed.
+It should be more useful to have a more clear representation of a sequence as multiple blocks (column here) depending on a given list of sizes of the blocks.
+This thing is used everywhere, not only for tau (look at the usage of group_by_block).
+
+We could eventually keep a mutable version like the one below and a freezed one
+that could be optimized as a one tuple like in the original code.
+
+""" 
 class PartialMatrix(Generic[T]):
     """ Kind of sparse matrix with fixed number of column, each of them containing a variable number of values """
     __slots__ = '_data', 'shape'
@@ -47,4 +56,6 @@ class PartialMatrix(Generic[T]):
 
 
 # TODO: un genre de FrozenPartialMatrix non mutable et mieux optimisé (on pourrait reprendre l'idée de tout mettre en ligne)
+# En plus, ça permettrait de traiter également les nombreux découpages par blocs de symétrie qui interviennent dans le code.
+# D'ailleurs, faudrait se reposer la question de l'intérêt de cette "matrice partielle", utilise-t-on vraiment l'indiçage i,j ? A-t-on besoin de modifier les colonnes ? etc.
 

@@ -145,6 +145,9 @@ class Tau:
             ccomponent // res_gcd
         )
 
+    # TODO: generate the dictionary for all values of the product scalar
+    # and filtering it later. Renaming it like grading_weights and removing
+    # the optional weights list so that to be a @cached_property.
     def positive_weights(self, weights: Optional[Iterable[Weight]] = None) -> dict[int, list[Weight]]:
         """ Inverse image of each non-negative p = <w, tau> for each w in weights (all weights by default) """
         if weights is None:
@@ -157,6 +160,9 @@ class Tau:
                 result.setdefault(p, []).append(chi)
         return result
     
+    # TODO: generate the dictionary for all values of the product scalar
+    # and filtering it later. Renaming it like grading_roots and removing
+    # the optional weights list so that to be a @cached_property.
     def positive_roots(self, roots: Optional[Iterable[Root]] = None) -> dict[int, list[Root]]:
         """ Inverse image of each non-zero p = <beta, tau> for each beta in roots (all roots of U by default) """
         if roots is None:
@@ -169,6 +175,7 @@ class Tau:
                 result.setdefault(p, []).append(r)
         return result
 
+    # TODO: as a @cache_property ?
     def orthogonal_roots(self) -> Iterable[Root]:
         """ All the root beta so that <beta, tau> = 0 """
         return filter(
@@ -215,6 +222,7 @@ class ReducedTau:
     def small_d(self) -> Dimension:
         return Dimension(self.values.sizes)
     
+    # FIXME: it seems that i,j is not really needed => simplification?
     def __getitem__(self, idx: tuple[int, int]) -> tuple[int, int]:
         return self.values[idx], self.mult[idx]
     
@@ -224,7 +232,9 @@ class ReducedTau:
             for cv, cm in zip(self.values.columns, self.mult.columns)
         )
     
-    @property # FIXME: returns an generator and not a sequence. Is it adapted to a property (or a cached_property?)
+    # FIXME: returns an generator and not a sequence. Is it adapted to a property (or a cached_property?)
+    # TODO: it will be used many time => returns a sequence and @cached_property
+    @property
     def Pzero(self) -> Iterable[Weight]:
         """ Search for weights w of V so that C_component + sum_k tau_red[w_k, k] = 0 """
         as_tau = Tau(self.values, self.ccomponent) # We use the scalar product of Tau
