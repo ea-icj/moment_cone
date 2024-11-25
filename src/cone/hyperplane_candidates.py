@@ -90,6 +90,24 @@ def has_enough_leq_weights(chi: Weight, u: int) -> bool:
     # FIXME: verify this function, it differ from the original version
     return leq_cnt > u
 
+def simplify_regularity(St: WeightSieve, d: Dimension, chi: Weight) -> None:
+    """
+    Changing a single epsilon^s_i into epsilon^s_j prevents regularity of tau, since this introduces equation epsilon^s_i-epsilon^s_j. When c gets in the zero list, the function removes these weights (with respect to c) from the indeterminate liste and places them in the zero list.
+    """
+    for k, dk in enumerate(d):
+        mchi2 = list(chi)
+        for y in range(dk):
+            if y != chi[k]:
+                mchi2[k] = y
+                chi2 = Weight(mchi2)
+                try:
+                    idx = St.indeterminate.index(chi2)
+                except ValueError:
+                    pass
+                else:
+                    smart_remove(St.indeterminate, idx)
+                    St.excluded.append(chi2)
+
 def find_hyperplanes(d: Dimension, u: int) -> Iterable[list[Weight]]:
     """
     Returns hyperplane candidates
@@ -131,8 +149,8 @@ def find_hyperplanes_impl(St: WeightSieve, d: Dimension, u: int) -> Iterable[lis
 
         # 2.2 Continuing if there are not too much negative elements
         if len(St2.negative) <= u:
-            #Simplif_Reg(Poids[c],d,nnSti,nnStnz)  #utilisation de la condition de régularité de tau
-            # TODO: à tester si c'est nécessaire
+            # simplify_regularity(St2, d, chi) # Using regularity condition of tau
+            # TODO: check if it is necessary
             yield from find_hyperplanes_impl(St2, d, u)
 
         # Current element back to the indeterminate
