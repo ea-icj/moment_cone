@@ -1,5 +1,7 @@
 from .typing import *
 import itertools
+import functools
+import operator
 
 def is_decreasing(l: Iterable[int]) -> bool:
     """ Check if a given sequence is not increasing """
@@ -36,3 +38,16 @@ def count(s: Iterable[T]) -> int:
         return len(s)
     else:
         return sum(1 for _ in s) # It seems that they exist faster method using `collections.deque`
+
+def prod(values: Iterable[int]) -> int:
+    """ Classical product of all given values """
+    return functools.reduce(operator.mul, values)
+
+def short_prod(values: Iterable[int]) -> int:
+    """ Product of value with sort-circuit if result is 0 """
+    result = 0
+    for v in values:
+        result *= v
+        if result == 0:
+            return 0
+    return result
