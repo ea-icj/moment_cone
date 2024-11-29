@@ -138,6 +138,23 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
             self[:i] + self[j:j+1] + self[i+1:j] + self[i:i+1] + self[j+1:]
         )
 
+    @cached_property
+    def covering_relations_strong_Bruhat(self) -> tuple["Permutation", ...]:
+        """
+        Covering relations strong Bruhat
+
+        Liste of v <= self for the ??? order so that v <= self is wrong
+        for the weak order and v has a length that is equal to the length of self minus 1.
+        """
+        n = len(self)
+        return tuple(
+            p
+            for i, j in itertools.combinations(range(n), 2)
+            for p in (self.transpose(i, j),)
+            if p.length == self.length - 1
+        )
+
+
     @staticmethod
     def all_transpositions(n: int) -> Iterable["Permutation"]:
         """
