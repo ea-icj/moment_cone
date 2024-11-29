@@ -29,7 +29,7 @@ class Blocks(Generic[T]):
     When immutable, hash is consistent with equality thus allowing to safely use a Blocks in a set of a dict. An mutable Blocks can be converted to a immutable one using the `freeze` method:
     >>> b1 = Blocks([1, 2, 3], (2, 1))
     >>> b2 = Blocks([1, 2, 3], (2, 1))
-    >>> b1 == b2, hash(b1), hash(b2)
+    >>> b1 == b2, hash(b1), hash(b2) # doctest: +SKIP
     (True, 8789978014300, 8789977956485)
     >>> b1f = b1.freeze()
     >>> b2f = b2.freeze()

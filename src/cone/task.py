@@ -191,24 +191,29 @@ class timeout:
     
     Example of usage as a decorator:
 
+    ```
     @timeout(10)
     def compute(a, b, c):
         print(a, b, c)
         ... # do some stuff
         return a * b + c
     result = compute(1, 2, 3) # result is TimeOutException if task didn't finished
+    ```
 
     Example of usage as a context manager:
 
+    ```
     a, b, c = 1, 2, 3
     with timeout(10):
         print(a, b, c)
         ... # do some stuff
         result = a * b + c
     # result isn't defined at all if time is out
+    ```
 
     Example of usage as a context manager with raised exception:
 
+    ```
     a, b, c = 1, 2, 3
     try:
         with timeout(10)
@@ -217,6 +222,7 @@ class timeout:
             result = a * b + c
     except TimeOutException:
         # Some something when task didn't finished
+    ```
     """
     t: int
     no_raise: bool
