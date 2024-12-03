@@ -104,15 +104,15 @@ def hyperplane_matrix(S: Sequence[Weight], d: Dimension) -> matrix:
     return M
 
 def check_hyperplane_dim(S: Sequence[Weight], d: Dimension) -> bool:
-    """ Check that the given sequence of weight has the dimension of an hyperplane """
-    target_rank = d.sum - len(d)
+    """ Check that the given sequence of weight has the dimension of an hyperplane in X^*(T)"""
+    target_rank = d.sum - len(d)  #Since T lies in C^*\times product of the SL_{d_i}, it has codimension len(d) in \hat T (torus of C^*\times product of the GL_{d_i}
     if len(S) < target_rank:
         return False
     
     M = hyperplane_matrix(S, d)
     return M.rank(algorithm="flint") == target_rank # Flint algorithm is faster than the default one
 
-def has_enough_leq_weights(chi: Weight, u: int) -> bool:
+def has_too_much_geq_weights(chi: Weight, u: int) -> bool:
     """ True for weights with more that u weights bigger for the order leq """
     leq_cnt = short_prod(c + 1 for c in chi) - 1
     # FIXME: verify this function, it differ from the original version
@@ -120,11 +120,11 @@ def has_enough_leq_weights(chi: Weight, u: int) -> bool:
 
 def find_hyperplanes(d: Dimension, u: int) -> Iterable[list[Weight]]:
     """
-    Returns hyperplane candidates with a maximal number u of positive elements
+    Returns sets of weights, each set generating an hyperplane in X^*(T) likely to be the orthogonal of a dominant character tau, such that there is at most u weights we of V with tau(we)>0 
     """
     St = WeightSieve([], [], [], [], [])
     for chi in Weight.all(d):
-        if has_enough_leq_weights(chi, u):
+        if has_too_much_geq_weights(chi, u):
             St.negative.append(chi)
         else:
             St.indeterminate.append(chi)
@@ -132,12 +132,13 @@ def find_hyperplanes(d: Dimension, u: int) -> Iterable[list[Weight]]:
 
 def find_hyperplanes_mod_sym_dim(d: Dimension, u: int) -> Iterable[list[Weight]]:
     """
-    Returns hyperplane candidates with a maximal number u of positive elements (u-condition) module the symmetries of d.
+    Same as find_hyperplanes, with results up to the action of the symmetries of d.
+    it should be faster since less possibilities are explored
     """
     # Earlier filtering
     St = WeightSieve([], [], [], [], [])
     for chi in Weight.all(d):
-        if has_enough_leq_weights(chi, u):
+        if has_too_much_geq_weights(chi, u):
             St.negative.append(chi)
         else:
             St.indeterminate.append(chi)
