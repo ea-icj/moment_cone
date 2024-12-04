@@ -6,6 +6,7 @@ from .root import Root
 from .hyperplane_candidates import hyperplane_matrix
 from sage.all import matrix, ZZ, QQ # type: ignore
 
+
 import itertools
 from functools import cached_property
 
@@ -65,6 +66,12 @@ class Tau:
            raise ValueError("Given set of weights does not generates an hyperplane")
         else:
            return Tau.from_flatten(b[0],d)
+
+
+        
+        
+        return Tau.from_flatten(self.)
+    
 
     def __len__(self) -> int:
         """ Number of components """
@@ -170,22 +177,39 @@ class Tau:
             ccomponent // res_gcd
         )
 
-    @cached_property
-    def grading_weights(self) -> dict[int, list[Weight]]:
-        """ dictionnary whose keys are eigenvalues of the action of tau on V. For each key p, the weights in the entry p correspond to a basis of the eigenspace """
-        weights = Weight.all(self.d)
-        result: dict[int, list[Weight]] = {}
-        for chi in weights:
-            p = self.dot_weight(chi)
+    def grading_dictionary(self, basis:list[T], dot_basis) -> dict[int,list[T]]:
+        """ basis is a set of elements parameterizing a basis of the space of interest made of eigenvector under action of tau.
+        dot_basis T -> int is a function associating to an element of the basis its eigenvalue.
+        grading_dictionary returns a dictionary whose keys are eigenvalues. For each key p, the values in the entry p correspond to a basis of the eigenspace
+        """
+        result: dict[int, list[T]] = {}
+        for chi in basis:
+            p = dot_basis(chi)
             result.setdefault(p, []).append(chi)
         return result
 
-    # TODO: generate the dictionary for all values of the product scalar
-    # and filtering it later. Renaming it like grading_weights and removing
-    # the optional weights list so that to be a @cached_property.
+    @cached_property
+    def grading_weights(self) -> dict[int, list[Weight]]:
+        """ dictionary whose keys are eigenvalues of the action of tau on V. For each key p, the weights in the entry p correspond to a basis of the eigenspace """
+        weights = Weight.all(self.d)
+        return self.grading_dictionary(weights,self.dot_weight)
+        # Former version
+        #weights = Weight.all(self.d)
+        #result: dict[int, list[Weight]] = {}
+        #for chi in weights:
+        #    p = self.dot_weight(chi)
+        #    result.setdefault(p, []).append(chi)
+        #return result
+        
+
+    @cached_property
+    def grading_roots(self) -> dict[int, list[Root]]:
+        """ dictionary whose keys are eigenvalues of the action of tau on u (sum of positive root spaces). For each key p, the roots in the entry p correspond to a basis of the eigenspace """
+        roots = Root.all(self.d)
+        return self.grading_dictionary(roots,self.dot_root)
     
     def filter_dict(self, dic, prop) -> dict[int, list]:
-        """ Selects in the dictionnary dic, the keys satisfying the property prop"""
+        """ Selects in the dictionary dic, the keys satisfying the property prop"""
         def property_key(pair):
            x,v=pair
            return prop(x)
@@ -194,6 +218,14 @@ class Tau:
     @property
     def positive_weights(self) -> dict[int, list[Weight]]:
         return self.filter_dict(self.grading_weights,lambda x: x>0)
+    
+    @property
+    def non_negative_weights(self) -> dict[int, list[Weight]]:
+        return self.filter_dict(self.grading_weights,lambda x: x>=0)
+    
+    @property
+    def positive_roots2(self) -> dict[int, list[Weight]]:
+        return self.filter_dict(self.grading_roots,lambda x: x>0)
 
     # TODO: generate the dictionary for all values of the product scalar
     # and filtering it later. Renaming it like grading_roots and removing
@@ -209,6 +241,7 @@ class Tau:
             if p > 0:
                 result.setdefault(p, []).append(r)
         return result
+
 
     # TODO: as a @cache_property ?
     def orthogonal_roots(self) -> Iterable[Root]:
