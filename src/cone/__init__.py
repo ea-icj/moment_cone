@@ -13,6 +13,7 @@ from .task import *
 from .inequality import *
 from .permutation import *
 from .hyperplane_candidates import *
+from .polynomial_ring import *
 
     
 
