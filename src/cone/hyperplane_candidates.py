@@ -7,7 +7,7 @@ from .permutation import Permutation
 from .dimension import Dimension
 from .utils import short_prod
 
-from sage.all import matrix, ZZ # type: ignore
+from sage.all import matrix, ZZ, QQ # type: ignore
 
 __all__ = (
     "find_hyperplanes",

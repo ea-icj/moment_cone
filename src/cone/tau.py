@@ -3,6 +3,8 @@ from .dimension import Dimension
 from .blocks import Blocks
 from .weight import Weight
 from .root import Root
+from .hyperplane_candidates import hyperplane_matrix
+from sage.all import matrix, ZZ, QQ # type: ignore
 
 import itertools
 from functools import cached_property
@@ -47,6 +49,22 @@ class Tau:
 
         # Tau will be always immutable
         return Tau(Blocks.from_flatten(tuple(all_components), d), ccomponent)
+
+    @staticmethod
+    def from_zero_weights(S: Sequence[Weight], d: Dimension) -> "Tau":
+        """ From a set of weights generating an hyperplane in X^*(T), returns a primitive Tau orthogonal to the hyperplane"""
+        M = hyperplane_matrix(S, d)
+        MQ = M.change_ring(QQ)
+        MQ.augment(matrix(QQ,[len(d)*[0] for i in range(sum(d)+1)])) 
+        for u in range(len(d)):
+           shift=sum(d[k] for k in range(u))
+           for i in range(d[u]):
+               M[shift+i+1,u+len(S)]=1
+        b=M.kernel().basis()
+        if len(b)!=1:
+           raise ValueError("Given set of weights does not generates an hyperplane")
+        else:
+           return Tau.from_flatten(b[0],d)
 
     def __len__(self) -> int:
         """ Number of components """

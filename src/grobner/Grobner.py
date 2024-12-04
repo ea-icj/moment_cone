@@ -72,7 +72,7 @@ def polyring(Poids,tw,d,restr=False):
    else:
       R1=PolynomialRing(QQ,gens_V)
    F1=FractionField(R1)
-   R=PolynomialRing(F1,gens_U)
+   R=PolynomialRing(F1,gens_U, order='deglex')
    return R
    
 def list_gi(dic_gi):
