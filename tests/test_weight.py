@@ -76,4 +76,17 @@ class TestWeight(unittest.TestCase):
         self.assertEqual(mod_weights[-1], Weight((0, 0, 0, 0, 0)))
 
 
+    def test_orbit(self) -> None:
+        p = Weight((2, 2, 4, 1, 2, 1, 4))
+        orbits = list(p.orbit_symmetries((3, 3, 1)))
+        self.assertEqual(len(orbits), 9)
+        self.assertEqual(orbits[0], Weight((2, 2, 4, 1, 1, 2, 4)))
+        self.assertEqual(orbits[1], Weight((2, 2, 4, 1, 2, 1, 4)))
+        self.assertEqual(orbits[2], Weight((2, 2, 4, 2, 1, 1, 4)))
+        self.assertEqual(orbits[3], Weight((2, 4, 2, 1, 1, 2, 4)))
+        self.assertEqual(orbits[4], Weight((2, 4, 2, 1, 2, 1, 4)))
+        self.assertEqual(orbits[5], Weight((2, 4, 2, 2, 1, 1, 4)))
+        self.assertEqual(orbits[6], Weight((4, 2, 2, 1, 1, 2, 4)))
+        self.assertEqual(orbits[7], Weight((4, 2, 2, 1, 2, 1, 4)))
+        self.assertEqual(orbits[8], Weight((4, 2, 2, 2, 1, 1, 4)))
         

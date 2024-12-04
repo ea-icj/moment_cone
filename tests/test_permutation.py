@@ -52,20 +52,6 @@ class TestPermutation(unittest.TestCase):
         d2 = Dimension((2, 3, 4))
         self.assertFalse(p.is_min_rep(d2))
 
-    def test_orbit(self) -> None:
-        p = Permutation((2, 2, 4, 1, 2, 1, 4))
-        orbits = list(p.orbit_symmetries((3, 3, 1)))
-        self.assertEqual(len(orbits), 9)
-        self.assertEqual(orbits[0], Permutation((2, 2, 4, 1, 1, 2, 4)))
-        self.assertEqual(orbits[1], Permutation((2, 2, 4, 1, 2, 1, 4)))
-        self.assertEqual(orbits[2], Permutation((2, 2, 4, 2, 1, 1, 4)))
-        self.assertEqual(orbits[3], Permutation((2, 4, 2, 1, 1, 2, 4)))
-        self.assertEqual(orbits[4], Permutation((2, 4, 2, 1, 2, 1, 4)))
-        self.assertEqual(orbits[5], Permutation((2, 4, 2, 2, 1, 1, 4)))
-        self.assertEqual(orbits[6], Permutation((4, 2, 2, 1, 1, 2, 4)))
-        self.assertEqual(orbits[7], Permutation((4, 2, 2, 1, 2, 1, 4)))
-        self.assertEqual(orbits[8], Permutation((4, 2, 2, 2, 1, 1, 4)))
-
     def test_permutationby_length(self) -> None:
         # TODO
         pass
