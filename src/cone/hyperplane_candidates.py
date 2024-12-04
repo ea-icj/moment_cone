@@ -75,24 +75,25 @@ def hyperplane_matrix(S: Sequence[Weight], d: Dimension) -> matrix:
     (1st coordinate 1 for C-component, len(d) other blocks of respective size di)
     
     Example :
-    sage: SW=list(Weight.all(Dimension([3,3,3])))[0:5]
-    sage: SW
-    [Weight((0, 0, 0), idx: 0),
-     Weight((0, 0, 1), idx: 1),
-     Weight((0, 0, 2), idx: 2),
-     Weight((0, 1, 0), idx: 3),
-     Weight((0, 1, 1), idx: 4)]
-    sage: hyperplane_matrix(SW,Dimension([3,3,3]))
-     [1 1 1 1 1]
-     [1 1 1 1 1]
-     [0 0 0 0 0]
-     [0 0 0 0 0]
-     [1 1 1 0 0]
-     [0 0 0 1 1]
-     [0 0 0 0 0]
-     [1 0 0 1 0]
-     [0 1 0 0 1]
-     [0 0 1 0 0]
+    >>> SW = list(Weight.all(Dimension([3,3,3])))[0:5]
+    >>> for chi in SW:
+    ...     print(chi)
+    Weight((0, 0, 0), idx: 0)
+    Weight((0, 0, 1), idx: 1)
+    Weight((0, 0, 2), idx: 2)
+    Weight((0, 1, 0), idx: 3)
+    Weight((0, 1, 1), idx: 4)
+    >>> hyperplane_matrix(SW,Dimension([3,3,3]))
+    [1 1 1 1 1]
+    [1 1 1 1 1]
+    [0 0 0 0 0]
+    [0 0 0 0 0]
+    [1 1 1 0 0]
+    [0 0 0 1 1]
+    [0 0 0 0 0]
+    [1 0 0 1 0]
+    [0 1 0 0 1]
+    [0 0 1 0 0]
     """
     M = matrix(ZZ, d.sum + 1, len(S))
     # We could use Blocks but matrix doesn't support len
