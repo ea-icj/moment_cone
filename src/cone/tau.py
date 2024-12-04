@@ -55,12 +55,12 @@ class Tau:
         """ From a set of weights generating an hyperplane in X^*(T), returns a primitive Tau orthogonal to the hyperplane"""
         M = hyperplane_matrix(S, d)
         MQ = M.change_ring(QQ)
-        MQ.augment(matrix(QQ,[len(d)*[0] for i in range(sum(d)+1)])) 
+        MQp=MQ.augment(matrix(QQ,[len(d)*[0] for i in range(sum(d)+1)])) 
         for u in range(len(d)):
            shift=sum(d[k] for k in range(u))
            for i in range(d[u]):
-               M[shift+i+1,u+len(S)]=1
-        b=M.kernel().basis()
+               MQp[shift+i+1,u+len(S)]=1
+        b=MQp.kernel().basis()
         if len(b)!=1:
            raise ValueError("Given set of weights does not generates an hyperplane")
         else:
