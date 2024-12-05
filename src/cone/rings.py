@@ -9,7 +9,7 @@ from sage.rings.polynomial.polynomial_element import Polynomial # type: ignore
 from sage.rings.polynomial.multi_polynomial_element import MPolynomial # type: ignore
 from sage.structure.element import Vector, Matrix # type: ignore
 from sage.all import vector as sage_vector, matrix as sage_matrix # type: ignore
-from sage.all import QQ, I # type: ignore
+from sage.all import ZZ, QQ, I # type: ignore
 
 from .typing import *
 from .weight import Weight

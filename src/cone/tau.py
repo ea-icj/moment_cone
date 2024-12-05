@@ -4,8 +4,7 @@ from .blocks import Blocks
 from .weight import Weight
 from .root import Root
 from .hyperplane_candidates import hyperplane_matrix
-from sage.all import matrix, ZZ, QQ # type: ignore
-
+from .rings import matrix, ZZ, QQ
 
 import itertools
 from functools import cached_property

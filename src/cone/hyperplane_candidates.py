@@ -6,8 +6,7 @@ from .weight import Weight
 from .permutation import Permutation
 from .dimension import Dimension
 from .utils import short_prod
-
-from sage.all import matrix, ZZ, QQ # type: ignore
+from .rings import matrix, Matrix, ZZ
 
 __all__ = (
     "find_hyperplanes",
@@ -68,7 +67,7 @@ def sign_assignment(chi: Weight,
         else:
             idx += 1 # index incremented only when not element where removed
 
-def hyperplane_matrix(S: Sequence[Weight], d: Dimension) -> matrix:
+def hyperplane_matrix(S: Sequence[Weight], d: Dimension) -> Matrix:
     """ S is a set of weights. 
     The coordinates of each weight in the basis of fundamental weights are in {0,1}. 
     Each column of the returned matrix is made of the coordinates of a weight in S
