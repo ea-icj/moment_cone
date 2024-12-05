@@ -1,6 +1,10 @@
 from .typing import *
 from .tau import Tau
 from .permutation import Permutation
+from .blocks import Blocks
+
+from functools import cached_property
+import itertools
 
 __all__ = (
     "Inequality",
@@ -36,3 +40,29 @@ class Inequality:
             f"Inequality(tau  = {self.tau},\n" + \
              "           w    =     " + " | ".join(" ".join(map(str, wk)) for wk in self.w) + ",\n" + \
             f"           wtau = {self.wtau})"
+    
+    @cached_property
+    def sort_mod_sym_dim(self) -> "Inequality":
+        """
+        Sort (tau_i, w_i)_i by block of the dimensions
+
+        >>> from cone import *
+        >>> d = Dimension((2, 2, 2, 3))
+        >>> tau = Tau.from_flatten([1, 6, 2, 1, 4, 1, 4, 5, 3, 1], d)
+        >>> w = Permutation((0, 1)), Permutation((1, 0)), Permutation((0, 1)), Permutation((2, 0, 1))
+        >>> ineq = Inequality(tau, w)
+        >>> ineq
+        Inequality(tau  = 1 | 6 2 | 1 4 | 1 4 | 5 3 1,
+                   w    =     0 1 | 1 0 | 0 1 | 2 0 1,
+                   wtau = 1 | 6 2 | 4 1 | 1 4 | 1 5 3)
+        >>> ineq.sort_mod_sym_dim
+        Inequality(tau  = 1 | 1 4 | 1 4 | 6 2 | 5 3 1,
+                   w    =     0 1 | 1 0 | 0 1 | 2 0 1,
+                   wtau = 1 | 1 4 | 4 1 | 6 2 | 1 5 3)
+        """
+        pairs = tuple(zip(self.tau.components, self.w))
+        blocks = (sorted(b) for b in Blocks(pairs, self.tau.d.symmetries))
+        tau_components, w = zip(*itertools.chain.from_iterable(blocks))
+        tau = Tau(tau_components, self.tau.ccomponent)
+        return Inequality(tau, w)
+

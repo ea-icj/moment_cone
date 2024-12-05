@@ -251,7 +251,16 @@ class Tau:
 
     @cached_property
     def sort_mod_sym_dim(self) -> "Tau":
-        """ Sort tau by block of the dimensions """
+        """
+        Sort tau by block of the dimensions
+        
+        >>> d = Dimension((2, 2, 2, 1, 1, 1))
+        >>> tau = Tau.from_flatten([1, 6, 2, 1, 4, 1, 4, 5, 3, 1], d)
+        >>> tau
+        1 | 6 2 | 1 4 | 1 4 | 5 | 3 | 1
+        >>> tau.sort_mod_sym_dim
+        1 | 1 4 | 1 4 | 6 2 | 1 | 3 | 5
+        """
         blocks = (sorted(b) for b in Blocks(self.components, self.d.symmetries))
         return Tau(itertools.chain.from_iterable(blocks), self.ccomponent)
 
