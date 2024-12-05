@@ -21,13 +21,29 @@ __all__ = (
 )
 
 class Tau:
-    """ Tuple of partition along with a coefficient """
+    """
+    Tuple of partition along with a coefficient
+    
+    Example:
+    >>> tau = Tau(((3, 3, 2, 2), (2, 2, 1), (2, 2, 1)), 1)
+    >>> tau
+    1 | 3 3 2 2 | 2 2 1 | 2 2 1
+
+    >>> d = Dimension((4, 3, 3))
+    >>> tau = Tau.from_flatten((1, 3, 3, 2, 2, 2, 2, 1, 2, 2, 1), d)
+    >>> tau
+    1 | 3 3 2 2 | 2 2 1 | 2 2 1
+    """
     #__slots__ = 'ccomponent', '_components' # FIXME cached_property cannot work without __dict__ ... => self managed cache or removing __slots__
     ccomponent: Optional[int]
     _components: Blocks[int]
 
     def __init__(self, components: Iterable[Sequence[int]] | Blocks[int], ccomponent: Optional[int] = None):
-        """ Tau initialization from a sequence of sub-group or directly from a partial matrix """
+        """
+        Tau initialization from a sequence of sub-group or directly from a partial matrix
+        
+        Beware that the ccomponent is at last position in the arguments since it is optional.
+        """
         self.ccomponent = ccomponent
         if isinstance(components, Blocks):
             self._components = components.freeze()
