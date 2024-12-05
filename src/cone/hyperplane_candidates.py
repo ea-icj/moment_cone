@@ -181,7 +181,6 @@ def find_hyperplanes_mod_sym_dim(d: Dimension, u: int) -> Iterable[list[Weight]]
         yield from find_hyperplanes_impl(St2, d, u)
 
         # Removing symmetries
-        # FIXME: orbit on weight or permutation ?!!
         for orbit_chi in chi.orbit_symmetries(d.symmetries):
             St.indeterminate.remove(orbit_chi)
             St.excluded.append(orbit_chi)
