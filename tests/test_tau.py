@@ -54,7 +54,7 @@ class TestTau(unittest.TestCase):
 
     def test_pos_roots(self):
         tau = Tau(((6, 2), (1, 4, 1), (2, 5, 3, 1)), 1)
-        pr = tau.positive_roots()
+        pr = tau.positive_roots
         self.assertEqual(sorted(pr.keys()), [1, 2, 3, 4])
         self.assertEqual(pr[1], [Root(2, 0, 3)])
         self.assertEqual(pr[2], [Root(2, 1, 2), Root(2, 2, 3)])
