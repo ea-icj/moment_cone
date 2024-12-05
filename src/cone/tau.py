@@ -249,13 +249,29 @@ class Tau:
         else: 
            return []
 
-
     @cached_property
     def sort_mod_sym_dim(self) -> "Tau":
         """ Sort tau by block of the dimensions """
         blocks = (sorted(b) for b in Blocks(self.components, self.d.symmetries))
         return Tau(itertools.chain.from_iterable(blocks), self.ccomponent)
 
+    @cached_property
+    def dim_Pu(self) -> int:
+        """
+        Dimension of Pu
+        
+        Example:
+        >>> tau = Tau(((3, 3, 2, 2), (2, 2, 1), (2, 2, 1)), 1)
+        >>> tau
+        1 | 3 3 2 2 | 2 2 1 | 2 2 1
+        >>> tau.dim_Pu
+        8
+        >>> sum(len(roots) for roots in tau.positive_roots.values())
+        8
+        """
+        sum_di2 = sum(di**2 for di in self.d)
+        sum_mi2 = sum(mi**2 for mi in self.reduced.mult.flatten)
+        return (sum_di2 - sum_mi2) // 2
 
 class ReducedTau:
     """ Tau in a reduction form """
