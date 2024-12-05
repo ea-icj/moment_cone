@@ -20,7 +20,7 @@ class Root:
         return self.i < self.j
     
     @staticmethod
-    def all(d: Dimension) -> Iterable["Root"]:
+    def all_of_U(d: Dimension) -> Iterable["Root"]:
         """ Returns all possible root from U for given dimensions """
         for k, dk in enumerate(d):
             for i, j in itertools.combinations(range(dk), 2):

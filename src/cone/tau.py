@@ -12,7 +12,6 @@ from functools import cached_property
 
 """
 TODO:
-- test file
 - same method for both scalar product using @singledispatch?
 - property or method for Pzero?
 """
@@ -209,7 +208,7 @@ class Tau:
     @cached_property
     def grading_roots(self) -> dict[int, list[Root]]:
         """ dictionary whose keys are eigenvalues of the action of tau on u (sum of positive root spaces). For each key p, the roots in the entry p correspond to a basis of the eigenspace """
-        roots = Root.all(self.d)
+        roots = Root.all_of_U(self.d)
         return self.grading_dictionary(roots,self.dot_root)
     
     def filter_dict(self, dic, prop) -> dict[int, list]:

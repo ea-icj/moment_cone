@@ -17,7 +17,7 @@ class TestRoot(unittest.TestCase):
 
     def test_all(self) -> None:
         d = Dimension((2, 3, 4))
-        all_r = tuple(Root.all(d))
+        all_r = tuple(Root.all_of_U(d))
 
         self.assertEqual(len(all_r), 10)
         self.assertEqual(all_r[0], Root(0, 0, 1))
