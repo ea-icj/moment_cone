@@ -8,7 +8,7 @@ from .typing import *
 # FIXME: should be fixed if we separate Dimension from
 # the associated polynomial rings, like in a kind of space class.
 if TYPE_CHECKING:
-    from .ring import PolynomialRingForWeights, Ring
+    from .rings import PolynomialRingForWeights, Ring
 
 __all__ = (
     "Dimension",
@@ -50,28 +50,28 @@ class Dimension(tuple[int, ...]):
     
     @cached_property
     def Q(self) -> "Ring":
-        from .ring import QQ
+        from .rings import QQ
         return QQ
     
     @cached_property
     def QI(self) -> "Ring":
-        from .ring import QQ, I
+        from .rings import QQ, I
         return QQ[I]
 
     @cached_property
     def QZ(self) -> "PolynomialRingForWeights":
-        from .ring import PolynomialRingForWeights, QQ
+        from .rings import PolynomialRingForWeights, QQ
         return PolynomialRingForWeights(QQ, "z")
     
     @cached_property
     def QV(self) -> "PolynomialRingForWeights":
-        from .ring import PolynomialRingForWeights, QQ
+        from .rings import PolynomialRingForWeights, QQ
         from .weight import Weight
         return PolynomialRingForWeights(QQ, weights=Weight.all(self))
     
     @cached_property
     def QV2(self) -> "PolynomialRingForWeights":
-        from .ring import PolynomialRingForWeights, QQ
+        from .rings import PolynomialRingForWeights, QQ
         from .weight import Weight
         return PolynomialRingForWeights(
             QQ,
@@ -82,7 +82,7 @@ class Dimension(tuple[int, ...]):
 
     @cached_property
     def QIV(self) -> "PolynomialRingForWeights":
-        from .ring import PolynomialRingForWeights, QQ, I
+        from .rings import PolynomialRingForWeights, QQ, I
         from .weight import Weight
         return PolynomialRingForWeights(
             QQ[I], 

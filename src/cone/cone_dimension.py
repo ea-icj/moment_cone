@@ -5,8 +5,8 @@ Tools to compute the dimension of the cone ???
 from .typing import *
 from .weight import Weight
 from .dimension import Dimension
-from .ring import PolynomialRingForWeights, Ring, vector, Vector, matrix, Matrix, I
-from .ring import real_part, imag_part
+from .rings import PolynomialRingForWeights, Ring, vector, Vector, matrix, Matrix, I
+from .rings import real_part, imag_part
 
 def point_vect_QI(pds: Iterable[Weight], d: Dimension, ring: Ring, bounds: tuple[int, int] = (-100, 100)) -> Vector:
     """
@@ -115,3 +115,4 @@ def rank_RC(M: Matrix, d: Dimension) -> int:
     N[M.nrows():, :] = imag_part(M)
 
     return N.change_ring(M.base_ring().fraction_field()).rank()
+

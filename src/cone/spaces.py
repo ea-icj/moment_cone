@@ -7,7 +7,7 @@ Currently only for Kronecker. Later for Fermions and Bosons
 from .typing import *
 from .root import Root
 from .dimension import Dimension
-from .ring import vector, Vector
+from .rings import vector, Vector
 from .weight import Weight
 
 def action_op_el(alpha: Root, v: Vector, d: Dimension) -> Vector:
