@@ -2,13 +2,10 @@
 Tools to compute the dimension of the cone ???
 """
 
-from sage.all import vector, I # type: ignore
-from sage.structure.element import Vector # type: ignore
-
 from .typing import *
 from .weight import Weight
 from .dimension import Dimension
-from .polynomial_ring import PolynomialRingForWeights, Ring
+from .ring import PolynomialRingForWeights, Ring, vector, Vector, I
 
 def point_vect_QI(pds: Iterable[Weight], d: Dimension, ring: Ring, bounds: tuple[int, int] = (-100, 100)) -> Vector:
     """
@@ -33,8 +30,7 @@ def point_vect_QV(pds: Iterable[Weight], d: Dimension, ring: PolynomialRingForWe
     """
     Generates a base vector of Vect(pds) over given polynomial (real) ring using the variables associated to the weights.
     """
-    from .polynomial_ring import variable
-    v = vector(ring.sage_ring, d.prod)
+    v = vector(ring, d.prod)
 
     for chi in pds:
         v[chi.index_in(d)] = ring.variable(chi)
@@ -46,8 +42,7 @@ def point_vect_QIV(pds: Iterable[Weight], d: Dimension, ring: PolynomialRingForW
     """
     Generates a base vector of Vect(pds) over given polynomial (complex) ring using the variables associated to the weights.
     """
-    from .polynomial_ring import variable
-    v = vector(ring.sage_ring, d.prod)
+    v = vector(ring, d.prod)
 
     for chi in pds:
         vr, vi = ring.variable(chi)
@@ -62,7 +57,6 @@ def point_vect_QZ(pds: Iterable[Weight], d: Dimension, ring: Ring, bounds: tuple
     Coefficients are integers withing the given closed interval.
     """
     from random import randint
-    from .polynomial_ring import variable
     v = vector(ring, d.prod)
     z = ring.variable("z")
 

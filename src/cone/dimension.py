@@ -8,7 +8,7 @@ from .typing import *
 # FIXME: should be fixed if we separate Dimension from
 # the associated polynomial rings, like in a kind of space class.
 if TYPE_CHECKING:
-    from .polynomial_ring import PolynomialRingForWeights, Ring
+    from .ring import PolynomialRingForWeights, Ring
 
 __all__ = (
     "Dimension",
@@ -49,32 +49,29 @@ class Dimension(tuple[int, ...]):
     
     @cached_property
     def Q(self) -> "Ring":
-        from sage.all import QQ # type: ignore
+        from .ring import QQ
         return QQ
     
     @cached_property
     def QI(self) -> "Ring":
-        from sage.all import QQ, I # type: ignore
+        from .ring import QQ, I
         return QQ[I]
 
     @cached_property
     def QZ(self) -> "PolynomialRingForWeights":
-        from .polynomial_ring import PolynomialRingForWeights
-        from sage.all import QQ # type: ignore
+        from .ring import PolynomialRingForWeights, QQ
         return PolynomialRingForWeights(QQ, "z")
     
     @cached_property
     def QV(self) -> "PolynomialRingForWeights":
-        from .polynomial_ring import PolynomialRingForWeights
+        from .ring import PolynomialRingForWeights, QQ
         from .weight import Weight
-        from sage.all import QQ # type: ignore
         return PolynomialRingForWeights(QQ, weights=Weight.all(self))
     
     @cached_property
     def QV2(self) -> "PolynomialRingForWeights":
-        from .polynomial_ring import PolynomialRingForWeights
+        from .ring import PolynomialRingForWeights, QQ
         from .weight import Weight
-        from sage.all import QQ # type: ignore
         return PolynomialRingForWeights(
             QQ,
             weights=Weight.all(self),
@@ -83,9 +80,8 @@ class Dimension(tuple[int, ...]):
 
     @cached_property
     def QIV(self) -> "PolynomialRingForWeights":
-        from .polynomial_ring import PolynomialRingForWeights
+        from .ring import PolynomialRingForWeights, QQ, I
         from .weight import Weight
-        from sage.all import QQ, I # type: ignore
         return PolynomialRingForWeights(
             QQ[I], 
             weights=Weight.all(self),

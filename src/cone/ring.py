@@ -1,14 +1,27 @@
 """
-Basic tools to manipulate polynomial rings with variables
+Basic tools to manipulate rings and polynomial rings with variables
+
+Also re-implements some common functions and classes from Sage with support
+for polynomial rings with variables.
 """
-from sage.all import Ring # type: ignore
+from sage.all import Ring, PolynomialRing # type: ignore
+from sage.rings.polynomial.polynomial_element import Polynomial # type: ignore
+from sage.rings.polynomial.multi_polynomial_element import MPolynomial # type: ignore
+from sage.structure.element import Vector, Matrix # type: ignore
+from sage.all import vector as sage_vector, matrix as sage_matrix # type: ignore
+from sage.all import QQ, I # type: ignore
+
 from .typing import *
 from .weight import Weight
 
 __all__ = (
     'VariableName',
     'PolynomialRingForWeights',
+    'PolynomialRing',
     'Ring',
+    'real_part', 'imag_part',
+    'vector', 'matrix',
+    'QQ', 'I',
 )
 
 VariableName = str | Weight
@@ -32,6 +45,37 @@ def variables(ring_or_gens: Ring | RingGens, name_or_weight: Iterable[VariableNa
         ring_or_gens = ring_or_gens.gens_dict()
     return tuple(ring_or_gens[variable_name(nc, seed)] for nc in name_or_weight)
 
+def real_part(value):
+    """
+    Real part of a scalar, a vector, an array or a polynomial
+    
+    Differs from Sage for polynomials.
+    """
+    try:
+        return value.real()
+    except AttributeError:
+        if isinstance(value, (Polynomial, MPolynomial)):
+            return value.map_coefficients(lambda c: c.real())
+        elif isinstance(value, (Vector, Matrix)):
+            return value.apply_map(lambda c: real_part(c))
+        else:
+            raise NotImplementedError()
+
+def imag_part(value):
+    """
+    Imaginary part of a scalar, a vector, an array or a polynomial
+    
+    Differs from Sage for polynomials.    
+    """
+    try:
+        return value.imag()
+    except AttributeError:
+        if isinstance(value, (Polynomial, MPolynomial)):
+            return value.map_coefficients(lambda c: c.imag())
+        elif isinstance(value, (Vector, Matrix)):
+            return value.apply_map(lambda c: imag_part(c))
+        else:
+            raise NotImplementedError()
 
 class PolynomialRingForWeights:
     """
@@ -111,9 +155,21 @@ class PolynomialRingForWeights:
     def __call__(self, *args, **kwargs) -> Any:
         return self.sage_ring(*args, **kwargs)
     
-    def base_ring(self) -> Ring:
-        return self.sage_ring.base_ring()
+    def __getattr__(self, name) -> Any:
+        return getattr(self.sage_ring, name)
     
-    def fraction_field(self) -> Ring:
-        return self.sage_ring.fraction_field()
+    def __getitem__(self, idx) -> Any:
+        return self.sage_ring[idx]
 
+
+def vector(ring: Ring | PolynomialRingForWeights, *args: Any, **kwargs: Any) -> Vector:
+    """ Creating vectors with proper usage of PolynomialRingForWeights """
+    if isinstance(ring, PolynomialRingForWeights):
+        ring = ring.sage_ring
+    return sage_vector(ring, *args, **kwargs)
+
+def matrix(ring: Ring | PolynomialRingForWeights, *args: Any, **kwargs: Any) -> Matrix:
+    """ Creating matrices with proper usage of PolynomialRingForWeights """
+    if isinstance(ring, PolynomialRingForWeights):
+        ring = ring.sage_ring
+    return sage_matrix(ring, *args, **kwargs)
