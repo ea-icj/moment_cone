@@ -148,11 +148,10 @@ def dim_of_stabilizer_in_K_tau(tau: Tau, method: Method) -> int:
     else:
         raise ValueError(f"Invalid value {method} of the computation method")
     
-    # FIXME: Weight.all(d) or simply tau.orthogonal_weights?
-    v = point_vect(Weight.all(d), d, ring, bounds=(-1000, 1000))
-
     roots_K_tau = tau.orthogonal_roots
     weights_K_tau = tau.orthogonal_weights
+
+    v = point_vect(weights_K_tau, d, ring, bounds=(-1000, 1000))
 
     dim_K_tau = d.sum + 2 * len(roots_K_tau)
     M = matrix(ring, len(weights_K_tau), dim_K_tau)
