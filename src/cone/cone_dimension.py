@@ -140,6 +140,7 @@ def dim_of_stabilizer_in_K_tau(tau: Tau, method: Method) -> int:
     """
     d = tau.d # FIXME: Here, d is recreated from scratch, without rings. Should we ensure the uniqueness of the instance of d?
 
+    # Ring depending on the computational method
     if method == "probabilistic":
         ring = d.QI
     elif method == "symbolic":
