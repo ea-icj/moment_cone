@@ -201,17 +201,6 @@ class Tau:
             ccomponent // res_gcd
         )
 
-    def grading_dictionary(self, basis:list[T], dot_basis) -> dict[int,list[T]]:
-        """ basis is a set of elements parameterizing a basis of the space of interest made of eigenvector under action of tau.
-        dot_basis T -> int is a function associating to an element of the basis its eigenvalue.
-        grading_dictionary returns a dictionary whose keys are eigenvalues. For each key p, the values in the entry p correspond to a basis of the eigenspace
-        """
-        result: dict[int, list[T]] = {}
-        for chi in basis:
-            p = dot_basis(chi)
-            result.setdefault(p, []).append(chi)
-        return result
-
     @cached_property
     def grading_weights(self) -> dict[int, list[Weight]]:
         """
@@ -255,13 +244,6 @@ class Tau:
         """
         from .utils import grading_dictionary
         return grading_dictionary(Root.all_of_U(self.d), self.dot_root)
-    
-    def filter_dict(self, dic, prop) -> dict[int, list]:
-        """ Selects in the dictionary dic, the keys satisfying the property prop"""
-        def property_key(pair):
-           x,v=pair
-           return prop(x)
-        return dict(filter(property_key, dic.items()))
 
     @property
     def positive_weights(self) -> dict[int, list[Weight]]:
@@ -323,7 +305,7 @@ class Tau:
     @property
     def orthogonal_roots(self) -> list[Root]:
         """
-        All the roots beta so that <beta, tau> = 0
+        All the roots beta of V so that <beta, tau> = 0
 
         >>> tau = Tau(((3, 2, 2), (4, 2, 1), (3, 2)), -7)
         >>> tau
