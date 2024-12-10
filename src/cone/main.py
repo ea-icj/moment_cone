@@ -1,8 +1,6 @@
 from cone.typing import *
 from cone.dimension import Dimension
 
-Method = Literal["probabilistic", "symbolic"]
-
 def to_method(method: str) -> Method:
     if method.startswith("p"):
         return "probabilistic"
