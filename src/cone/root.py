@@ -26,3 +26,18 @@ class Root:
             for i, j in itertools.combinations(range(dk), 2):
                 yield Root(k, i, j)
 
+    @staticmethod
+    def all(d: Dimension) -> Iterable["Root"]:
+        """ Returns all possible roots from G for given dimensions """
+        for k, dk in enumerate(d):
+            for i, j in itertools.product(range(dk), repeat=2) :
+                if i != j:
+                    yield Root(k, i, j)
+
+    @staticmethod
+    def all_of_T(d: Dimension) -> Iterable["Root"]:
+        """ Returns all possible roots from T for given dimensions """
+        for k, dk in enumerate(d):
+            for i in range(dk):
+                yield Root(k, i, i)            
+
