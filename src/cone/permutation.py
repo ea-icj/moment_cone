@@ -174,12 +174,27 @@ class AllPermutationsByLength:
     (Permutation((0, 2, 1)), Permutation((1, 0, 2)))
     >>> ap[:2] # All permutations of length <= 1
     (Permutation((0, 1, 2)), Permutation((0, 2, 1)), Permutation((1, 0, 2)))
+
+    It is worth noting that this class ensure uniqueness of an instance for a given n
+    so that it can be constructed multiple times for a same n without a computation time penalty.
+    >>> ap2 = AllPermutationsByLength(3)
+    >>> ap is ap2
+    True
     """
+    all_instances: dict[int, "AllPermutationsByLength"] = {}
+
     __slots__ = 'permutations', 'indexes'
     permutations: tuple[Permutation, ...]
     indexes: tuple[int, ...]
 
-    def __init__(self, n: int):
+    def __new__(cls, n: int):
+        """ Construction with reusing of already computed permutations for given n """
+        try:
+            return cls.all_instances[n]
+        except KeyError:
+            pass
+
+        self = super().__new__(cls)
         self.permutations = tuple(sorted(
             Permutation.all(n),
             key=lambda p: p.length
@@ -191,6 +206,9 @@ class AllPermutationsByLength:
             (size for value, size in group_by_block(p.length for p in self.permutations)),
             initial=0
         ))
+
+        cls.all_instances[n] = self
+        return self
 
     def __len__(self) -> int:
         """
