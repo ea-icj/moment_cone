@@ -105,11 +105,20 @@ def Embeddings_mod_sym(d: Sequence[int],e:Sequence[int])-> Iterable[Iterable[int
 def extend_with_repetitions(seq:Sequence[T],l:[int])->Sequence[T]:
     """from a sequence seq of length <=l with no repetition, returns the list of all expanded sequences of length l obtained from seq by repetitions of some elements."""
     if len(seq)==1 : 
-       return([l*seq])
+       return([l*[seq[0]]])
     if len(seq)==l : 
-       return([seq])
+       return([list(seq)])
     Res=[]
     for i in range(l-len(seq)+1):
         Res+=[(i+1)*[seq[0]]+ext for ext in extend_with_repetitions(seq[1:],l-i-1)]
     return(Res)
+    
+def flatten_dictionary(dic: Dict[U, List[T]])->List[T]:
+   """dic is a dictionary where the value stored in each entry is a list.
+   returns the concatened list.
+   """
+   Res=[]
+   for x in dic.keys():
+      Res+=dic[x]
+   return Res
 
