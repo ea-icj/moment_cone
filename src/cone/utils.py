@@ -14,6 +14,7 @@ __all__ = (
     "count",
     "prod",
     "short_prod",
+    "Embeddings_mod_sym",
 )
 
 def is_decreasing(l: Iterable[int]) -> bool:
@@ -65,40 +66,39 @@ def short_prod(values: Iterable[int]) -> int:
             return 0
     return result
     
-def create_bijection(list1: Sequence[T], list2:Sequence[T]):
-    """
-    list1 and list2 are two list sharing the same values each with same multiplicities
-    returns a Permutation on the indices that yields list2 from list1
-    
-    Example
-    >>>create_bijection(["a","b","c","a"],["b","c","a","a"])
-    Permutation((2, 0, 1, 3))
-    """
-    list2cp=cp.copy(list2)
-    bijection = []
-    for element in list1:
-        i=list2cp.index(element)
-        bijection.append(i)
-        # On remplace l'élément utilisé par None pour éviter de le sélectionner à nouveau
-        list2cp[i] = None
-    return Permutation(bijection)
 
-#TODO: à insérer dans le contexte
-def Embeddings(d,e): # List of permutations of e that are at most d
+
+def Embeddings_mod_sym(d: Sequence[int],e:Sequence[int])-> Iterable[Iterable[int]]: # List of permutations of e that are at most d
+    """
+    d and e are list of integers the same length  (typically, dimensions), each in decreasing order 
+    returns the list of permutation of e (each encoded by a permutation of the indices) such that the in the i-th component of the permuted e is at most d[i]
+    Outputs are irredundant modulo symmetries of e and d
+    
+    Example:
+    >>>d=[4,4,3,3,2]
+    >>>e=[4,3,3,2,1]
+    >>>emb=Embeddings(d,e)
+    >>>emb
+    [[0, 1, 2, 3, 4], [0, 1, 2, 4, 3], [0, 3, 1, 2, 4], [0, 4, 1, 2, 3]]
+    >>>[e[emb[-1][i]] for i in range(5)]
+    [4, 1, 3, 3, 2]
+    """
     Res=[]
-    for ep in multiset_permutations(e):
-        if all(ep[i] <= d[i] for i in range(len(e))): 
-           sd=d.symmetries
-           i=0
-           shift=0
-           Test=True
-           while (i<len(sd)) and Test:
-               eps=ep[shift:shift+sd[i]]
-               Test=(sorted(eps,reverse=True) == eps)
-               shift+=sd[i]
-               i+=1   
-           if Test:
-              Res.append([ep,create_bijection(ep,e)]) # Une chance sur deux inverser ep et e si nécessaire 
+    eg=list(group_by_block(e))
+    dg=list(group_by_block(d))
+    partial_sum_mult_d=[0]+list(itertools.accumulate([x for _,x in dg]))
+    partial_sum_mult_e=[0]+list(itertools.accumulate([x for _,x in eg]))
+    indices_eg=expand_blocks([i for i,x in enumerate(eg)],[x[1] for i,x in enumerate(eg)]) #same as e, but with repetition of indices, rather than values
+    for ep in multiset_permutations(indices_eg):
+        p_i=cp.copy(partial_sum_mult_e)[:-1]
+        indices_e=[]
+        for i in range(len(e)):
+           indices_e.append(p_i[ep[i]])
+           p_i[ep[i]]+=1
+        #Res.append(indices_e)
+    #return(Res)
+        if all(e[indices_e[i]] <= d[i] for i in range(len(e))) and all(is_increasing(indices_e[a:b]) for a,b in itertools.pairwise(partial_sum_mult_d)):
+           Res.append(indices_e) # Une chance sur deux inverser ep et e si nécessaire 
     return(Res)
 
 
