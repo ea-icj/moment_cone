@@ -2,6 +2,8 @@ from .typing import *
 import itertools
 import functools
 import operator
+import copy as cp
+from sympy.utilities.iterables import multiset_permutations
 
 __all__ = (
     "is_decreasing",
@@ -63,6 +65,7 @@ def short_prod(values: Iterable[int]) -> int:
             return 0
     return result
 
+
 def grading_dictionary(elements: Iterable[T], fn: Callable[[T], U]) -> dict[U, list[T]]:
     """ 
     From a sequence of elements and a function that applies on these elements,
@@ -104,3 +107,42 @@ def filter_dict_by_key(d: dict[T, U], predicate: Callable[[T], bool]) -> dict[T,
     6: [6, 13, 20, 27, 34]
     """
     return {k: v for k, v in d.items() if predicate(k)}
+
+    
+def create_bijection(list1: Sequence[T], list2:Sequence[T]):
+    """
+    list1 and list2 are two list sharing the same values each with same multiplicities
+    returns a Permutation on the indices that yields list2 from list1
+    
+    Example
+    >>>create_bijection(["a","b","c","a"],["b","c","a","a"])
+    Permutation((2, 0, 1, 3))
+    """
+    list2cp=cp.copy(list2)
+    bijection = []
+    for element in list1:
+        i=list2cp.index(element)
+        bijection.append(i)
+        # On remplace l'élément utilisé par None pour éviter de le sélectionner à nouveau
+        list2cp[i] = None
+    return Permutation(bijection)
+
+#TODO: à insérer dans le contexte
+def Embeddings(d,e): # List of permutations of e that are at most d
+    Res=[]
+    for ep in multiset_permutations(e):
+        if all(ep[i] <= d[i] for i in range(len(e))): 
+           sd=d.symmetries
+           i=0
+           shift=0
+           Test=True
+           while (i<len(sd)) and Test:
+               eps=ep[shift:shift+sd[i]]
+               Test=(sorted(eps,reverse=True) == eps)
+               shift+=sd[i]
+               i+=1   
+           if Test:
+              Res.append([ep,create_bijection(ep,e)]) # Une chance sur deux inverser ep et e si nécessaire 
+    return(Res)
+
+

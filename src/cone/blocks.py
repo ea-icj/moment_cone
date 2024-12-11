@@ -1,4 +1,5 @@
 from .typing import *
+from .dimension import *
 import itertools
 
 __all__ = (
@@ -67,6 +68,17 @@ class Blocks(Generic[T]):
             tuple(itertools.chain.from_iterable(blocks1)),
             map(len, blocks2)
         )
+
+    def orbit_symmetries(self) -> Iterable["Blocks"]:
+        """
+        Permutations inside each block of given sizes
+        
+        """
+        bblocks=list(self.blocks_by_size.blocks) 
+        from sympy.utilities.iterables import multiset_permutations
+        orbit_by_size=(multiset_permutations(bblock) for bblock in bblocks)
+        for p in itertools.product(*orbit_by_size):
+            yield Blocks.from_blocks(sum(p,[]))
     
     @property
     def is_frozen(self) -> bool:
@@ -87,8 +99,15 @@ class Blocks(Generic[T]):
     
     @property
     def blocks(self) -> Iterable[Sequence[T]]:
-        """ The blocks """
+        """ Tuple of  blocks """
         return (self.flatten[a:b] for a, b in itertools.pairwise(self._indexes))
+
+    @property
+    def blocks_by_size(self) -> Iterable[Sequence[T]]:
+        """ Tuple of tuples of (blocks of the same size) """
+        return Blocks(tuple(self.blocks),Dimension(self.sizes).symmetries)
+        #partial_sums=itertools.accumulate((0,)+self._sizes)
+        #return (blocks1[a:b] for a, b in itertools.pairwise(partial_sums))
 
     def __len__(self) -> int:
         """ Number of blocks """

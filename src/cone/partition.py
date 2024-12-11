@@ -67,4 +67,12 @@ class Partition:
         for w in itertools.combinations_with_replacement(reversed(range(lambda_max + 1)), height):
             yield Partition(w, check=False)
 
+    def all_subpartitions(self)-> Iterable["Partition"]:
+      if len(self)==0 : return([[]])
+      Res=[]
+      for x in range(self[0]):
+           dtemp=Partition([min(x+1,y) for y in self._data[1:]])
+           Res+=[[x+1]+l for l in dtemp.all_subpartitions()]
+      return(Res)
+
     

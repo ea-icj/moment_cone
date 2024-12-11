@@ -1,0 +1,9 @@
+d=Dimension([4,4,4])
+
+m=list(find_hyperplanes_reg_mod_sym_dim(d,d.uMAX(d)))
+
+List0_Tau_Reg=[Tau.from_zero_weights(mi,d) for mi in m]
+List1_Tau_Reg=List0_Tau_Reg+[tau.opposite() for tau in List0_Tau_Reg] 
+List1U_Tau_Reg=list(set([tau.sort_mod_sym_dim.end0_representative for tau in List1_Tau_Reg]))
+
+

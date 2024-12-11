@@ -3,6 +3,7 @@ from functools import cached_property
 from .utils import prod
 from .typing import *
 
+
 # Ugly things due to the circular import between
 # Dimension and PolynomialRingForWeight
 # FIXME: should be fixed if we separate Dimension from
@@ -89,3 +90,14 @@ class Dimension(tuple[int, ...]):
             weights=Weight.all(self),
             seed=('vr', 'vi')
         )
+
+    def uMAX(self,e: "Dimension")->int: # Maximal value of u obtained by extending a e-1-PS to a d-1-PS
+        """
+        For a dimension vector d=(d_i), and a list of number of Levi blocks in each d_i,
+        computes the maximal dimension of a nilradical.
+        """
+        from math import floor
+        return(sum([floor(self[i]*self[i]/2*(1-1/e[i])) for i in range(len(self))]))
+        
+        
+

@@ -6,12 +6,14 @@ from .weight import Weight
 from .permutation import Permutation
 from .dimension import Dimension
 from .utils import short_prod
+from .tau import *
+#from sage.all import matrix, ZZ, QQ # type: ignore
 from .rings import matrix, Matrix, ZZ
 
 __all__ = (
-    "find_hyperplanes",
+    "find_hyperplanes_reg",
     "hyperplane_matrix",
-    "find_hyperplanes_mod_sym_dim",
+    "find_hyperplanes_reg_mod_sym_dim",
 )
 
 
@@ -119,14 +121,14 @@ def has_too_much_geq_weights(chi: Weight, u: int) -> bool:
     # FIXME: verify this function, it differ from the original version
     return leq_cnt > u
 
-def find_hyperplanes(d: Dimension, u: int) -> Iterable[list[Weight]]:
+def find_hyperplanes_reg(d: Dimension, u: int) -> Iterable[list[Weight]]:
     """
-    Returns sets of weights, each set generating an hyperplane in X^*(T) likely to be the orthogonal of a dominant character tau, such that there is at most u weights we of V with tau(we)>0
+    Returns sets of weights, each set generating an hyperplane in X^*(T) likely to be the orthogonal of a dominant 1-parameter subgroup tau, such that there is at most u weights we of V with tau(we)>0
 
     Example:
     >>> from cone import *
     >>> d = Dimension((4, 4, 4))
-    >>> hp = list(find_hyperplanes(d, 4**3))
+    >>> hp = list(find_hyperplanes_reg(d, 4**3))
     >>> print("Number of raw hyperplanes:", len(hp))
     Number of raw hyperplanes: 3622
     """
@@ -136,9 +138,9 @@ def find_hyperplanes(d: Dimension, u: int) -> Iterable[list[Weight]]:
             St.negative.append(chi)
         else:
             St.indeterminate.append(chi)
-    return find_hyperplanes_impl(St, d, u)
+    return find_hyperplanes_reg_impl(St, d, u)
 
-def find_hyperplanes_mod_sym_dim(d: Dimension, u: int) -> Iterable[list[Weight]]:
+def find_hyperplanes_reg_mod_sym_dim(d: Dimension, u: int) -> Iterable[list[Weight]]:
     """
     Same as find_hyperplanes, with results up to the action of the symmetries of d.
     
@@ -147,7 +149,7 @@ def find_hyperplanes_mod_sym_dim(d: Dimension, u: int) -> Iterable[list[Weight]]
     Example:
     >>> from cone import *
     >>> d = Dimension((4, 4, 4))
-    >>> hp = list(find_hyperplanes_mod_sym_dim(d, 4**3))
+    >>> hp = list(find_hyperplanes_reg_mod_sym_dim(d, 4**3))
     >>> print("Number of raw hyperplanes:", len(hp))
     Number of raw hyperplanes: 1604
     """
@@ -177,14 +179,14 @@ def find_hyperplanes_mod_sym_dim(d: Dimension, u: int) -> Iterable[list[Weight]]
         sign_assignment(chi, St2.excluded, St2.negative, St2.positive)
 
         # Further exploring the branch
-        yield from find_hyperplanes_impl(St2, d, u)
+        yield from find_hyperplanes_reg_impl(St2, d, u)
 
         # Removing symmetries
         for orbit_chi in chi.orbit_symmetries(d.symmetries):
             St.indeterminate.remove(orbit_chi)
             St.excluded.append(orbit_chi)
 
-def find_hyperplanes_impl(St: WeightSieve, d: Dimension, u: int) -> Iterable[list[Weight]]:
+def find_hyperplanes_reg_impl(St: WeightSieve, d: Dimension, u: int) -> Iterable[list[Weight]]:
     """ Recursive part to find the hyperplane candidates """
     if check_hyperplane_dim(St.zero, d):
         # Candidate hyperplane if the dimension is appropriate
@@ -198,7 +200,7 @@ def find_hyperplanes_impl(St: WeightSieve, d: Dimension, u: int) -> Iterable[lis
 
         # 1. We explore the branch where it is excluded from the possible zero elements
         St.excluded.append(chi)
-        yield from find_hyperplanes_impl(St, d, u)
+        yield from find_hyperplanes_reg_impl(St, d, u)
         St.excluded.pop()
 
         # 2. We explore the branch where it is defined as a zero element (on the hyperplane)
@@ -211,8 +213,10 @@ def find_hyperplanes_impl(St: WeightSieve, d: Dimension, u: int) -> Iterable[lis
 
         # 2.2 Continuing if there are not too much positive elements
         if len(St2.positive) <= u:
-            yield from find_hyperplanes_impl(St2, d, u)
+            yield from find_hyperplanes_reg_impl(St2, d, u)
 
         # Current element back to the indeterminate
         St.indeterminate.append(chi)
+
+
 
