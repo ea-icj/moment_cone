@@ -34,7 +34,20 @@ class Dimension(tuple[int, ...]):
     20
     >>> d.symmetries
     (2, 1, 1)
+
+    It should also be noted that this class ensure uniqueness of an instance
+    for a given sequence of dimensions:
+    >>> d2 = Dimension((4, 4, 3, 2))
+    >>> d is d2
+    True
     """
+    all_instances: dict["Dimension", "Dimension"] = {}
+
+    def __new__(cls, dimensions):
+        """ Construction with reusing of already computed Dimension instance """
+        d = super().__new__(cls, dimensions)
+        return cls.all_instances.setdefault(d, d)
+    
     @cached_property
     def symmetries(self) -> tuple[int, ...]:
         """ Returns length of the symmetries in the dimensions """
