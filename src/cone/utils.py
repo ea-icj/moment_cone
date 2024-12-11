@@ -15,6 +15,7 @@ __all__ = (
     "prod",
     "short_prod",
     "Embeddings_mod_sym",
+    "extend_with_repetitions"
 )
 
 def is_decreasing(l: Iterable[int]) -> bool:
@@ -101,4 +102,14 @@ def Embeddings_mod_sym(d: Sequence[int],e:Sequence[int])-> Iterable[Iterable[int
            Res.append(indices_e) # Une chance sur deux inverser ep et e si nécessaire 
     return(Res)
 
+def extend_with_repetitions(seq:Sequence[T],l:[int])->Sequence[T]:
+    """from a sequence seq of length <=l with no repetition, returns the list of all expanded sequences of length l obtained from seq by repetitions of some elements."""
+    if len(seq)==1 : 
+       return([l*seq])
+    if len(seq)==l : 
+       return([seq])
+    Res=[]
+    for i in range(l-len(seq)+1):
+        Res+=[(i+1)*[seq[0]]+ext for ext in extend_with_repetitions(seq[1:],l-i-1)]
+    return(Res)
 
