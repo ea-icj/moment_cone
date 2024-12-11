@@ -5,6 +5,7 @@ from .weight import Weight
 from .root import Root
 from .hyperplane_candidates import *
 from .rings import matrix, ZZ, QQ
+from .utils import extend_with_repetitions,Embeddings_mod_sym
 
 import itertools
 from functools import cached_property
@@ -122,6 +123,11 @@ class Tau:
     def reduced(self) -> "ReducedTau":
         """ Returns reduced form of tau """
         return ReducedTau(self)
+        
+    def m_extend_with_repetitions(self,d:Dimension)-> Iterable["Tau"]:
+        extend_each_comp=[extend_with_repetitions(x,d[i]) for i,x in enumerate(self._components)]
+        for ext in itertools.product(*extend_each_comp):
+            yield Tau(ext,self.ccomponent)
 
     def __repr__(self) -> str:
         return f"{self.ccomponent} | " + repr(self._components)
@@ -386,27 +392,27 @@ def find_1PS_reg_mod_sym_dim(d:Dimension,u) -> Sequence["Tau"]:
     return([tau for tau in Liste_1PS_sign if tau.is_dom_reg])
 
 def find_1PS_mod_sym_dim(d: Dimension) -> Sequence["Tau"]:
+    """
+    Same as find_1PS_reg_mod_sym_dim without regularity condition
+    Computed by 
+    """
     # Initialisation with regular 1-PS
     Liste_1PS=find_1PS_reg_mod_sym_dim(d,d.uMAX(d))
-    print('For d=',d,'we get',len(Liste_1PS),' candidates regular dominant')
+    print('For d=',d,'we get',len(Liste_1PS),' candidates regular dominant up to symmetry')
     # Looking for 1-PS by extension
     sub_dim=[Dimension(p) for p in Partition(d).all_subpartitions()][1:-1] #[1:-1] excludes 1... 1 and d
     for small_d in sub_dim:  
         umax=uMAX(d,small_d)
         #Recover by induction all candidates 1-PS mod symmetry
         Liste_1PS_smalld_mod_sym= hyperplane_reg_mod_sym_dim(small_d,umax)
-        print('For d=',small_d,'we get',len(Liste_1PS_small_mod_sym),' candidates regular dominant')
+        print('For d=',small_d,'we get',len(Liste_1PS_small_mod_sym),' candidates regular dominant up to symmetry')
+        Liste_1PS_smalld=sum([list(tau.orbit_symmetries()) for tau in Liste_1PS_smalld_mod_sym]  ,[])
         #from now on, the program has to be adapted
-        Liste_1PS_smalld=Action_Sd_Liste_Tau(Liste_1PS_smalld_mod_sym,small_d,sd_small_d)
-        for e in Embeddings(d,small_d) :
+        for permut in Embeddings_mod_sym(d,small_d):
             for tau in Liste_1PS_smalld:
-                tau_twist=[]
-                for i in e[1]:
-                    shift=1+sum(small_d[:i])
-                    tau_twist+=tau[shift:shift+small_d[i]]   
-                #We just applied to tau the permutation applied to small_d
-                list_tau_extended=expand_blocks(values,mult) #ExtendTauGL_power_s(tau_twist,d,e[0])
-                list_tau_extended=[[tau[0]]+l for l in list_tau_extended]
+                tau_twist=Tau([tau0._components[i] for i in permut],tau0.ccomponent)
+                list_tau_extended=tau_twist.m_extend_with_repetitions(d)
+                #list_tau_extended=[[tau[0]]+l for l in list_tau_extended]
                 # Check dimU
                 list_tau_extended_dimU=[]
                 for tau_ext in list_tau_extended:
