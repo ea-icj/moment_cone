@@ -19,6 +19,11 @@ class Root:
         """ Check if this root is in U """
         return self.i < self.j
     
+    @property
+    def opposite(self) -> "Root":
+        """ Return the opposite of a root (k,i,j -> kj,i) """
+        return Root(self.k, self.j, self.i)
+    
     @staticmethod
     def all_of_U(d: Dimension) -> Iterable["Root"]:
         """

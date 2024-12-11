@@ -155,27 +155,22 @@ def dim_of_stabilizer_in_K_tau(tau: Tau, method: Method) -> int:
 
     dim_K_tau = d.sum + 2 * len(roots_K_tau)
     M = matrix(ring, len(weights_K_tau), dim_K_tau)
-    j = 0
 
     # First block
-    for k, dk in enumerate(d):
-        for l in range(dk):
-            root = Root(k, l, l) # FIXME: create a Root.all_diagonal?
-            tv = action_op_el(root, v, d)
-            for i, chi in enumerate(weights_K_tau):
-                M[i, j] = tv[chi.index_in(d)]
-            j += 1
+    for j, root in enumerate(Root.all_of_T(d)):
+        tv = action_op_el(root, v, d)
+        for i, chi in enumerate(weights_K_tau):
+            M[i, j] = tv[chi.index_in(d)]
 
     # Second block
-    for root in roots_K_tau:
+    for j, root in enumerate(roots_K_tau):
         tv_pos = action_op_el(root, v, d)
-        tv_neg = action_op_el(Root(root.k, root.j, root.i), v, d) # FIXME: root.transpose?
+        tv_neg = action_op_el(root.opposite, v, d) # FIXME: root.transpose?
         tv_k1 = tv_pos - tv_neg
         tv_k2 = I * (tv_pos + tv_neg)
         for i, chi in enumerate(weights_K_tau):
-            M[i, j] = tv_k1[chi.index_in(d)]
-            M[i, j + 1] = tv_k2[chi.index_in(d)]
-        j += 2
+            M[i, j + d.sum] = tv_k1[chi.index_in(d)]
+            M[i, j + d.sum + 1] = tv_k2[chi.index_in(d)]
 
     return dim_K_tau - rank_RC(M)
 
