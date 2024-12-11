@@ -30,6 +30,8 @@ class Dimension(tuple[int, ...]):
     13
     >>> d.dimV
     96
+    >>> d.dimU
+    20
     >>> d.symmetries
     (2, 1, 1)
     """
@@ -51,8 +53,8 @@ class Dimension(tuple[int, ...]):
     @cached_property
     def dimU(self) -> int:
         """ Dimension of the unipotent subgroup U """
-        g=sum([i**2 for i in self])
-        return(int((g-len(d))/2))
+        g = sum(i**2 for i in self)
+        return (g - len(self)) // 2
     
     @cached_property
     def Q(self) -> "Ring":
