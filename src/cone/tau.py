@@ -275,7 +275,27 @@ class Tau:
         """
         from .utils import filter_dict_by_key
         return filter_dict_by_key(self.grading_weights, lambda x: x > 0)
-    
+
+    @property
+    def non_positive_weights(self) -> dict[int, list[Weight]]:
+        """
+        Basis of the eigen space for non-positive eigen values for the action of tau on V.
+
+        >>> tau = Tau(((3, 2, 2), (4, 2, 1), (3, 2)), -7)
+        >>> tau
+        -7 | 3 2 2 | 4 2 1 | 3 2
+        >>> gw = tau.non_positive_weights
+        >>> for k in sorted(gw.keys()):
+        ...     print(f"{k}:", gw[k])
+        -2: [Weight((1, 2, 1), idx: 11), Weight((2, 2, 1), idx: 17)]
+        -1: [Weight((0, 2, 1), idx: 5), Weight((1, 1, 1), idx: 9), Weight((1, 2, 0), idx: 10), Weight((2, 1, 1), idx: 15), Weight((2, 2, 0), idx: 16)]
+        0: [Weight((0, 1, 1), idx: 3), Weight((0, 2, 0), idx: 4), Weight((1, 1, 0), idx: 8), Weight((2, 1, 0), idx: 14)]
+
+        """
+        from .utils import filter_dict_by_key
+        return filter_dict_by_key(self.grading_weights, lambda x: x <= 0)
+
+
     @property
     def non_negative_weights(self) -> dict[int, list[Weight]]:
         """
