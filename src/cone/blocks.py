@@ -79,6 +79,7 @@ class Blocks(Generic[T]):
         orbit_by_size=(multiset_permutations(bblock) for bblock in bblocks)
         for p in itertools.product(*orbit_by_size):
             yield Blocks.from_blocks(sum(p,[]))
+
     
     @property
     def is_frozen(self) -> bool:
