@@ -120,7 +120,7 @@ class Blocks(Generic[T]):
     def __getitem__(self, idx: int | slice | tuple[int, int]) -> Sequence[T] | Iterable[Sequence[T]] | T:
         """ Get a block or an element """
         # Get a block by index
-        if isinstance(idx, int):
+        if not isinstance(idx, (slice, tuple)): # To take into account integral types that are not int (like Integer from Sage)
             if not 0 <= idx < len(self):
                 raise IndexError("block index out of range")
             a, b = self._indexes[idx], self._indexes[idx + 1]
@@ -160,7 +160,7 @@ class Blocks(Generic[T]):
         assert isinstance(self.flatten, MutableSequence), "this Blocks is frozen"
 
         # Modify a block
-        if isinstance(idx, int):
+        if not isinstance(idx, (slice, tuple)): # To take into account integral types that are not int (like Integer from Sage)
             assert isinstance(value, Sequence)
             if not 0 <= idx < len(self):
                 raise IndexError("block index out of range")
