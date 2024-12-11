@@ -45,8 +45,14 @@ class Dimension(tuple[int, ...]):
 
     @cached_property
     def dimV(self) -> int:
-        """ Dimension of the vectorial space V """
+        """ Dimension of the vector space V """
         return prod(self)
+
+    @cached_property
+    def dimU(self) -> int:
+        """ Dimension of the unipotent subgroup U """
+        g=sum([i**2 for i in self])
+        return(int((g-len(d))/2))
     
     @cached_property
     def Q(self) -> "Ring":
