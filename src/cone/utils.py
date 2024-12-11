@@ -15,7 +15,8 @@ __all__ = (
     "prod",
     "short_prod",
     "Embeddings_mod_sym",
-    "extend_with_repetitions"
+    "extend_with_repetitions",
+    "flatten_dictionary",
 )
 
 def is_decreasing(l: Iterable[int]) -> bool:
@@ -113,8 +114,8 @@ def extend_with_repetitions(seq:Sequence[T],l:[int])->Sequence[T]:
         Res+=[(i+1)*[seq[0]]+ext for ext in extend_with_repetitions(seq[1:],l-i-1)]
     return(Res)
     
-def flatten_dictionary(dic: Dict[U, List[T]])->List[T]:
-   """dic is a dictionary where the value stored in each entry is a list.
+def flatten_dictionary(dic)->Sequence[T]:
+   """dic is a dictionary Dict[U, List[T]] where the value stored in each entry is a list.
    returns the concatened list.
    """
    Res=[]

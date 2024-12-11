@@ -1,11 +1,12 @@
 from .typing import *
 from .dimension import Dimension
+from .partition import *
 from .blocks import Blocks
 from .weight import Weight
 from .root import Root
 from .hyperplane_candidates import *
 from .rings import matrix, ZZ, QQ
-from .utils import extend_with_repetitions,Embeddings_mod_sym
+from .utils import extend_with_repetitions,Embeddings_mod_sym,flatten_dictionary
 
 import itertools
 from functools import cached_property
@@ -125,6 +126,24 @@ class Tau:
         return ReducedTau(self)
         
     def m_extend_with_repetitions(self,d:Dimension)-> Iterable["Tau"]:
+        """
+        Extends self in all possible manners to a Tau of dimension d
+                
+        Example:
+        >>>tau=Tau([[5,4,0],[4,3,0],[4,2,0]],-1)
+        >>>tau
+        -1 | 5 4 0 | 4 3 0 | 4 2 0
+        >>>list(tau.m_extend_with_repetitions(Dimension([4,4,3])))
+        [-1 | 5 4 0 0 | 4 3 0 0 | 4 2 0,
+         -1 | 5 4 0 0 | 4 3 3 0 | 4 2 0,
+         -1 | 5 4 0 0 | 4 4 3 0 | 4 2 0,
+         -1 | 5 4 4 0 | 4 3 0 0 | 4 2 0,
+         -1 | 5 4 4 0 | 4 3 3 0 | 4 2 0,
+         -1 | 5 4 4 0 | 4 4 3 0 | 4 2 0,
+         -1 | 5 5 4 0 | 4 3 0 0 | 4 2 0,
+         -1 | 5 5 4 0 | 4 3 3 0 | 4 2 0,
+         -1 | 5 5 4 0 | 4 4 3 0 | 4 2 0]
+        """
         extend_each_comp=[extend_with_repetitions(x,d[i]) for i,x in enumerate(self._components)]
         for ext in itertools.product(*extend_each_comp):
             yield Tau(ext,self.ccomponent)
@@ -389,7 +408,7 @@ def find_1PS_reg_mod_sym_dim(d:Dimension,u) -> Sequence["Tau"]:
     Liste_hr=find_hyperplanes_reg_mod_sym_dim(d,u)
     Liste_1PS=list(set([Tau.from_zero_weights(h,d).end0_representative.sort_mod_sym_dim for h in Liste_hr]))
     Liste_1PS_sign=Liste_1PS+[tau.opposite() for tau in Liste_1PS]
-    return([tau for tau in Liste_1PS_sign if tau.is_dom_reg])
+    return [tau for tau in Liste_1PS_sign if tau.is_dom_reg]
 
 def find_1PS_mod_sym_dim(d: Dimension) -> Sequence["Tau"]:
     """
@@ -402,21 +421,20 @@ def find_1PS_mod_sym_dim(d: Dimension) -> Sequence["Tau"]:
     # Looking for 1-PS by extension
     sub_dim=[Dimension(p) for p in Partition(d).all_subpartitions()][1:-1] #[1:-1] excludes 1... 1 and d
     for small_d in sub_dim:  
-        umax=uMAX(d,small_d)
+        umax=d.uMAX(small_d)
         #Recover by induction all candidates 1-PS mod symmetry
-        Liste_1PS_smalld_mod_sym= hyperplane_reg_mod_sym_dim(small_d,umax)
-        print('For d=',small_d,'we get',len(Liste_1PS_small_mod_sym),' candidates regular dominant up to symmetry')
+        Liste_1PS_smalld_mod_sym= find_1PS_reg_mod_sym_dim(small_d,umax)
+        print('For d=',small_d,'we get',len(Liste_1PS_smalld_mod_sym),' candidates regular dominant up to symmetry')
         Liste_1PS_smalld=sum([list(tau.orbit_symmetries()) for tau in Liste_1PS_smalld_mod_sym]  ,[])
-        #from now on, the program has to be adapted
         for permut in Embeddings_mod_sym(d,small_d):
             for tau in Liste_1PS_smalld:
-                tau_twist=Tau([tau0._components[i] for i in permut],tau0.ccomponent)
+                tau_twist=Tau([tau._components[i] for i in permut],tau.ccomponent)
                 list_tau_extended=tau_twist.m_extend_with_repetitions(d)
-                #list_tau_extended=[[tau[0]]+l for l in list_tau_extended]
-                # Check dimU
                 list_tau_extended_dimU=[]
                 for tau_ext in list_tau_extended:
-                    if Istaunlequ(tau_ext,d,dimU_GL_power_s(tau_ext,d),Poids):
+                    if len(flatten_dictionary(tau_ext.positive_weights))<=tau_ext.dim_Pu:
                         list_tau_extended_dimU.append(tau_ext)
-                Liste+=list_tau_extended_dimU
-    return(Liste)
+                Liste_1PS+=list_tau_extended_dimU
+    return list(set([tau.sort_mod_sym_dim for tau in Liste_1PS]))
+
+#    return list(set(Liste_1PS))
