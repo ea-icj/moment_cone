@@ -13,6 +13,8 @@ tpi_method='symbolic'
 ####
 
 
+
+
 ## Checking if the cone has the expected dimension
 
 tau_triv=Tau.from_flatten((d0.sum+1)*[0],d0) #The trivial one parameter subgroup
@@ -33,7 +35,7 @@ Candidates_for_tau=find_1PS_mod_sym_dim(d0)
 
 
 
-Candidates_for_tau1=[tau for tau in Candidates_for_tau if Check_sub_module(tau)]
+Candidates_for_tau1=[tau for tau in Candidates_for_tau if tau.Check_sub_module()]
 
 # Filter 2: stabilizer condition
 

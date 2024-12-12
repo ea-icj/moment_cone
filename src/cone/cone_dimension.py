@@ -161,7 +161,7 @@ def dim_of_stabilizer_in_K_tau(tau: Tau, method: Method) -> int:
         tv = action_op_el(root, v, d)
         for i, chi in enumerate(weights_K_tau):
             M[i, j] = tv[chi.index_in(d)]
-
+    
     # Second block
     for j, root in enumerate(roots_K_tau):
         tv_pos = action_op_el(root, v, d)
@@ -169,9 +169,8 @@ def dim_of_stabilizer_in_K_tau(tau: Tau, method: Method) -> int:
         tv_k1 = tv_pos - tv_neg
         tv_k2 = I * (tv_pos + tv_neg)
         for i, chi in enumerate(weights_K_tau):
-            M[i, j + d.sum] = tv_k1[chi.index_in(d)]
-            M[i, j + d.sum + 1] = tv_k2[chi.index_in(d)]
-
+            M[i, 2*j + d.sum] = tv_k1[chi.index_in(d)]
+            M[i, 2*j + d.sum + 1] = tv_k2[chi.index_in(d)]
     return dim_K_tau - rank_RC(M)
 
     
