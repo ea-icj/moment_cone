@@ -182,6 +182,9 @@ def find_hyperplanes_reg_mod_sym_dim(d: Dimension, u: int) -> Iterable[list[Weig
         yield from find_hyperplanes_reg_impl(St2, d, u)
 
         # Removing symmetries
+        print(chi)
+        print(d.symmetries)
+        print(list(chi.orbit_symmetries(d.symmetries)))
         for orbit_chi in chi.orbit_symmetries(d.symmetries):
             St.indeterminate.remove(orbit_chi)
             St.excluded.append(orbit_chi)

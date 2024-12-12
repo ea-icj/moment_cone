@@ -20,7 +20,8 @@ TODO:
 __all__ = (
     "Tau",
     "ReducedTau",
-    "simplify_list_of_tau_end0",
+    "unique_modulo_symmetry_list_of_tau",
+    "full_under_symmetry_list_of_tau",
     "find_1PS_reg_mod_sym_dim",
     "find_1PS_mod_sym_dim",
 )

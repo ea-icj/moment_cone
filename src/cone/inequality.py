@@ -9,6 +9,7 @@ import itertools
 
 __all__ = (
     "Inequality",
+    "unique_modulo_symmetry_list_of_ineq",
 )
 
 class Inequality:
@@ -86,5 +87,8 @@ class Inequality:
         for k, p in enumerate(self.w):
             for i, j in p.inversions:
                 yield Root(k, i, j)
+
+def unique_modulo_symmetry_list_of_ineq(seq_ineq:Sequence["Inequality"]) -> Sequence["Inequality"]:
+    return list(set([ineq.sort_mod_dim for ineq in seq_ineq]))
 
 
