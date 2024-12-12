@@ -17,6 +17,10 @@ __all__ = (
     "Embeddings_mod_sym",
     "extend_with_repetitions",
     "flatten_dictionary",
+    "grading_dictionary",
+    "ListW_subMod",
+    "Are_Isom_Mod",
+    "Is_Sub_Mod",
 )
 
 def is_decreasing(l: Iterable[int]) -> bool:
@@ -167,4 +171,40 @@ def flatten_dictionary(dic)->Sequence[T]:
    for x in dic.keys():
       Res+=dic[x]
    return Res
+   
+def Is_Sub_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> bool:
+    for p in M1.keys():
+        if p not in M2.keys() or M1[p]>M2[p] :
+            return(False)
+    return(True)
+
+def Are_Isom_Mod(M1 : dict[int, int], M2 : dict[int, int])->bool:
+    # Keys unique
+    keys_M1 = set(M1.keys())
+    keys_M2 = set(M2.keys())
+    
+    # Check equality of keys
+    if keys_M1 != keys_M2:
+        return False
+    
+    # check values
+    for key in keys_M1:
+        if M1[key] != M2[key]: 
+            return False   
+    return True
+
+def ListW_subMod(tau : "Tau",pos : int,C_mod : dict[int, int]) -> list["Permutation"]:
+    "List of permutations w such that tau.Scalar(Inv(w) in position pos) is a submodule of C_mod."
+    D=sum(C_mod.values())
+    e=tau.d[pos]
+    ap = AllPermutationsByLength(e)
+    res=[]
+    for l in range(D+1):
+      for w in ap[l]:
+        print(w.inversions)
+        List_Inv=[[pos]+inv for inv in w.inversions]
+        M=grading_dictionary(List_Inv, self.dot_root)
+        if Is_Sub_Mod(M,C_mod):
+            res.append(w)
+    return(res)        
 
