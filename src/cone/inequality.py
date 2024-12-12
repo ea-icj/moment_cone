@@ -4,6 +4,7 @@ from .permutation import Permutation
 from .blocks import Blocks
 from .root import Root
 
+
 from functools import cached_property
 import itertools
 
@@ -89,6 +90,6 @@ class Inequality:
                 yield Root(k, i, j)
 
 def unique_modulo_symmetry_list_of_ineq(seq_ineq:Sequence["Inequality"]) -> Sequence["Inequality"]:
-    return list(set([ineq.sort_mod_dim for ineq in seq_ineq]))
+    return list(set([ineq.sort_mod_sym_dim for ineq in seq_ineq]))
 
 

@@ -7,14 +7,14 @@ from src.cone.inequality import *
 
 
 
-
 ####
 d0=Dimension([4,4,4])
 #stabilizer_method='symbolic'
 stabilizer_method='probabilistic'
 tpi_method='symbolic'
+ram_schub_method='probabilistic'
+ram0_method='probabilistic'
 ####
-
 
 
 
@@ -33,17 +33,17 @@ else:
 #Candidates_for_tau=find_hyperplanes_mod_sym_dim(d0,d0.dimU) # This is the function for regular ops (todo : include this info in the name) - To be changed.
 print('Step 1, looking for a first list of dominant 1-PS whose kernel is supported at hyperplanes of weights.')
 Candidates_for_tau=find_1PS_mod_sym_dim(d0)   
-print(len(Candidates_for_tau), ' 1-PS selected in Step 1')
+print(len(Candidates_for_tau), ' dominant 1-PS selected in Step 1')
 # Filter 1: submodule condition
 
 print('Step 2, Checking submodule condition')
 Candidates_for_tau1=[tau for tau in Candidates_for_tau if tau.Check_sub_module()]
-print(len(Candidates_for_tau1), ' 1-PS selected in Step 2')
+print(len(Candidates_for_tau1), ' dominant 1-PS selected in Step 2')
 
 # Filter 2: stabilizer condition
 print('Step 3, Stabilizer condition')
 Candidates_for_tau2=[tau for tau in Candidates_for_tau1 if dim_of_stabilizer_in_K_tau(tau,stabilizer_method)==len(d0)]
-print(len(Candidates_for_tau2), ' 1-PS selected in Step 3')
+print(len(Candidates_for_tau2), ' dominant 1-PS selected in Step 3')
 
 ## Generate the list of candidates for the inequalites (pairs tau,w)
 ## Here w has to belong to P^tau and U(w) is tau-isomorphic to V(tau>0)
@@ -52,15 +52,21 @@ Candidates_for_Ineq=[]
 for tau in Candidates_for_tau2 :
     Lw=ListWs_Mod(tau)
     Candidates_for_Ineq+=[Inequality(tau,w) for w in Lw] # Fait-on un dictionnaire tau : Lw ??
-print(len(Candidates_for_Ineq), ' 1-PS selected in Step 4')
+print(len(Candidates_for_Ineq), ' inequalities selected in Step 4')
 
 # Filter 0: Unicity modulo sym(d)
 print('Step 5, Reduction modulo symmetries of the dimension vector')
 Candidates_for_Ineq1=unique_modulo_symmetry_list_of_ineq(Candidates_for_Ineq)
-print(len(Candidates_for_Ineq1), ' 1-PS selected in Step 5')
+print(len(Candidates_for_Ineq1), ' inequalities selected in Step 5')
 
 # Filter 1: pi is dominant
-print('Step 5, checking dominance of map pi')
+print('Step 6, checking dominance of map pi')
 Dominant_Ineq=[ineq for ineq in Candidates_for_Ineq1 if Check_Rank_Tpi(ineq,tpi_method)] 
-print(len(Dominant_Ineq), ' 1-PS selected in Step 6')
+print(len(Dominant_Ineq), ' inequalities selected in Step 6')
+
+# Filter 2: pi is dominant
+print('Step 7, checking dominance of map pi (again)')
+Birational_Ineq=[ineq for ineq in Dominant_Ineq if Is_Ram_contracted(ineq,ram_schub_method,ram0_method)]
+print(len(Birational_Ineq), ' inequalities selected in Step 7')
+
 
