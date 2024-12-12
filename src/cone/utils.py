@@ -18,11 +18,10 @@ __all__ = (
     "extend_with_repetitions",
     "flatten_dictionary",
     "grading_dictionary",
-    "ListW_subMod",
     "Are_Isom_Mod",
     "Is_Sub_Mod",
     "quotient_C_Mod",
-    "ListW_Mod",
+    "dictionary_list_lengths",
     
 )
 
@@ -175,6 +174,10 @@ def flatten_dictionary(dic)->Sequence[T]:
       Res+=dic[x]
    return Res
    
+def dictionary_list_lengths(D):
+    # Create a new dictionary with the same keys and the lengths of the lists as values
+    return {key: len(value) for key, value in D.items()}
+   
 def Is_Sub_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> bool:
     for p in M1.keys():
         if p not in M2.keys() or M1[p]>M2[p] :
@@ -196,20 +199,7 @@ def Are_Isom_Mod(M1 : dict[int, int], M2 : dict[int, int])->bool:
             return False   
     return True
 
-def ListW_subMod(tau : "Tau",pos : int,C_mod : dict[int, int]) -> list["Permutation"]:
-    "List of permutations w such that tau.Scalar(Inv(w) in position pos) is a submodule of C_mod."
-    D=sum(C_mod.values())
-    e=tau.d[pos]
-    ap = AllPermutationsByLength(e)
-    res=[]
-    for l in range(D+1):
-      for w in ap[l]:
-        print(w.inversions)
-        List_Inv=[[pos]+inv for inv in w.inversions]
-        M=grading_dictionary(List_Inv, self.dot_root)
-        if Is_Sub_Mod(M,C_mod):
-            res.append(w)
-    return(res)
+
     
 def quotient_C_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> dict[int]:
     M = {}
@@ -220,17 +210,7 @@ def quotient_C_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> dict[int]:
         if difference != 0:
             M[p] = difference
     return M
-    
-def ListW_Mod(tau : "Tau",pos : int,C_mod : dict[int, int]) -> list["Permutation"]:
-    "List of permutations w such that tau.Scalar(Inv(w) in position pos) is isomorphic to C_mod."
-    D=sum(C_mod.values())
-    e=tau.d[pos]
-    ap = AllPermutationsByLength(e)
-    res=[]
-    for w in ap[D]:
-        List_Inv=[[pos]+inv for inv in w.inversions]
-        Mw=grading_dictionary(List_Inv, self.dot_root)
-        if Are_Isom_Mod(Mw,C_mod):
-            res.append(w)
-    return(res)     
+
+
+  
 
