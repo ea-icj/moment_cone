@@ -147,14 +147,15 @@ def Embeddings_mod_sym(d: Sequence[int],e:Sequence[int])-> Iterable[Iterable[int
            Res.append(indices_e) # Une chance sur deux inverser ep et e si nécessaire 
     return(Res)
 
-def extend_with_repetitions(seq:Sequence[T],l:[int])->Sequence[T]:
+def extend_with_repetitions(seq: Sequence[T], l: int) -> list[T]:
     """from a sequence seq of length <=l with no repetition, returns the list of all expanded sequences of length l obtained from seq by repetitions of some elements."""
     if len(seq)==1 : 
-       return([l*[seq[0]]])
+       return l * [seq[0]]
     if len(seq)==l : 
-       return([list(seq)])
+       return list(seq)
     Res=[]
     for i in range(l-len(seq)+1):
+        # FIXME: ya un bug là, non ?
         Res+=[(i+1)*[seq[0]]+ext for ext in extend_with_repetitions(seq[1:],l-i-1)]
     return(Res)
     
