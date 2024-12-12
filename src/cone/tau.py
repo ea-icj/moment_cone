@@ -6,7 +6,7 @@ from .weight import Weight
 from .root import Root
 from .hyperplane_candidates import *
 from .rings import matrix, ZZ, QQ
-from .utils import extend_with_repetitions,Embeddings_mod_sym,flatten_dictionary
+from .utils import extend_with_repetitions,Embeddings_mod_sym,flatten_dictionary, grading_dictionary
 
 import itertools
 from functools import cached_property
@@ -410,6 +410,18 @@ class Tau:
         for sym_comp in self._components.orbit_symmetries():
            yield Tau(sym_comp,self.ccomponent)
 
+    def Check_sub_module(self) -> bool : # 
+        "Check if V^{\tau>0} is a C^*-submodule of U"
+        # Create the dictionnary for V^{\tau>0}
+        gw = self.positive_weights 
+        # Create the dictionnary for U
+        gr=grading_dictionary(Root.all_of_U(self.d),self.dot_root)
+        #Compare them
+        for p in gw.keys():
+            if p not in gr.keys() or len(gr[p])<len(gw[p]) :
+                return(False)           
+        return(True)
+
     @cached_property
     def dim_Pu(self) -> int:
         """
@@ -535,5 +547,7 @@ def find_1PS_mod_sym_dim(d: Dimension) -> Sequence["Tau"]:
                         list_tau_extended_dimU.append(tau_ext)
                 Liste_1PS+=list_tau_extended_dimU
     return list(set([tau.sort_mod_sym_dim for tau in Liste_1PS]))
+
+
 
 #    return list(set(Liste_1PS))
