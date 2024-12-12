@@ -54,4 +54,50 @@ def is_not_contracted(inverse_v: Sequence[Root], tau: Tau, method: Method) -> bo
     rank_T = T.change_ring(ring.fraction_field()).rank()
     return rank_T == len(inverse_v)
 
+def Compute_JA(ineq : Inequality) : # Return a dictionnary polynom :  int
+    tau=ineq.tau
+    d = tau.d
+    ring = d.QV
+    # a generic vector in VV^tau
+    zero_weights = tau.orthogonal_weights
+    v = point_vect(zero_weights, d, ring, bounds=(-100, 100)) # bounds unuseful here
+    # inversions of w
+    Inv_w=ineq.inversions
+    #gr = grading_dictionary(ineq.inversions, tau.dot_root)
+    gr = tau.grading_roots_in(ineq.inversions)
+    for x in sorted(gr.keys(),reverse=True): # Choose a diagonal block of Tpi that is a weight of tau        
+        M=matrix(ring,len(gr[x]))
+        for col,root in enumerate(gr[x]): # List of roots such that tau.scalar(root)=x
+	        uv=action_op_el(root, v, d)
+            for row, chi in enumerate(gw[x]): # List of weights such that tau.scalar(chi)=x 
+	       	    M[row,col]=uv[chi.index_ind(d)]
+        Jb=M.det().factor()   
+        for F in Jb.keys(): # We could make a function add_dictionaries
+            if F in J.keys():
+                J[F]+=Jb[F]
+            else:
+                J[F]=Jb[F]
+    return(J)
+
+def Smith_n_1(A):
+    "Compute the gcd of the minors of A of size n-1"
+    combinaisons = list(combinations(range(A.nrows()),A.nrows()-1))
+    pgcd = 0
+    
+    # Run over the n-1 x n-1 minors
+    for lignes in combinaisons:
+        for colonnes in combinaisons:
+            # Extract submatrices
+            sous_matrice = A.matrix_from_rows_and_columns(lignes, colonnes)
+            
+            # Det            
+            det = sous_matrice.det()
+            
+            # Upgrade GCD
+            pgcd = gcd(pgcd, det)
+            
+            #If the gcd is 1 stop
+            if pgcd == 1:
+                return pgcd    
+    return pgcd
 
