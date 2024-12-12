@@ -20,6 +20,7 @@ TODO:
 __all__ = (
     "Tau",
     "ReducedTau",
+    "simplify_list_of_tau_end0",
     "find_1PS_reg_mod_sym_dim",
     "find_1PS_mod_sym_dim",
 )
@@ -510,6 +511,9 @@ class ReducedTau:
         for weight in Weight.all(self.small_d):
             if as_tau.dot_weight(weight) == 0:
                 yield weight
+
+def simplify_list_of_tau_end0(seq_tau:Sequence["Tau"]) -> Sequence["Tau"]:
+    return list(set([tau.end0_representative.sort_mod_sym_dim for tau in seq_tau]))
 
 def find_1PS_reg_mod_sym_dim(d:Dimension,u) -> Sequence["Tau"]:
     """

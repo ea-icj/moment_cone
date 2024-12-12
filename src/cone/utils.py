@@ -21,6 +21,9 @@ __all__ = (
     "ListW_subMod",
     "Are_Isom_Mod",
     "Is_Sub_Mod",
+    "quotient_C_Mod",
+    "ListW_Mod",
+    
 )
 
 def is_decreasing(l: Iterable[int]) -> bool:
@@ -206,5 +209,28 @@ def ListW_subMod(tau : "Tau",pos : int,C_mod : dict[int, int]) -> list["Permutat
         M=grading_dictionary(List_Inv, self.dot_root)
         if Is_Sub_Mod(M,C_mod):
             res.append(w)
-    return(res)        
+    return(res)
+    
+def quotient_C_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> dict[int]:
+    M = {}
+    for p in M1.keys():
+        # Valeur par défaut pour M2[p] : 0
+        difference = M1[p] - M2.get(p, 0)
+        # Ajouter à M uniquement si la différence est non nulle
+        if difference != 0:
+            M[p] = difference
+    return M
+    
+def ListW_Mod(tau : "Tau",pos : int,C_mod : dict[int, int]) -> list["Permutation"]:
+    "List of permutations w such that tau.Scalar(Inv(w) in position pos) is isomorphic to C_mod."
+    D=sum(C_mod.values())
+    e=tau.d[pos]
+    ap = AllPermutationsByLength(e)
+    res=[]
+    for w in ap[D]:
+        List_Inv=[[pos]+inv for inv in w.inversions]
+        Mw=grading_dictionary(List_Inv, self.dot_root)
+        if Are_Isom_Mod(Mw,C_mod):
+            res.append(w)
+    return(res)     
 

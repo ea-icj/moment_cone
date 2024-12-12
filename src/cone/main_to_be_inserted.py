@@ -2,6 +2,8 @@ from src.cone.typing import *
 from src.cone.dimension import *
 from src.cone.cone_dimension import *
 from src.cone.hyperplane_candidates import *
+from src.cone.listW_temp import *
+from src.cone.inequality import *
 
 
 
@@ -46,7 +48,7 @@ Candidates_for_tau2=[tau for tau in Candidates_for_tau1 if dim_of_stabilizer_in_
 
 Candidates_for_Ineq=[]
 for tau in Candidates_for_tau2 :
-    Lw=Candidates_for_tau2(tau)
+    Lw=ListWs_Mod(tau)
     Candidates_for_Ineq+=[Inequality(tau,w) for w in Lw] # Fait-on un dictionnaire tau : Lw ??
 
 # Filter 0: Unicity modulo sym(d)
@@ -54,3 +56,5 @@ for tau in Candidates_for_tau2 :
 # Filter 1: pi is dominant
 
 Dominant_Ineq=[ineq for ineq in Candidates_for_Ineq if Check_Rank_Tpi(ineq,tpi_method)] 
+
+

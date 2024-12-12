@@ -1,27 +1,5 @@
-
-
-def quotient_C_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> dict[int]:
-    M = {}
-    for p in M1.keys():
-        # Valeur par défaut pour M2[p] : 0
-        difference = M1[p] - M2.get(p, 0)
-        # Ajouter à M uniquement si la différence est non nulle
-        if difference != 0:
-            M[p] = difference
-    return M
-    
-def ListW_Mod(tau : "Tau",pos : int,C_mod : dict[int, int]) -> list["Permutation"]:
-    "List of permutations w such that tau.Scalar(Inv(w) in position pos) is isomorphic to C_mod."
-    D=sum(C_mod.values())
-    e=tau.d[pos]
-    ap = AllPermutationsByLength(e)
-    res=[]
-    for w in ap[D]:
-        List_Inv=[[pos]+inv for inv in w.inversions]
-        Mw=grading_dictionary(List_Inv, self.dot_root)
-        if Are_Isom_Mod(Mw,C_mod):
-            res.append(w)
-    return(res)
+from utils import *
+from permutation import *
 
 
 
@@ -45,3 +23,30 @@ def ListWs_Mod(tau : "Tau") ->  list["Permutation"]:
     for x in Poids_positive.keys():
         C_mod[x]=len(Poids_positive[x])
     return(ListWs_Mod_rec(tau,0,C_mod))
+
+def Check_Rank_Tpi(ineq : "Inequality", method: "Method") -> bool :
+    tau=ineq.tau
+    d = tau.d # FIXME: Here, d is recreated from scratch, without rings. Should we ensure the uniqueness of the instance of d?
+
+    # Ring depending on the computational method
+    if method == "probabilistic":
+        ring = d.QI
+    elif method == "symbolic":
+        ring = d.QV
+    else:
+        raise ValueError(f"Invalid value {method} of the computation method")
+    zero_weights = tau.orthogonal_weights
+    v = point_vect(zero_weights, d, ring, bounds=(-100, 100))
+    gw = tau.grading_weights
+    gr = tau.grading_roots(ineq.inversions) # A vérifier
+    for x in sorted(gr.keys(),reverse=True): # Run over the possible values of tau.scalar(root) for root inversion of w
+        M=matrix(ring,len(gr[x]))
+        for col,root in enumerate(gr[x]): # List of roots such that tau.scalar(root)=x
+               uv=action_op_el(root, v, d)
+               for row, chi in enumerate(gw[x]): # List of weights such that tau.scalar(chi)=x 
+                   M[row,col]=uv[chi.index_ind(d)]
+        rank_M = M.change_ring(ring.fraction_field()).rank()
+        if rank_M<M.nrows():
+               return(False)
+    return(True)	       
+      
