@@ -157,11 +157,11 @@ def Is_Ram_contracted_v2(ineq : Inequality, method_S: Method, method_R0: Method)
     # Creation of sorted lists of weights
     Neg0_Weights_dic=tau.non_positive_weights
     Neg0_Weights_sorted=[]
-    for x in sorted(Neg0_Weights_dic.keys(),reverse=True)
+    for x in sorted(Neg0_Weights_dic.keys(),reverse=True):
         Neg0_Weights_sorted+=Neg0_Weights_dic[x]
     Pos_Weights_dic=tau.positive_weights
     Pos_Weights_sorted=[]
-    for x in sorted(Pos_Weights_dic.keys(),reverse=True)
+    for x in sorted(Pos_Weights_dic.keys(),reverse=True):
         Pos_Weights_sorted+=Pos_Weights_dic[x]
     if dU==0 : # Trivial case. Can we replace by <=1
         return(True)

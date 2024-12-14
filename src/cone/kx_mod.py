@@ -1,3 +1,5 @@
+from .rings import Matrix, vector, Polynomial
+
 def Bezout_Inverse(LP):
     " LP is a list of polynomial pairwise coprime. Return a list of polynomial M_i such that Bezout inverse is sum(M_i*B_i)"
     res=[]
@@ -7,7 +9,7 @@ def Bezout_Inverse(LP):
         res.append(A*Q)
     return(res)
 
-def Kernel_modulo_P(ring,M : matrix,LP,LIB,d)->polynomial: # LP and LIB (list inverse Bezou) list of polynomials
+def Kernel_modulo_P(ring,M : Matrix,LP,LIB,d)->Polynomial: # LP and LIB (list inverse Bezou) list of polynomials
     """M is a square matrix with entries in K[X]. We know the its Kernel in K[X]/prod(LP) is a submodule of rank 1 of (K[X]/prod(LP))^n. 
        The function returns a generator of this kernel by using the Chinese Theorem."""
     
