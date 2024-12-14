@@ -112,13 +112,28 @@ class Dimension(tuple[int, ...]):
             seed=('vr', 'vi')
         )
 
-    def uMAX(self,e: "Dimension")->int: # Maximal value of u obtained by extending a e-1-PS to a d-1-PS
+    def u_max(self, e: "Dimension") -> int:
         """
+        Maximal value of u obtained by extending a e-1-PS to a d-1-PS
+
         For a dimension vector d=(d_i), and a list of number of Levi blocks in each d_i,
         computes the maximal dimension of a nilradical.
+
+        Examples:
+        >>> d1 = Dimension((2, 3, 4))
+        >>> d1.u_max(d1)
+        10
+        >>> d2 = Dimension((3, 5, 2))
+        >>> d2.u_max(d2)
+        14
+        >>> d1.u_max(d2)
+        8
+        >>> d2.u_max(d1)
+        11
         """
         from math import floor
-        return(sum([floor(self[i]*self[i]/2*(1-1/e[i])) for i in range(len(self))]))
+        return sum(floor(di * di / 2 * (1 - 1 / ei)) for di, ei in zip(self, e))
+        
         
         
 

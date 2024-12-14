@@ -14,7 +14,6 @@ __all__ = (
     "count",
     "prod",
     "short_prod",
-    "Embeddings_mod_sym",
     "extend_with_repetitions",
     "flatten_dictionary",
     "grading_dictionary",
@@ -117,96 +116,127 @@ def filter_dict_by_key(d: dict[T, U], predicate: Callable[[T], bool]) -> dict[T,
     """
     return {k: v for k, v in d.items() if predicate(k)}
 
-    
-
-
-def Embeddings_mod_sym(d: Sequence[int],e:Sequence[int])-> Iterable[Iterable[int]]: # List of permutations of e that are at most d
+def extend_with_repetitions(seq:Sequence[T], l: int) -> Iterable[tuple[T, ...]]:
     """
-    d and e are list of integers the same length  (typically, dimensions), each in decreasing order 
-    returns the list of permutation of e (each encoded by a permutation of the indices) such that the in the i-th component of the permuted e is at most d[i]
-    Outputs are irredundant modulo symmetries of e and d
+    From a sequence seq of length <= l with no repetition, returns the list of all expanded sequences of length l obtained from seq by repetitions of some elements.
+
+    Examples:
+    >>> for l in extend_with_repetitions([1, 2, 3], 5):
+    ...     print(l)
+    (1, 2, 3, 3, 3)
+    (1, 2, 2, 3, 3)
+    (1, 2, 2, 2, 3)
+    (1, 1, 2, 3, 3)
+    (1, 1, 2, 2, 3)
+    (1, 1, 1, 2, 3)
+    >>> for l in extend_with_repetitions([1], 5):
+    ...     print(l)
+    (1, 1, 1, 1, 1)
+    """
+    assert 0 < len(seq) <= l, "Incompatible sequence length and/or target length"
+    if len(seq) == 1: 
+       yield l * (seq[0],)
+    elif len(seq) == l: 
+       yield tuple(seq)
+    else:
+        for i in range(l - len(seq) + 1):
+            for tail in extend_with_repetitions(seq[1:], l - i - 1):
+                yield (i + 1) * (seq[0],) + tail
+    
+def flatten_dictionary(dic: dict[U, Iterable[T]]) -> list[T]:
+    """
+    Returns the concatenation of all list stored as values in a dict.
     
     Example:
-    >>> d = [4, 4, 3, 3, 2]
-    >>> e = [4, 3, 3, 2, 1]
-    >>> emb = Embeddings_mod_sym(d, e)
-    >>> emb
-    [[0, 1, 2, 3, 4], [0, 1, 2, 4, 3], [0, 3, 1, 2, 4], [0, 4, 1, 2, 3]]
-    >>> [e[emb[-1][i]] for i in range(5)]
-    [4, 1, 3, 3, 2]
+    >>> d = {0: [1, 2], 1: [4, 5], 2: [3, 6, 7]}
+    >>> sorted(flatten_dictionary(d))
+    [1, 2, 3, 4, 5, 6, 7]
     """
-    Res=[]
-    eg=list(group_by_block(e))
-    dg=list(group_by_block(d))
-    partial_sum_mult_d=[0]+list(itertools.accumulate([x for _,x in dg]))
-    partial_sum_mult_e=[0]+list(itertools.accumulate([x for _,x in eg]))
-    indices_eg=expand_blocks([i for i,x in enumerate(eg)],[x[1] for i,x in enumerate(eg)]) #same as e, but with repetition of indices, rather than values
-    for ep in multiset_permutations(indices_eg):
-        p_i=cp.copy(partial_sum_mult_e)[:-1]
-        indices_e=[]
-        for i in range(len(e)):
-           indices_e.append(p_i[ep[i]])
-           p_i[ep[i]]+=1
-        #Res.append(indices_e)
-    #return(Res)
-        if all(e[indices_e[i]] <= d[i] for i in range(len(e))) and all(is_increasing(indices_e[a:b]) for a,b in itertools.pairwise(partial_sum_mult_d)):
-           Res.append(indices_e) # Une chance sur deux inverser ep et e si nécessaire 
-    return(Res)
+    # TODO: can we return the iterable directly?
+    return list(itertools.chain.from_iterable(dic.values()))
+   
+def dictionary_list_lengths(dic: dict[U, Sequence[T]]) -> dict[U, int]:
+    """
+    From a dictionary of list, returns the dictionary of the length of each list.
 
-def extend_with_repetitions(seq:Sequence[T], l:int) -> Sequence[Sequence[T]]:
-    """from a sequence seq of length <=l with no repetition, returns the list of all expanded sequences of length l obtained from seq by repetitions of some elements."""
-    if len(seq)==1 : 
-       return [l * [seq[0]]]
-    if len(seq)==l : 
-       return [list(seq)]
-    Res=[]
-    for i in range(l-len(seq)+1):
-        ee=extend_with_repetitions(seq[1:],l-i-1)
-        Res+=[(i+1)*[seq[0]]+ext for ext in extend_with_repetitions(seq[1:],l-i-1)]
-    return(Res)
-    
-def flatten_dictionary(dic)->Sequence[T]:
-   """dic is a dictionary Dict[U, List[T]] where the value stored in each entry is a list.
-   returns the concatened list.
-   """
-   Res=[]
-   for x in dic.keys():
-      Res+=dic[x]
-   return Res
+    Example:
+    >>> d = {0: [1, 2], 1: [4, 5], 2: [3, 6, 7]}
+    >>> dl = dictionary_list_lengths(d)
+    >>> for k in sorted(dl.keys()):
+    ...     print((k, dl[k]))
+    (0, 2)
+    (1, 2)
+    (2, 3)
+    """
+    return {key: len(value) for key, value in dic.items()}
    
-def dictionary_list_lengths(D):
-    # Create a new dictionary with the same keys and the lengths of the lists as values
-    return {key: len(value) for key, value in D.items()}
-   
-def Is_Sub_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> bool:
+def Is_Sub_Mod(M1: dict[int, int], M2: dict[int, int]) -> bool:
+    """
+    Kind of order on dictionary of int -> int.
+
+    Examples:
+    >>> d1 = {0: 0, 1: 1, 2: 2}
+    >>> d2 = {0: 0, 2: 2}
+    >>> Is_Sub_Mod(d1, d2)
+    False
+    >>> d3 = {0: 0, 1: 1, 2: 1}
+    >>> Is_Sub_Mod(d1, d3)
+    False
+    >>> d4 = {0: 0, 1: 1, 2: 3}
+    >>> Is_Sub_Mod(d1, d4)
+    True
+    """
+    # TODO: lowercase name, move to more specific file?
     for p in M1.keys():
-        if p not in M2.keys() or M1[p]>M2[p] :
-            return(False)
-    return(True)
-
-def Are_Isom_Mod(M1 : dict[int, int], M2 : dict[int, int])->bool:
-    # Keys unique
-    keys_M1 = set(M1.keys())
-    keys_M2 = set(M2.keys())
-    
-    # Check equality of keys
-    if keys_M1 != keys_M2:
-        return False
-    
-    # check values
-    for key in keys_M1:
-        if M1[key] != M2[key]: 
-            return False   
+        if p not in M2.keys() or M1[p] > M2[p] :
+            return False
     return True
 
-
+def Are_Isom_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> bool:
+    """ Comparison of dictionary of int -> int.
     
-def quotient_C_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> dict[int]:
-    M = {}
+    Examples:
+    >>> d1 = {0: 0, 1: 1, 2: 2}
+    >>> d2 = {0: 0, 2: 2}
+    >>> Are_Isom_Mod(d1, d2)
+    False
+    >>> d3 = {0: 0, 1: 1, 2: 1}
+    >>> Are_Isom_Mod(d1, d3)
+    False
+    >>> d4 = {0: 0, 1: 1, 2: 3}
+    >>> Are_Isom_Mod(d1, d4)
+    False
+    >>> d5 = {0: 0, 1: 1, 2: 2}
+    >>> Are_Isom_Mod(d1, d5)
+    True
+    """
+    # TODO: lowercase name, move to more specific file, probably useless since it is simply a comparison
+    return M1 == M2
+    
+def quotient_C_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> dict[int, int]:
+    """ Quotient of two dictionary int -> int.
+
+    Examples:
+    >>> d1 = {0: 0, 1: 1, 2: 2}
+    >>> d2 = {0: 0, 2: 2}
+    >>> quotient_C_Mod(d1, d2)
+    {1: 1}
+    >>> d3 = {0: 0, 1: 1, 2: 1}
+    >>> quotient_C_Mod(d1, d3)
+    {2: 1}
+    >>> d4 = {0: 1, 1: 1, 2: 3}
+    >>> quotient_C_Mod(d1, d4)
+    {0: -1, 2: -1}
+    >>> d5 = {0: 0, 1: 1, 2: 2}
+    >>> quotient_C_Mod(d1, d5)
+    {}
+    """
+    # TODO: lowercase name, move to more specific file?
+    M: dict[int, int] = {}
     for p in M1.keys():
-        # Valeur par défaut pour M2[p] : 0
+        # Default value for M2[p] : 0
         difference = M1[p] - M2.get(p, 0)
-        # Ajouter à M uniquement si la différence est non nulle
+        # Add only non-zero differences
         if difference != 0:
             M[p] = difference
     return M

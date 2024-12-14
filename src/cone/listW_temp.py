@@ -2,6 +2,14 @@ from .utils import *
 from .permutation import *
 from .root import *
 from .cone_dimension import *
+from .rings import matrix
+from .spaces import action_op_el
+
+__all__ = (
+    "ListW_Mod",
+    "ListWs_Mod",
+    "Check_Rank_Tpi",
+)
 
 def ListW_subMod(tau : "Tau",pos : int,C_mod : dict[int, int]) -> list[Permutation]:
     "List of permutations w in W^{P(tau[pos])} such that tau.Scalar(Inv(w) in position pos) is a submodule of C_mod."

@@ -11,6 +11,12 @@ from .rings import PolynomialRingForWeights, Ring, vector, Vector, matrix, Matri
 from .rings import real_part, imag_part
 from .spaces import action_op_el
 
+__all__ = (
+    'point_vect',
+    'rank_RC',
+    'dim_of_stabilizer_in_K_tau',
+)
+
 def point_vect_QI(pds: Iterable[Weight], d: Dimension, ring: Ring, bounds: tuple[int, int] = (-100, 100)) -> Vector:
     """
     Generates a random vector of Vect(pds) over given ring.

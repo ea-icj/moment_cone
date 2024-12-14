@@ -1,6 +1,7 @@
 from .typing import *
-from .utils import count, group_by_block
+from .utils import count, group_by_block, expand_blocks, is_increasing
 from .blocks import Blocks
+from .dimension import Dimension
 
 from functools import cached_property
 import itertools
@@ -110,6 +111,52 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
                 p[i] = j
             p[cycle[-1]] = cycle[0]
         return Permutation(p)
+    
+    @staticmethod
+    def embeddings_mod_sym(d: Dimension, e: Sequence[int])-> Iterable["Permutation"]:
+        """
+        List of permutations of e that are at most d
+
+        d and e are list of integers of the same length  (typically, dimensions), each in decreasing order.
+
+        Returns the list of permutation of e (each encoded by a permutation of the indices) such that the value in the i-th component of the permuted e is at most d[i]
+        Outputs are irredundant modulo symmetries of e and d
+        
+        Example:
+        >>> d = [4, 4, 3, 3, 2]
+        >>> e = [4, 3, 3, 2, 1]
+        >>> emb = list(Permutation.embeddings_mod_sym(d, e))
+        >>> for pe in emb:
+        ...     print(pe)
+        Permutation((0, 1, 2, 3, 4))
+        Permutation((0, 1, 2, 4, 3))
+        Permutation((0, 3, 1, 2, 4))
+        Permutation((0, 4, 1, 2, 3))
+        >>> for pe in emb:
+        ...     print(pe(e))
+        (4, 3, 3, 2, 1)
+        (4, 3, 3, 1, 2)
+        (4, 2, 3, 3, 1)
+        (4, 1, 3, 3, 2)
+        """
+        # TODO: check if group_by_block and expand_blocs can be rewritten in another way
+        from sympy.utilities.iterables import multiset_permutations
+
+        eg = list(group_by_block(e))
+        dg = list(group_by_block(d))
+        partial_sum_mult_d = [0] + list(itertools.accumulate([x for _,x in dg]))
+        partial_sum_mult_e = [0] + list(itertools.accumulate([x for _,x in eg]))
+        indices_eg = expand_blocks([i for i, x in enumerate(eg)], [x[1] for i, x in enumerate(eg)]) # same as e, but with repetition of indices, rather than values
+        for ep in multiset_permutations(indices_eg):
+            p_i = partial_sum_mult_e[:-1]
+
+            indices_e = []
+            for i in range(len(e)):
+                indices_e.append(p_i[ep[i]])
+                p_i[ep[i]] += 1
+
+            if all(e[indices_e[i]] <= d[i] for i in range(len(e))) and all(is_increasing(indices_e[a:b]) for a,b in itertools.pairwise(partial_sum_mult_d)):
+                yield Permutation(indices_e)
     
     def transpose(self, i: int, j: int) -> "Permutation":
         """
