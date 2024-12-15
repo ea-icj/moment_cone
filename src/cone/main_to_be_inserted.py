@@ -59,21 +59,6 @@ print(len(Candidates_for_Ineq), ' inequalities selected in Step 4')
 print('Step 5, Reduction modulo symmetries of the dimension vector')
 Candidates_for_Ineq1=unique_modulo_symmetry_list_of_ineq(Candidates_for_Ineq)
 print(len(Candidates_for_Ineq1), ' inequalities selected in Step 5')
-#FIXME problem for filtering:
-"""
-sage: Candidates_for_Ineq1[534]
-Inequality(tau  = -4 | 2 1 1 0 | 2 1 1 0 | 2 1 1 0,
-           w    =     0 1 3 2 | 1 0 3 2 | 1 3 2 0,
-           wtau = -4 | 2 1 0 1 | 1 2 0 1 | 1 0 1 2)
-sage: Candidates_for_Ineq1[553]
-Inequality(tau  = -4 | 2 1 1 0 | 2 1 1 0 | 2 1 1 0,
-           w    =     0 1 3 2 | 1 0 3 2 | 1 3 2 0,
-           wtau = -4 | 2 1 0 1 | 1 2 0 1 | 1 0 1 2)
-sage: ineq1=Candidates_for_Ineq1[553]
-sage: ineq2=Candidates_for_Ineq1[534]
-sage: ineq1==ineq2
-False
-"""
 
 # Filter 1: pi is dominant
 print('Step 6, checking dominance of map pi')
@@ -86,6 +71,8 @@ Birational_Ineq=[ineq for ineq in Dominant_Ineq if Is_Ram_contracted(ineq,ram_sc
 print(len(Birational_Ineq), ' inequalities selected in Step 7')
 
 #path="/home/bm29130h/Documents/Recherche/Ressources_autres/GDT/Machine Learning/calculs Kron/2 oct/"
-#reference=convert_file_Nout2pyth(path,d)
-#dictionary_list_lengths(compare_tau_candidates_reference(Candidates_for_Ineq,reference))
+#reference=[Inequality.from_tau(tau) for tau in convert_file_Nout2pyth(path,d0)]
+#dictionary_list_lengths(compare_tau_candidates_reference_mod_sym_dim(Candidates_for_Ineq1,reference))
+#unique_reference=unique_modulo_symmetry_list_of_ineq([Inequality.from_tau(tau) for tau in reference])
+
 

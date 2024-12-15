@@ -1,7 +1,8 @@
 from .typing import *
 from re import split as re_split
 from .tau import Tau
-from .inequality import Inequality
+from .inequality import *
+from .utils import dictionary_list_lengths
 
 def convert_lines_Nout2pyth(lines:Sequence[str],d:"Dimension") -> Sequence[Tau]:
     """ lines is a list of lines read from a Normaliz output file, e.g. via
@@ -46,15 +47,22 @@ def convert_file_Nout2pyth(rep_path:str, d:"Dimension") -> Sequence[Tau]:
 #reference=convert_file_Nout2pyth(path,d)
 
     
-def compare_tau_candidates_reference(Candidates:Sequence[Inequality],Reference:Sequence[Tau])->dict[str,Sequence[Tau]]:
-    res = {key: [] for key in ["cand_only","ref_only","both"]}
-    for i,eq in enumerate(Candidates):
-        if eq.wtau.end0_representative.opposite in Reference:
-            res["both"].append(i)
-        else:
-            res["cand_only"].append(i)
-    print(len(res["cand_only"]), "irredundant inequalities found in given list")
-    print(len(res["both"]), "redundant inequalities found in given list")
+def compare_tau_candidates_reference_mod_sym_dim(Candidates:Sequence[Inequality],Reference:Sequence[Inequality])->dict[str,Sequence[Inequality]]:
+    l1=[ineq.wtau.end0_representative.opposite for ineq in unique_modulo_symmetry_list_of_ineq(Candidates)]
+    l2=[ineq.wtau for ineq in unique_modulo_symmetry_list_of_ineq(Reference)]
+    res = {key: [] for key in ["candidates_only","reference_only","both"]}
+    for wtau in list(set(l1+l2)):
+        wtau_opp=wtau.opposite
+        if wtau in l1:
+            if wtau in l2: 
+                res["both"].append(Inequality.from_tau(wtau_opp))
+            else:
+                res["candidates_only"].append(Inequality.from_tau(wtau_opp))
+        else: 
+            res["reference_only"].append(Inequality.from_tau(wtau_opp))
+    print(dictionary_list_lengths(res))
+    #print(len(res["cand_only"]), "irredundant inequalities found in given list")
+    #print(len(res["both"]), "redundant inequalities found in given list")
     return(res)
 
 

@@ -17,7 +17,7 @@ from .hyperplane_candidates import *
 from .rings import *
 from .listW_temp import *
 from .ramification import *
-
+from .Normaliz2python import *
     
 
 #def fct_Weights_of_Nu(nu: PartialMatrix[Partition]) -> PartialMatrix[int]:
