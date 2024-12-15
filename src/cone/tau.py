@@ -5,7 +5,7 @@ from .blocks import Blocks
 from .weight import Weight
 from .root import Root
 from .rings import matrix, ZZ, QQ
-from .utils import extend_with_repetitions,flatten_dictionary, grading_dictionary
+from .utils import extend_with_repetitions, flatten_dictionary, grading_dictionary, orbit_symmetries
 from .permutation import Permutation
 
 import itertools
@@ -415,10 +415,24 @@ class Tau:
         
     def orbit_symmetries(self) -> Iterable["Tau"]:
         """
-        Lists the orbit of tau under symmetries of dimensions of its components  
+        Lists the orbit of tau under symmetries of dimensions of its components
+
+        Example:
+        >>> d = Dimension((2, 2, 2, 1, 1))
+        >>> tau = Tau.from_flatten([1, 6, 2, 1, 4, 1, 4, 5, 3], d)
+        >>> tau
+        1 | 6 2 | 1 4 | 1 4 | 5 | 3
+        >>> for t in tau.orbit_symmetries():
+        ...     print(t)
+        1 | 1 4 | 1 4 | 6 2 | 3 | 5
+        1 | 1 4 | 1 4 | 6 2 | 5 | 3
+        1 | 1 4 | 6 2 | 1 4 | 3 | 5
+        1 | 1 4 | 6 2 | 1 4 | 5 | 3
+        1 | 6 2 | 1 4 | 1 4 | 3 | 5
+        1 | 6 2 | 1 4 | 1 4 | 5 | 3
         """
-        for sym_comp in self._components.orbit_symmetries():
-           yield Tau(sym_comp,self.ccomponent)
+        for sym_comp in orbit_symmetries(self._components, self.d.symmetries):
+            yield Tau(sym_comp, self.ccomponent)
 
     @cached_property
     def is_sub_module(self) -> bool :

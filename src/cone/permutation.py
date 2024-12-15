@@ -1,5 +1,5 @@
 from .typing import *
-from .utils import count, group_by_block, expand_blocks, is_increasing
+from .utils import count, group_by_block, expand_blocks, is_increasing, multiset_permutations
 from .blocks import Blocks
 from .dimension import Dimension
 
@@ -140,8 +140,6 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         (4, 1, 3, 3, 2)
         """
         # TODO: check if group_by_block and expand_blocs can be rewritten in another way
-        from sympy.utilities.iterables import multiset_permutations
-
         eg = list(group_by_block(e))
         dg = list(group_by_block(d))
         partial_sum_mult_d = [0] + list(itertools.accumulate([x for _,x in dg]))
