@@ -49,7 +49,7 @@ class Blocks(Generic[T]):
         """
         self.flatten = flatten
         self._indexes = tuple(itertools.accumulate(sizes, initial=0))
-        assert self._indexes[-1] <= len(self.flatten), "Invalid sizes"
+        assert self._indexes[-1] == len(self.flatten), "Invalid sizes"
 
     @staticmethod
     def from_flatten(flatten: Sequence[T], sizes: Iterable[int]) -> "Blocks":
