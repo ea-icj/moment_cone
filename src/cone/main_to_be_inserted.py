@@ -33,7 +33,7 @@ else:
 
 #Candidates_for_tau=find_hyperplanes_mod_sym_dim(d0,d0.dimU) # This is the function for regular ops (todo : include this info in the name) - To be changed.
 print('Step 1, looking for a first list of dominant 1-PS whose kernel is supported at hyperplanes of weights.')
-Candidates_for_tau=find_1PS_mod_sym_dim(d0)   
+Candidates_for_tau=find_1PS_mod_sym_dim(d0)
 print(len(Candidates_for_tau), ' dominant 1-PS selected in Step 1')
 # Filter 1: submodule condition
 
@@ -59,6 +59,21 @@ print(len(Candidates_for_Ineq), ' inequalities selected in Step 4')
 print('Step 5, Reduction modulo symmetries of the dimension vector')
 Candidates_for_Ineq1=unique_modulo_symmetry_list_of_ineq(Candidates_for_Ineq)
 print(len(Candidates_for_Ineq1), ' inequalities selected in Step 5')
+#FIXME problem for filtering:
+"""
+sage: Candidates_for_Ineq1[534]
+Inequality(tau  = -4 | 2 1 1 0 | 2 1 1 0 | 2 1 1 0,
+           w    =     0 1 3 2 | 1 0 3 2 | 1 3 2 0,
+           wtau = -4 | 2 1 0 1 | 1 2 0 1 | 1 0 1 2)
+sage: Candidates_for_Ineq1[553]
+Inequality(tau  = -4 | 2 1 1 0 | 2 1 1 0 | 2 1 1 0,
+           w    =     0 1 3 2 | 1 0 3 2 | 1 3 2 0,
+           wtau = -4 | 2 1 0 1 | 1 2 0 1 | 1 0 1 2)
+sage: ineq1=Candidates_for_Ineq1[553]
+sage: ineq2=Candidates_for_Ineq1[534]
+sage: ineq1==ineq2
+False
+"""
 
 # Filter 1: pi is dominant
 print('Step 6, checking dominance of map pi')

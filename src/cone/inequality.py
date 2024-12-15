@@ -37,12 +37,31 @@ class Inequality:
         self.w = tuple(w)
         assert len(tau.d) == len(self.w)
         self.wtau = Tau(tuple(wk(ck) for wk, ck in zip(self.w, tau.components)), tau.ccomponent)
-
+   
+    def from_tau(tau:Tau) -> "Inequality":
+        """converts a (possibly non-dominant) tau to an element of the class Inequality, that is a pair (taup,w) where w.taup=tau
+        
+        """
+        tau_pairs=[sorted([(t,i) for i,t in enumerate(taub)],key=lambda pair:(-pair[0],pair[1])) for taub in tau._components]
+        for taub in tau_pairs:
+            taup=Tau(Blocks.from_blocks([[t for t,i in taub] for taub in tau_pairs]), tau.ccomponent)
+            w=[Permutation([i for t,i in taub]).inverse for taub in tau_pairs]
+        return Inequality(taup,w)
+    
     def __repr__(self) -> str:
         return \
             f"Inequality(tau  = {self.tau},\n" + \
              "           w    =     " + " | ".join(" ".join(map(str, wk)) for wk in self.w) + ",\n" + \
             f"           wtau = {self.wtau})"
+    
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Inequality):
+            return NotImplemented
+        return self.tau == other.tau and self.w == other.w
+    
+    def __hash__(self) -> int:
+        """ Hash consistent with equality so that to be safely used in a set or a dict """
+        return hash((self.tau, self.w))
     
     @cached_property
     def sort_mod_sym_dim(self) -> "Inequality":

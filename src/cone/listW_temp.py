@@ -12,19 +12,19 @@ __all__ = (
 )
 
 def ListW_subMod(tau : "Tau",pos : int,C_mod : dict[int, int]) -> list[Permutation]:
-    "List of permutations w in W^{P(tau[pos])} such that tau.Scalar(Inv(w) in position pos) is a submodule of C_mod."
+    "List of permutations w in W^{P(tau[pos])} such that tau.Scalar(Inv(w) in position pos) is a submodule of a C^*-module whose dimension of eigenspaces is encoded by C_mod."
     D=sum(C_mod.values())
     e=tau.d[pos]
     ap = AllPermutationsByLength(e)
     res=[]
-    for l in range(min(D+1,int(e*(e-1)/2))):
+    for l in range(min(D+1,int(e*(e-1)/2)+1)):
       for w in ap[l] :
          if w.is_min_rep(tau.reduced.mult[pos]): 
             List_Inv=[Root(pos, *inv) for inv in w.inversions]
             gr=grading_dictionary(List_Inv, tau.dot_root)
             Mw=dictionary_list_lengths(gr)
             if Is_Sub_Mod(Mw,C_mod):
-                res.append(w)
+                res.append(w.inverse)
     return(res)        
 
     
@@ -35,7 +35,7 @@ def ListW_Mod(tau : "Tau",pos : int,C_mod : dict[int, int]) -> list[Permutation]
     e=tau.d[pos]
     ap = AllPermutationsByLength(e)
     res=[]
-    if D>=int(e*(e-1)/2):
+    if D>=int(e*(e-1)/2+1):
         return(res)
     for w in ap[D]:
         if w.is_min_rep(tau.reduced.mult[pos]):
@@ -43,7 +43,7 @@ def ListW_Mod(tau : "Tau",pos : int,C_mod : dict[int, int]) -> list[Permutation]
             gr = grading_dictionary(List_Inv, tau.dot_root)
             Mw=dictionary_list_lengths(gr)
             if Are_Isom_Mod(Mw,C_mod):
-                res.append(w)
+                res.append(w.inverse)
     return(res)
 
 
@@ -87,7 +87,7 @@ def Check_Rank_Tpi(ineq : "Inequality", method: "Method") -> bool :
     gw = tau.grading_weights
     gr = tau.grading_roots_in(ineq.inversions) # A vérifier
     for x in sorted(gr.keys(),reverse=True): # Run over the possible values of tau.scalar(root) for root inversion of w
-        M=matrix(ring,len(gr[x]))
+        M=matrix(ring,len(gw[x]),len(gr[x]))
         for col,root in enumerate(gr[x]): # List of roots such that tau.scalar(root)=x
                uv=action_op_el(root, v, d)
                for row, chi in enumerate(gw[x]): # List of weights such that tau.scalar(chi)=x 

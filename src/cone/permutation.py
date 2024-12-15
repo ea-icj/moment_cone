@@ -77,7 +77,7 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
     def is_min_rep(self, symmetries: Iterable[int]) -> bool:
         """ Check if permutation is decreasing along each block of given sizes """
         return all(
-            all(a > b for a, b in itertools.pairwise(block))
+            all((self.inverse)[a] < (self.inverse)[b] for a, b in itertools.pairwise(block))
             for block in Blocks.from_flatten(self, symmetries)
         )
 

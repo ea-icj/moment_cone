@@ -192,7 +192,8 @@ class Tau:
     def is_dominant(self) -> bool:
         """ Check if tau is dominant """
         return all(all(a >= b for a, b in itertools.pairwise(c)) for c in self.components)
-
+    
+    #FIXME: does not work when a whole component is 0. Such a component should be avoided when computing res_gcd
     @cached_property
     def sl_representative(self) -> "Tau":
         """ Returns representative of tau in C^* x (SLn)^3 """
