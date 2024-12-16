@@ -3,7 +3,6 @@ import itertools
 
 from .typing import *
 from .weight import Weight
-from .permutation import Permutation
 from .dimension import Dimension
 from .utils import short_prod
 from .tau import *
