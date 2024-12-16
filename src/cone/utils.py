@@ -45,6 +45,16 @@ def expand_blocks(values: Iterable[T], mult: Iterable[int]) -> Iterable[T]:
     """ Decompress output from `group_by_block` to the initial sequence """
     return itertools.chain.from_iterable(itertools.repeat(v, m) for v, m in zip(values, mult))
 
+def symmetries(values: Iterable[T]) -> Iterable[int]:
+    """
+    Returns the multiplicities of identical consecutive values in a sequence
+    
+    Example:
+    >>> tuple(symmetries((4, 4, 3, 2, 2, 2, 1)))
+    (2, 1, 3, 1)
+    """
+    return (length for _, length in group_by_block(values))
+
 def trim_zeros(s: Sequence[int]) -> Sequence[int]:
     """ Remove trailing zeros from a sequence """
     for i, v in enumerate(reversed(s)):
@@ -241,6 +251,43 @@ def quotient_C_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> dict[int, int]:
             M[p] = difference
     return M
 
+def multiset_permutations(m: Iterable[T]) -> Generator[list[T]]:
+    """
+    Returns the unique permutations of the given multiset m
+    
+    Is it simply a wrapper of sympy.utilities.iterables.multiset_permutations
+    so that to get the correct return type.
+    """
+    from sympy.utilities.iterables import multiset_permutations as mp
+    return cast(Generator[list[T]], mp(m))
 
+def orbit_symmetries(flatten: Iterable[T], symmetries: Iterable[int]) -> Generator[Iterable[T]]:
+    """
+    Permutation inside each block of given sizes
+
+    Note that each returned permutation is only an iterable (not a list or tuple).
+    
+    If this is too slow, we may consider the remarks/propositions from:
+    - https://stackoverflow.com/questions/19676109/how-to-generate-all-the-permutations-of-a-multiset/
+    - https://stackoverflow.com/questions/70057504/speed-up-multiset-permutations
+
+    Example:
+    >>> orbits = orbit_symmetries((2, 2, 4, 1, 2, 1, 4), (3, 3, 1))
+    >>> for p in orbits:
+    ...     print(tuple(p))
+    (2, 2, 4, 1, 1, 2, 4)
+    (2, 2, 4, 1, 2, 1, 4)
+    (2, 2, 4, 2, 1, 1, 4)
+    (2, 4, 2, 1, 1, 2, 4)
+    (2, 4, 2, 1, 2, 1, 4)
+    (2, 4, 2, 2, 1, 1, 4)
+    (4, 2, 2, 1, 1, 2, 4)
+    (4, 2, 2, 1, 2, 1, 4)
+    (4, 2, 2, 2, 1, 1, 4)
+    """
+    from .blocks import Blocks
+    blocks = (multiset_permutations(block) for block in Blocks.from_flatten(tuple(flatten), symmetries))
+    for p in itertools.product(*blocks):
+        yield itertools.chain.from_iterable(p)
   
 

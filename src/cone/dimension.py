@@ -1,6 +1,6 @@
 from functools import cached_property
 
-from .utils import prod
+from .utils import prod, symmetries
 from .typing import *
 
 
@@ -52,8 +52,7 @@ class Dimension(tuple[int, ...]):
     @cached_property
     def symmetries(self) -> tuple[int, ...]:
         """ Returns length of the symmetries in the dimensions """
-        from .utils import group_by_block
-        return tuple(length for _, length in group_by_block(self))
+        return tuple(symmetries(self))
 
     @cached_property
     def sum(self) -> int:

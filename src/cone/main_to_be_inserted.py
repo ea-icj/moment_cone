@@ -6,7 +6,7 @@ from cone.listW_temp import *
 from cone.inequality import *
 from cone.tau import *
 from cone.ramification import *
-
+from cone.Normaliz2python import *
 
 ####
 d0=Dimension([5,4,4])
@@ -33,7 +33,7 @@ else:
 
 #Candidates_for_tau=find_hyperplanes_mod_sym_dim(d0,d0.dimU) # This is the function for regular ops (todo : include this info in the name) - To be changed.
 print('Step 1, looking for a first list of dominant 1-PS whose kernel is supported at hyperplanes of weights.')
-Candidates_for_tau=find_1PS_mod_sym_dim(d0)   
+Candidates_for_tau=find_1PS_mod_sym_dim(d0)
 print(len(Candidates_for_tau), ' dominant 1-PS selected in Step 1')
 Candidates_for_tau=unique_modulo_symmetry_list_of_tau(Candidates_for_tau)
 print(len(Candidates_for_tau), ' dominant 1-PS selected in Step 1 After Unicity')
@@ -92,5 +92,10 @@ print(len(Dominant_Ineq), ' inequalities selected in Step 6')
 print('Step 7, checking dominance of map pi (again)')
 Birational_Ineq=[ineq for ineq in Dominant_Ineq if Is_Ram_contracted(ineq,ram_schub_method,ram0_method)]
 print(len(Birational_Ineq), ' inequalities selected in Step 7')
+
+#path="/home/bm29130h/Documents/Recherche/Ressources_autres/GDT/Machine Learning/calculs Kron/2 oct/"
+#reference=[Inequality.from_tau(tau) for tau in convert_file_Nout2pyth(path,d0)]
+#dictionary_list_lengths(compare_tau_candidates_reference_mod_sym_dim(Candidates_for_Ineq1,reference))
+#unique_reference=unique_modulo_symmetry_list_of_ineq([Inequality.from_tau(tau) for tau in reference])
 
 

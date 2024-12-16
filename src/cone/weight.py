@@ -1,6 +1,5 @@
 from .typing import *
 from .dimension import Dimension
-from .blocks import Blocks
 
 import itertools
 import operator
@@ -78,15 +77,25 @@ class Weight:
     def orbit_symmetries(self, symmetries: Iterable[int]) -> Iterable["Weight"]:
         """
         Permutation inside each block of given sizes
-        
-        If this is too slow, we may consider the remarks/propositions from:
-        - https://stackoverflow.com/questions/19676109/how-to-generate-all-the-permutations-of-a-multiset/
-        - https://stackoverflow.com/questions/70057504/speed-up-multiset-permutations
+
+        Example:
+        >>> p = Weight((2, 2, 4, 1, 2, 1, 4))
+        >>> orbits = p.orbit_symmetries((3, 3, 1))
+        >>> for chi in orbits:
+        ...     print(chi)
+        Weight((2, 2, 4, 1, 1, 2, 4))
+        Weight((2, 2, 4, 1, 2, 1, 4))
+        Weight((2, 2, 4, 2, 1, 1, 4))
+        Weight((2, 4, 2, 1, 1, 2, 4))
+        Weight((2, 4, 2, 1, 2, 1, 4))
+        Weight((2, 4, 2, 2, 1, 1, 4))
+        Weight((4, 2, 2, 1, 1, 2, 4))
+        Weight((4, 2, 2, 1, 2, 1, 4))
+        Weight((4, 2, 2, 2, 1, 1, 4))
         """
-        from sympy.utilities.iterables import multiset_permutations
-        blocks = (multiset_permutations(block) for block in Blocks(self._weights, symmetries))
-        for p in itertools.product(*blocks):
-            yield Weight(itertools.chain.from_iterable(p))
+        from .utils import orbit_symmetries
+        for chi in orbit_symmetries(self._weights, symmetries):
+            yield Weight(chi)
 
     def __len__(self) -> int:
         return len(self._weights)

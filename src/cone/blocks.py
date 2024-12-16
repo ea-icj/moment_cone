@@ -49,7 +49,7 @@ class Blocks(Generic[T]):
         """
         self.flatten = flatten
         self._indexes = tuple(itertools.accumulate(sizes, initial=0))
-        assert self._indexes[-1] <= len(self.flatten), "Invalid sizes"
+        assert self._indexes[-1] == len(self.flatten), "Invalid sizes"
 
     @staticmethod
     def from_flatten(flatten: Sequence[T], sizes: Iterable[int]) -> "Blocks":
@@ -69,18 +69,6 @@ class Blocks(Generic[T]):
             map(len, blocks2)
         )
 
-    def orbit_symmetries(self) -> Iterable["Blocks"]:
-        """
-        Permutations inside each block of given sizes
-        
-        """
-        bblocks=list(self.blocks_by_size.blocks) 
-        from sympy.utilities.iterables import multiset_permutations
-        orbit_by_size=(multiset_permutations(bblock) for bblock in bblocks)
-        for p in itertools.product(*orbit_by_size):
-            yield Blocks.from_blocks(sum(p,[]))
-
-    
     @property
     def is_frozen(self) -> bool:
         """ Return True if this instance is immutable """
@@ -100,15 +88,8 @@ class Blocks(Generic[T]):
     
     @property
     def blocks(self) -> Iterable[Sequence[T]]:
-        """ Tuple of  blocks """
+        """ Tuple of blocks """
         return (self.flatten[a:b] for a, b in itertools.pairwise(self._indexes))
-
-    @property
-    def blocks_by_size(self) -> Iterable[Sequence[T]]:
-        """ Tuple of tuples of (blocks of the same size) """
-        return Blocks(tuple(self.blocks),Dimension(self.sizes).symmetries)
-        #partial_sums=itertools.accumulate((0,)+self._sizes)
-        #return (blocks1[a:b] for a, b in itertools.pairwise(partial_sums))
 
     def __len__(self) -> int:
         """ Number of blocks """
