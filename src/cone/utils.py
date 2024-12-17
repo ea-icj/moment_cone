@@ -71,11 +71,32 @@ def count(s: Iterable[T]) -> int:
         return sum(1 for _ in s) # It seems that they exist faster method using `collections.deque`
 
 def prod(values: Iterable[int]) -> int:
-    """ Classical product of all given values """
+    """
+    Classical product of all given values
+    
+    >>> prod([1, 2, 3])
+    6
+    >>> prod([1, 2, 3, 0, 5])
+    0
+    """
     return functools.reduce(operator.mul, values)
 
 def short_prod(values: Iterable[int]) -> int:
-    """ Product of value with sort-circuit if result is 0 """
+    """
+    Product of value with sort-circuit if result is 0
+    
+    >>> short_prod([1, 2, 3])
+    6
+    >>> short_prod([1, 2, 3, 0, 5])
+    0
+
+    Testing short-circuit feature:
+    >>> g = iter([1, 2, 3, 0, 5])
+    >>> short_prod(g)
+    0
+    >>> next(g)
+    5
+    """
     result = 1
     for v in values:
         result *= v
