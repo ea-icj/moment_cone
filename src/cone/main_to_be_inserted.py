@@ -72,7 +72,8 @@ print(len(Birational_Ineq), ' inequalities selected in Step 7')
 
 #path="/home/bm29130h/Documents/Recherche/Ressources_autres/GDT/Machine Learning/calculs Kron/2 oct/"
 #reference=[Inequality.from_tau(tau) for tau in convert_file_Nout2pyth(path,d0)]
-#dictionary_list_lengths(compare_tau_candidates_reference_mod_sym_dim(Candidates_for_Ineq1,reference))
-#unique_reference=unique_modulo_symmetry_list_of_ineq([Inequality.from_tau(tau) for tau in reference])
+#dictionary_list_lengths(compare_ineq_candidates_reference_mod_sym_dim(Candidates_for_Ineq1,reference))
+#unique_reference=unique_modulo_symmetry_list_of_ineq(reference)
+#dictionary_list_lengths(compare_tau_candidates_reference_mod_sym_dim(Candidates_for_tau,[ineq.tau for ineq in reference]))
 
 

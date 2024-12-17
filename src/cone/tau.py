@@ -206,7 +206,6 @@ class Tau:
         for dj, cj in zip(self.d, self.components):
             column_sum = sum(cj)
             shift = column_sum * tau_lcm // dj
-            print(shift)
             columns.append([tau_lcm * cji - shift for cji in cj])
             ccomponent += shift
         res_gcd = gcd(ccomponent, *itertools.chain.from_iterable(columns))
@@ -528,8 +527,8 @@ def find_1PS_reg_mod_sym_dim(d:Dimension,u) -> Sequence["Tau"]:
     With results up to the action of the symmetries of d.
     """
     Liste_hr=find_hyperplanes_reg_mod_sym_dim(d,u)
+    #return Liste_hr
     Liste_1PS=unique_modulo_symmetry_list_of_tau([Tau.from_zero_weights(h,d) for h in Liste_hr])
-    #return Liste_1PS
     Liste_1PS_sign=Liste_1PS+[tau.opposite for tau in Liste_1PS]
     return [tau for tau in Liste_1PS_sign if tau.is_dom_reg]
 
