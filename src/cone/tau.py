@@ -193,21 +193,22 @@ class Tau:
         """ Check if tau is dominant """
         return all(all(a >= b for a, b in itertools.pairwise(c)) for c in self.components)
     
-    #FIXME: does not work when a whole component is 0. Such a component should be avoided when computing res_gcd
+    #FIXME: does not work when an entry is zero
     @cached_property
     def sl_representative(self) -> "Tau":
         """ Returns representative of tau in C^* x (SLn)^3 """
         assert self.ccomponent is not None
         from math import lcm, gcd
-        tau_lcm = lcm(*self.flattened)
+        #flat_non_zero=[x for x in self.flattened if x!=0]
+        tau_lcm = lcm(*self.d)
         ccomponent = self.ccomponent * tau_lcm
         columns = []
         for dj, cj in zip(self.d, self.components):
             column_sum = sum(cj)
             shift = column_sum * tau_lcm // dj
+            print(shift)
             columns.append([tau_lcm * cji - shift for cji in cj])
             ccomponent += shift
-
         res_gcd = gcd(ccomponent, *itertools.chain.from_iterable(columns))
         return Tau(
             tuple(tuple(v // res_gcd for v in cj) for cj in columns),
@@ -528,6 +529,7 @@ def find_1PS_reg_mod_sym_dim(d:Dimension,u) -> Sequence["Tau"]:
     """
     Liste_hr=find_hyperplanes_reg_mod_sym_dim(d,u)
     Liste_1PS=unique_modulo_symmetry_list_of_tau([Tau.from_zero_weights(h,d) for h in Liste_hr])
+    #return Liste_1PS
     Liste_1PS_sign=Liste_1PS+[tau.opposite for tau in Liste_1PS]
     return [tau for tau in Liste_1PS_sign if tau.is_dom_reg]
 
