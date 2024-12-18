@@ -15,7 +15,9 @@ __all__ = (
 
 class Inequality:
     """
-    An inequality composed of a Tau and a list of permutations
+    An inequality composed of a Tau and a list of permutations, one from each block of Tau.
+
+    In wtau, the blocks are permuted by the **inverse** of the corresponding permutation.
     
     Example :
     >>> from cone import *
@@ -26,7 +28,7 @@ class Inequality:
     >>> print(ineq)    
     Inequality(tau  = 1 | 6 2 | 1 4 1 | 2 5 3 1,
                w    =     1 0 | 0 2 1 | 2 0 1 3,
-               wtau = 1 | 2 6 | 1 1 4 | 3 2 5 1)
+               wtau = 1 | 2 6 | 1 1 4 | 5 3 2 1)
     """
     tau: Tau
     w: tuple[Permutation, ...]
@@ -36,11 +38,12 @@ class Inequality:
         self.tau = tau
         self.w = tuple(w)
         assert len(tau.d) == len(self.w)
-        self.wtau = Tau(tuple((wk.inverse)(ck) for wk, ck in zip(self.w, tau.components)), tau.ccomponent)
+        self.wtau = Tau(tuple(wk.inverse(ck) for wk, ck in zip(self.w, tau.components)), tau.ccomponent)
     
     @staticmethod
     def from_tau(tau: Tau) -> "Inequality":
-        """converts a (possibly non-dominant) tau to an element of the class Inequality, that is a pair (taup,w) where w.taup=tau and w is of minimal length with this property
+        """ Converts a (possibly non-dominant) tau to an element of the class Inequality,
+        that is a pair (taup, w) where w.taup = tau and w is of minimal length with this property.
         
         Example:
         >>> tau0 = Tau([[4, 9, 6, 5], [3, 1, 1, 2], [2, 2, 8, 2]], 7)
@@ -49,15 +52,23 @@ class Inequality:
         Inequality(tau  = 7 | 9 6 5 4 | 3 2 1 1 | 8 2 2 2,
                    w    =     1 2 3 0 | 0 3 1 2 | 2 0 1 3,
                    wtau = 7 | 4 9 6 5 | 3 1 1 2 | 2 2 8 2)
-        >>> [wi.is_min_rep(si) for wi,si in zip(ineq0.w,ineq0.tau.reduced.mult)]
+        >>> [wi.is_min_rep(si) for wi, si in zip(ineq0.w, ineq0.tau.reduced.mult)]
         [True, True, True]
-
         """
-        tau_pairs=[sorted([(t,i) for i,t in enumerate(taub)],key=lambda pair:(-pair[0],pair[1])) for taub in tau._components]
-        for taub in tau_pairs:
-            taup=Tau(Blocks.from_blocks([[t for t,i in taub] for taub in tau_pairs]), tau.ccomponent)
-            w=[Permutation([i for t,i in taub]) for taub in tau_pairs]
-        return Inequality(taup,w)
+        tau_pairs = [
+            sorted(
+                ((t, i) for i, t in enumerate(taub)),
+                key=lambda pair: (-pair[0], pair[1])
+            )
+            for taub in tau._components
+        ]
+
+        taup = Tau(
+            Blocks.from_blocks([[t for t, i in taub] for taub in tau_pairs]),
+            tau.ccomponent
+        )
+        w = (Permutation([i for t, i in taub]) for taub in tau_pairs)
+        return Inequality(taup, w)
     
     def __repr__(self) -> str:
         return \
@@ -87,11 +98,11 @@ class Inequality:
         >>> ineq
         Inequality(tau  = 1 | 6 2 | 1 4 | 1 4 | 5 3 1,
                    w    =     0 1 | 1 0 | 0 1 | 2 0 1,
-                   wtau = 1 | 6 2 | 4 1 | 1 4 | 1 5 3)
+                   wtau = 1 | 6 2 | 4 1 | 1 4 | 3 1 5)
         >>> ineq.sort_mod_sym_dim
         Inequality(tau  = 1 | 1 4 | 1 4 | 6 2 | 5 3 1,
                    w    =     0 1 | 1 0 | 0 1 | 2 0 1,
-                   wtau = 1 | 1 4 | 4 1 | 6 2 | 1 5 3)
+                   wtau = 1 | 1 4 | 4 1 | 6 2 | 3 1 5)
         """
         pairs = tuple(zip(self.tau.components, self.w))
         blocks = (sorted(b) for b in Blocks(pairs, self.tau.d.symmetries))
@@ -119,7 +130,28 @@ class Inequality:
             for i, j in p.inversions:
                 yield Root(k, i, j)
 
-def unique_modulo_symmetry_list_of_ineq(seq_ineq:Sequence["Inequality"]) -> Sequence["Inequality"]:
-    return list(set([ineq.sort_mod_sym_dim for ineq in seq_ineq]))
+
+def unique_modulo_symmetry_list_of_ineq(seq_ineq: Iterable[Inequality]) -> set[Inequality]:
+    """
+    Unique sequence of tau modulo the it's symmetries
+
+    Example:
+    >>> from cone import *
+    >>> d = Dimension((2, 2, 2, 3))
+    >>> tau = Tau.from_flatten([1, 6, 2, 1, 4, 1, 4, 5, 3, 1], d)
+    >>> w = Permutation((0, 1)), Permutation((1, 0)), Permutation((0, 1)), Permutation((2, 0, 1))
+    >>> ineq1 = Inequality(tau, w)
+    >>> ineq2 = ineq1.sort_mod_sym_dim
+    >>> ineq3 = Inequality(ineq1.wtau, w)
+    >>> for ineq in unique_modulo_symmetry_list_of_ineq((ineq1, ineq2, ineq3)):
+    ...     print(ineq)
+    Inequality(tau  = 1 | 1 4 | 4 1 | 6 2 | 3 1 5,
+               w    =     0 1 | 1 0 | 0 1 | 2 0 1,
+               wtau = 1 | 1 4 | 1 4 | 6 2 | 1 5 3)
+    Inequality(tau  = 1 | 1 4 | 1 4 | 6 2 | 5 3 1,
+               w    =     0 1 | 1 0 | 0 1 | 2 0 1,
+               wtau = 1 | 1 4 | 4 1 | 6 2 | 3 1 5)
+    """
+    return set(ineq.sort_mod_sym_dim for ineq in seq_ineq)
 
 
