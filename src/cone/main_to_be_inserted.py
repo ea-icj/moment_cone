@@ -13,6 +13,7 @@ d0=Dimension([4,4,4])
 #stabilizer_method='symbolic'
 stabilizer_method='probabilistic'
 tpi_method='symbolic'
+#tpi_method='probabilistic'
 ram_schub_method='probabilistic'
 ram0_method='probabilistic'
 ####
@@ -38,9 +39,14 @@ print('Step 1, looking for a first list of dominant 1-PS whose kernel is support
 Candidates_for_tau=find_1PS_mod_sym_dim(d0)
 
 print(len(Candidates_for_tau), ' dominant 1-PS selected in Step 1')
-Candidates_for_tau=unique_modulo_symmetry_list_of_tau(Candidates_for_tau)
+for tau in Candidates_for_tau:
+    print(tau)
+Candidates_for_tau=unique_modulo_symmetry_list_of_tau(Candidates_for_tau) # todo : inutile car déjà fait dans find_1PS ?
 print(len(Candidates_for_tau), ' dominant 1-PS selected in Step 1 After Unicity')
 
+for tau in Candidates_for_tau:
+    print(tau)
+    
 # Filter 1: submodule condition
 
 print('Step 2, Checking submodule condition')
@@ -75,8 +81,11 @@ for tau in Candidates_for_tau1:
 print(len(Candidates_for_tau2), ' dominant 1-PS selected in Step 3')
 
 """
+for tau in Candidates_for_tau2:
+    print(tau)
+
 ##### TO BE SUPRESSED #####
-print('Test New Stab',Candidates_for_tau2==Candidates_for_tau2n,len(Candidates_for_tau2),len(Candidates_for_tau2o))
+print('Test New Stab',Candidates_for_tau2==Candidates_for_tau2o,len(Candidates_for_tau2),len(Candidates_for_tau2o))
 ####### END SUPRESS ######
 """
 
@@ -90,18 +99,27 @@ for tau in Candidates_for_tau2 :
     Candidates_for_Ineq+=[Inequality(tau,w) for w in Lw] # Fait-on un dictionnaire tau : Lw ??
 print(len(Candidates_for_Ineq), ' inequalities selected in Step 4')
 
+for ineq in Candidates_for_Ineq :
+    print(ineq)
+    
 # Filter 0: Unicity modulo sym(d)
 print('Step 5, Reduction modulo symmetries of the dimension vector')
 Candidates_for_Ineq1=unique_modulo_symmetry_list_of_ineq(Candidates_for_Ineq)
 print(len(Candidates_for_Ineq1), ' inequalities selected in Step 5')
+
+for ineq in Candidates_for_Ineq1 :
+    print(ineq.tau)
 
 # Filter 1: pi is dominant
 print('Step 6, checking dominancy of the map pi')
 Dominant_Ineq=[ineq for ineq in Candidates_for_Ineq1 if Check_Rank_Tpi(ineq,tpi_method)] 
 print(len(Dominant_Ineq), ' inequalities selected in Step 6')
 
-# Filter 2: pi is dominant
-print('Step 7, checking birationality of the map pi')
+for ineq in Dominant_Ineq :
+    print(ineq.tau)
+
+# Filter 2: pi is birational (ramification divisor contracted)
+print('Step 7, checking birationality (ramification divisor contracted) of the map pi')
 Birational_Ineq=[ineq for ineq in Dominant_Ineq if Is_Ram_contracted(ineq,ram_schub_method,ram0_method)]
 print(len(Birational_Ineq), ' inequalities selected in Step 7')
 
@@ -113,4 +131,5 @@ print(len(Birational_Ineq), ' inequalities selected in Step 7')
 #unique_reference=unique_modulo_symmetry_list_of_ineq(reference)
 #dictionary_list_lengths(compare_tau_candidates_reference_mod_sym_dim(Candidates_for_tau,[ineq.tau for ineq in reference]))
 
-
+for ineq in Birational_Ineq :
+    print(ineq)

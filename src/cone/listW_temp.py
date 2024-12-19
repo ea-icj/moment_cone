@@ -19,6 +19,7 @@ def ListW_subMod(tau : "Tau",pos : int,C_mod : dict[int, int]) -> list[Permutati
     res=[]
     for l in range(min(D+1,int(e*(e-1)/2)+1)):
       for w in ap[l] :
+         print('w,tau_mult,minrep',w,tau.reduced.mult[pos],w.is_min_rep(tau.reduced.mult[pos]))
          if w.is_min_rep(tau.reduced.mult[pos]): 
             List_Inv=[Root(pos, *inv) for inv in w.inversions]
             gr=grading_dictionary(List_Inv, tau.dot_root)
@@ -50,9 +51,11 @@ def ListW_Mod(tau : "Tau",pos : int,C_mod : dict[int, int]) -> list[Permutation]
 
 def ListWs_Mod_rec(tau : "Tau",pos : int,C_mod : dict[int, int]) -> list[Permutation]: # List of tuples [w_pos,...,w_len(d)-1] such that U(w)\isom C_mod as tau-module and w_i\in W^P
     d=tau.d
+    print(C_mod)
     if pos==len(d)-1:
         return([[w] for w in ListW_Mod(tau,pos,C_mod)])
     Lpos=ListW_subMod(tau,pos,C_mod) # Candidates of w_pos
+    print('pos,Lpos',pos,Lpos)
     res=[]
     for w in Lpos:
         List_Inv=[Root(pos, *inv) for inv in w.inversions]
@@ -61,6 +64,7 @@ def ListWs_Mod_rec(tau : "Tau",pos : int,C_mod : dict[int, int]) -> list[Permuta
         new_C_mod=quotient_C_Mod(C_mod,Mw)
         Lw=ListWs_Mod_rec(tau,pos+1,new_C_mod)
         res+=[[w]+l for l in Lw]
+    print(res)    
     return(res)
 
 def ListWs_Mod(tau : "Tau") ->  list[Permutation]:
@@ -68,6 +72,7 @@ def ListWs_Mod(tau : "Tau") ->  list[Permutation]:
     C_mod={}
     for x in Poids_positive.keys():
         C_mod[x]=len(Poids_positive[x])
+    print('C_mod départ:',C_mod)    
     return(ListWs_Mod_rec(tau,0,C_mod))
 
 
