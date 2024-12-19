@@ -99,8 +99,16 @@ class Weight:
 
     def __len__(self) -> int:
         return len(self._weights)
-    
+
+    @overload
     def __getitem__(self, idx: int) -> int:
+        ...
+
+    @overload
+    def __getitem__(self, idx: slice) -> tuple[int, ...]:
+        ...
+
+    def __getitem__(self, idx: int | slice) -> int | tuple[int, ...]:
         return self._weights[idx]
     
     def __iter__(self) -> Iterator[int]:
