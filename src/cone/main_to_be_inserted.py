@@ -9,7 +9,7 @@ from cone.ramification import *
 from cone.Normaliz2python import *
 
 ####
-d0=Dimension([3,3,3])
+d0=Dimension([4,4,4])
 #stabilizer_method='symbolic'
 stabilizer_method='probabilistic'
 tpi_method='symbolic'
@@ -18,7 +18,10 @@ ram_schub_method='probabilistic'
 ram0_method='probabilistic'
 ####
 
+task = Task("main_total")
+print(task)
 
+task.start()
 
 ## Checking if the cone has the expected dimension
 
@@ -126,7 +129,7 @@ print(len(Birational_Ineq), ' inequalities selected in Step 7')
 
 #path="/home/bm29130h/Documents/Recherche/Ressources_autres/GDT/Machine Learning/calculs Kron/2 oct/"
 #reference=[Inequality.from_tau(tau) for tau in convert_file_Nout2pyth(path,d0)]
-#dictionary_list_lengths(compare_ineq_candidates_reference_mod_sym_dim(Candidates_for_Ineq1,reference))
+#dictionary_list_lengths(compare_ineq_candidates_reference_mod_sym_dim(Birational_Ineq,reference))
 
 #test fails following fusion 17dec 12h11
 
@@ -135,3 +138,9 @@ print(len(Birational_Ineq), ' inequalities selected in Step 7')
 
 for ineq in Birational_Ineq :
     print(ineq)
+    
+
+task.stop()
+
+print(task)
+

@@ -155,7 +155,7 @@ def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) ->
     for pol in Jf.keys():
         J_square_free*=pol # todo : prod(list(Jf.keys())) ne semble pas fonctionner
     if len(Jf.keys())!=len(dict(J_square_free.factor()).keys()):
-        print('Error in factor with:',Jf,J_square_free)
+        print('Error in factor with:',ineq,Jf,J_square_free)
     #print('J square free',J_square_free)        
     # gradiant of J_square_free
     L0=matrix(d.QV,1,len(Neg0_Weights_dic[0]))
