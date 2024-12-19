@@ -146,7 +146,7 @@ def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) ->
                 if is_not_contracted(ineqv.inversions,tau,method_S) :
                     return(False)
 
-    return(True) # Freeze the second checking
+    #return(True) # Freeze the second checking
     ### Divisor R_0
     Jf=Compute_JA(ineq) # The Jacobian factorized as a dictionnary
     print('Jf',Jf)

@@ -200,13 +200,13 @@ class Tau:
         """ Check if tau is dominant """
         return all(all(a >= b for a, b in itertools.pairwise(c)) for c in self.components)
     
-    #FIXME: does not work when a whole component is 0. Such a component should be avoided when computing res_gcd
     @cached_property
     def sl_representative(self) -> "Tau":
         """ Returns representative of tau in C^* x (SLn)^3 """
         assert self.ccomponent is not None
         from math import lcm, gcd
-        tau_lcm = lcm(*self.flattened)
+        #flat_non_zero=[x for x in self.flattened if x!=0]
+        tau_lcm = lcm(*self.d)
         ccomponent = self.ccomponent * tau_lcm
         columns = []
         for dj, cj in zip(self.d, self.components):
@@ -214,7 +214,6 @@ class Tau:
             shift = column_sum * tau_lcm // dj
             columns.append([tau_lcm * cji - shift for cji in cj])
             ccomponent += shift
-
         res_gcd = gcd(ccomponent, *itertools.chain.from_iterable(columns))
         return Tau(
             tuple(tuple(v // res_gcd for v in cj) for cj in columns),
@@ -620,6 +619,7 @@ def find_1PS_reg_mod_sym_dim(d: Dimension, u: int) -> Iterable[Tau]:
     list_1PS_sign = (t for tau in list_1PS for t in (tau, tau.opposite))
     return filter(lambda tau: tau.is_dom_reg, list_1PS_sign)
 
+
 def find_1PS_mod_sym_dim(d: Dimension) -> Sequence["Tau"]:
     """
     Same as find_1PS_reg_mod_sym_dim without regularity condition
@@ -635,19 +635,19 @@ def find_1PS_mod_sym_dim(d: Dimension) -> Sequence["Tau"]:
     for small_d in sub_dim:  
         umax=d.u_max(small_d)
         #Recover by induction all candidates 1-PS mod symmetry
-        Liste_1PS_smalld_mod_sym = list(find_1PS_reg_mod_sym_dim(small_d,umax))
-        print('For d=',small_d,'we get',len(Liste_1PS_smalld_mod_sym),' candidates regular dominant up to symmetry')
-        Liste_1PS_smalld=full_under_symmetry_list_of_tau(Liste_1PS_smalld_mod_sym)
-        #Liste_1PS_smalld=sum([list(tau.orbit_symmetries()) for tau in Liste_1PS_smalld_mod_sym]  ,[])
+        Liste_1PS_smalld_reg_mod_sym= list(find_1PS_reg_mod_sym_dim(small_d,umax))
+        print('For d=',small_d,'we get',len(Liste_1PS_smalld_reg_mod_sym),' candidates regular dominant up to symmetry')
+        Liste_1PS_smalld_reg=full_under_symmetry_list_of_tau(Liste_1PS_smalld_reg_mod_sym)
+        #Liste_1PS_smalld_reg=sum([list(tau.orbit_symmetries()) for tau in Liste_1PS_smalld_reg_mod_sym]  ,[])
+        Liste_1PS_smalld_extended=[]
         for permut in Permutation.embeddings_mod_sym(d, small_d):
-            for tau in Liste_1PS_smalld:
+            for tau in Liste_1PS_smalld_reg:
                 tau_twist=Tau([tau._components[i] for i in permut],tau.ccomponent)
                 list_tau_extended=tau_twist.m_extend_with_repetitions(d)
-                list_tau_extended_dimU=[]
                 for tau_ext in list_tau_extended:
                     if len(flatten_dictionary(tau_ext.positive_weights))<=tau_ext.dim_Pu:
-                        list_tau_extended_dimU.append(tau_ext)
-                Liste_1PS+=unique_modulo_symmetry_list_of_tau(list_tau_extended_dimU)
+                        Liste_1PS_smalld_extended.append(tau_ext)
+        Liste_1PS+=unique_modulo_symmetry_list_of_tau(Liste_1PS_smalld_extended)
     return(Liste_1PS)
 
 

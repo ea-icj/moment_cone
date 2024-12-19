@@ -92,7 +92,7 @@ def Check_Rank_Tpi(ineq : "Inequality", method: "Method") -> bool :
     gw = tau.grading_weights
     gr = tau.grading_roots_in(ineq.inversions) # A vérifier
     for x in sorted(gr.keys(),reverse=True): # Run over the possible values of tau.scalar(root) for root inversion of w
-        M=matrix(ring,len(gw[x]),len(gr[x]))
+        M=matrix(ring,len(gr[x]))
         for col,root in enumerate(gr[x]): # List of roots such that tau.scalar(root)=x
                uv=action_op_el(root, v, d)
                for row, chi in enumerate(gw[x]): # List of weights such that tau.scalar(chi)=x 

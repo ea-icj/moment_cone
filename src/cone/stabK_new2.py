@@ -2,10 +2,24 @@
 #from src.cone.weight import *
 #from src.cone.root import *
 #from src.cone.tau import *
-import itertools
 
-def mat_C_to_R(M : matrix) -> matrix :
-    "M is a matrix with complex coefficients. Replace each coefficient coefficien a+bI by a 2x2-matrix [a,-b,b,a]"
+from .dimension import *
+from .weight import *
+from .root import *
+from .tau import *
+from sage.all import matrix,QQ,I,real,imag,vector,randint
+
+import itertools
+#import itertools
+
+#def mat_C_to_R(M : matrix) -> matrix :
+#    "M is a matrix with complex coefficients. Replace each coefficient coefficien a+bI by a #2x2-matrix [a,-b,b,a]"
+
+
+def mat_C_to_R(M):
+    """M is a matrix with complex coefficients. Replace each coefficient coefficien a+bI by a 2x2-matrix [a,-b,b,a]
+    orginially written def mat_C_to_R(M : matrix) -> matrix : but the type matrix was not recognized
+    """
     A = M.apply_map(real)
     B = M.apply_map(imag)
     p = M.nrows()
@@ -78,6 +92,7 @@ def dim_gen_stab_of_K(matrices)->int:
     # Create the vector v in the representation
     v = vector(QQ, [randint(-3,3) for i in range(n)])
 
+
     # Construct the matrix M
     M = matrix(QQ, n, dk, lambda i, k: sum([matrices[k][i,j] * v[j] for j in range(n)]))
     
@@ -91,7 +106,6 @@ def dim_gen_stab_of_K(matrices)->int:
         v = vector(QQ,n)
         v[k]=1
         M = matrix(QQ, n, dk, lambda i, k: sum([matrices[k][i,j] * v[j] for j in range(n)]))
-     
     # Echelon form of M.transpose() to computation modulo the image F of M
     B = M.transpose().echelon_form().rref() # reduced echelon form
     B = B.matrix_from_rows(B.pivot_rows()) # Suppress zero rows
@@ -99,7 +113,6 @@ def dim_gen_stab_of_K(matrices)->int:
 
     # Dimension of V/F
     qn = n-len(List_Pivots)
-    
     # If V/F is trivial then we can conclude
     if qn == 0 :
         return(dk-n)
@@ -111,14 +124,12 @@ def dim_gen_stab_of_K(matrices)->int:
     # Compute the basis of the left kernel of M. That a bases of the stabilizer of v.
     kernel_basis = M.right_kernel().basis()
     dk_stab=len(kernel_basis)
-    
     # Determine the set I to form a basis of V/F ## 
     
     List_B=[matrix(QQ,qn,qn) for i in range(dk_stab)] 
     for k,L in enumerate(kernel_basis) :
         for j,nj in enumerate(List_Not_Pivots):
             nv=sum([L[i]*matrices[i].column(nj) for i in range(dk)])
-            
             #Split nv
             nv_pivots=vector(QQ,len(List_Pivots))
             nv_quot=vector(QQ,qn)
@@ -130,7 +141,6 @@ def dim_gen_stab_of_K(matrices)->int:
                 else :
                     nv_quot[iq]=nv[i]
                     iq+=1
-                   
             nv_quot+=N*nv_pivots        
             for i in range(qn):
                 List_B[k][i,j]=nv_quot[i]

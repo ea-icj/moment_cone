@@ -36,19 +36,27 @@ class Inequality:
         self.tau = tau
         self.w = tuple(w)
         assert len(tau.d) == len(self.w)
-        self.wtau = Tau(tuple(wk(ck) for wk, ck in zip(self.w, tau.components)), tau.ccomponent)
-   
+        self.wtau = Tau(tuple((wk.inverse)(ck) for wk, ck in zip(self.w, tau.components)), tau.ccomponent)
+    
     @staticmethod
     def from_tau(tau: Tau) -> "Inequality":
-        """
-        Converts a (possibly non-dominant) tau to an element of the class Inequality, that is a pair (taup, w) where w.taup = tau
+        """converts a (possibly non-dominant) tau to an element of the class Inequality, that is a pair (taup,w) where w.taup=tau and w is of minimal length with this property
+        
+        Example:
+        >>>tau0=Tau([[4,9,6,5],[3,1,1,2],[2,2,8,2]],7)
+        >>>ineq0=Inequality.from_tau(tau0)
+        >>>ineq0
+        Inequality(tau  = 7 | 9 6 5 4 | 3 2 1 1 | 8 2 2 2,
+                   w    =     1 2 3 0 | 0 3 1 2 | 2 0 1 3,
+                   wtau = 7 | 4 9 6 5 | 3 1 1 2 | 2 2 8 2)
+        >>>[wi.is_min_rep(si) for wi,si in zip(ineq0.w,ineq0.tau.reduced.mult)]
+        [True, True, True]
 
-        TODO: doctest
         """
         tau_pairs=[sorted([(t,i) for i,t in enumerate(taub)],key=lambda pair:(-pair[0],pair[1])) for taub in tau._components]
         for taub in tau_pairs:
             taup=Tau(Blocks.from_blocks([[t for t,i in taub] for taub in tau_pairs]), tau.ccomponent)
-            w=[Permutation([i for t,i in taub]).inverse for taub in tau_pairs]
+            w=[Permutation([i for t,i in taub]) for taub in tau_pairs]
         return Inequality(taup,w)
     
     def __repr__(self) -> str:

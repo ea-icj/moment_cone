@@ -18,6 +18,7 @@ from .rings import *
 from .listW_temp import *
 from .ramification import *
 from .Normaliz2python import *
+from .stabK_new2 import *
     
 
 #def fct_Weights_of_Nu(nu: PartialMatrix[Partition]) -> PartialMatrix[int]:

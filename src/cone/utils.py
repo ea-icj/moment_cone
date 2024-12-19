@@ -76,7 +76,7 @@ def prod(values: Iterable[int]) -> int:
 
 def short_prod(values: Iterable[int]) -> int:
     """ Product of value with sort-circuit if result is 0 """
-    result = 0
+    result = 1
     for v in values:
         result *= v
         if result == 0:
