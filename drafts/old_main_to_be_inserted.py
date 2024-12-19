@@ -19,6 +19,7 @@ ram_schub_method: Method = 'symbolic'
 ram0_method: Method = 'probabilistic'
 ####
 
+from cone.task import Task
 task = Task("main_total")
 print(task)
 
