@@ -77,7 +77,7 @@ def Compute_JA(ineq : Inequality) : # Return a dictionnary polynom :  int
             uv=action_op_el(root, v, d)
             for row, chi in enumerate(tau.positive_weights[x]): # List of weights such that tau.scalar(chi)=x 
                 M[row,col]=uv[chi.index_in(d)]
-        print('M',M)        
+        #print('M',M)        
         Jb=dict(M.det().factor())   
         for F in Jb.keys(): # We could make a function add_dictionaries
             if F in J.keys():
@@ -149,14 +149,14 @@ def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) ->
     #return(True) # Freeze the second checking
     ### Divisor R_0
     Jf=Compute_JA(ineq) # The Jacobian factorized as a dictionnary
-    print('Jf',Jf)
+    #print('Jf',Jf)
     #print(list(Jf.keys())[0] in d.QV)
     J_square_free=1
     for pol in Jf.keys():
         J_square_free*=pol # todo : prod(list(Jf.keys())) ne semble pas fonctionner
     if len(Jf.keys())!=len(dict(J_square_free.factor()).keys()):
         print('Error in factor with:',Jf,J_square_free)
-    print('J square free',J_square_free)        
+    #print('J square free',J_square_free)        
     # gradiant of J_square_free
     L0=matrix(d.QV,1,len(Neg0_Weights_dic[0]))
     for col,chi in enumerate(Neg0_Weights_dic[0]) :
@@ -198,10 +198,10 @@ def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) ->
             subs_dict[d.QV.variable(chi)]= d.QV2.variable(chi)*d.QV2('z')+d.QV2.variable(chi) # Mettre a et b 
     # Substitutions
     Az=A.subs(subs_dict)
-    D, U, V = Az.smith_form()
-    print('Smith')
-    for i in range(D.nrows()):
-        print(D[i,i])
+    #D, U, V = Az.smith_form()
+    #print('Smith')
+    #for i in range(D.nrows()):
+    #    print(D[i,i])
     B0z=B0.subs(subs_dict)
     L0z=L0.subs(subs_dict)
     Jz=J_square_free.subs(subs_dict)
@@ -212,11 +212,11 @@ def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) ->
     s=Jz.degree()-Smith_n_un.degree()
     exponent=max(s-1,1)
     pgcd=Jz.gcd(Smith_n_un**exponent)
-    print('Jz,Smith_n_un,pgcd:',Jz,Smith_n_un,pgcd)
+    #print('Jz,Smith_n_un,pgcd:',Jz,Smith_n_un,pgcd)
     delta1 = Jz // pgcd # delta1 =Jz.quo(pgcd)
     delta = delta1 // delta1.gcd(delta1.derivative()) #delta = delta1.quo(gcd(delta1,delta_1.derivative()))
     Ldelta=list(dict(delta.factor()).keys())
-    print('delta',delta,Ldelta)
+    #print('delta',delta,Ldelta)
 
     # Computation of Bezout inverse
     LIB=Bezout_Inverse(Ldelta,d.QZ)
@@ -224,14 +224,14 @@ def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) ->
     # Kernel of Az modulo delta
     noyau=Kernel_modulo_P(ring2,Az,Ldelta,LIB,d)
 
-    print('\n noyau\n',noyau,'\n\n')
-    for i in range(Az.nrows()):
-        print((Az*noyau)[i] % delta)
+    #print('\n noyau\n',noyau,'\n\n')
+    #for i in range(Az.nrows()):
+    #    print((Az*noyau)[i] % delta)
     # Check divisibility
     check=L0z*B0z*noyau
     check=d.QZ(check[0])
-    print('check',check)
+    #print('check',check)
     quo, rem = check.quo_rem(delta)
-    print('A Quotient:',rem)
+    #print('A Quotient:',rem)
     return(rem==0)
    

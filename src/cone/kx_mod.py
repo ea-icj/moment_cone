@@ -26,7 +26,7 @@ def Kernel_modulo_P(ring,M : Matrix,LP,LIB,d)->Polynomial: # LP and LIB (list in
             return "Erreur de rang"
         else:
             Vreduced.append(Kernel_basis[0])
-    print(Vreduced,M.nrows())        
+    #print(Vreduced,M.nrows())        
     # We now apply Bezout inverse to each coordinate of Vreduced      
     v=vector(ring,M.nrows())
     for i in range(M.nrows()):
