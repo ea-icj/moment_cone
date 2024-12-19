@@ -1,7 +1,7 @@
 from .utils import *
 from .permutation import *
 from .root import *
-from .cone_dimension import *
+from .vector_chooser import *
 from .rings import matrix
 from .spaces import action_op_el
 

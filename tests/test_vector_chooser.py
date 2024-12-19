@@ -5,7 +5,7 @@ from sage.all import ZZ, QQ, I # type: ignore
 
 from cone.dimension import Dimension
 from cone.weight import Weight
-import cone.cone_dimension as cd
+import cone.vector_chooser as cd
 
 class TestPermutation(unittest.TestCase):
     def test_pointv(self) -> None:

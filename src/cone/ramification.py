@@ -2,7 +2,7 @@ from .typing import *
 from .tau import Tau
 from .root import Root
 from .weight import Weight
-from .cone_dimension import point_vect, vector, matrix
+from .vector_chooser import point_vect, vector, matrix
 from .spaces import action_op_el
 from .inequality import *
 from .permutation import *

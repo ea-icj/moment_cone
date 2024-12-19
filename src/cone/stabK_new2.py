@@ -59,6 +59,7 @@ def Lie_action_as_matrices_Vtau(tau : Tau,matrices): # matrices is a list of mat
     return(res)
 
 
+# Rename, like dim_of_stabilizer_in_K
 def dim_gen_stab_of_K(matrices)->int:
     """
     Recursive function associating an integer to a list of matrices.

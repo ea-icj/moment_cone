@@ -1,6 +1,6 @@
 from cone.typing import *
 from cone.dimension import *
-from cone.cone_dimension import *
+from cone.vector_chooser import *
 from cone.hyperplane_candidates import *
 from cone.listW_temp import *
 from cone.inequality import *

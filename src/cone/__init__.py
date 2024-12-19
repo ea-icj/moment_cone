@@ -6,7 +6,7 @@ from .utils import *
 from .blocks import *
 from .partition import *
 from .dimension import *
-from .cone_dimension import *
+from .vector_chooser import *
 from .tau import *
 from .weight import *
 from .root import *
