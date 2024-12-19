@@ -13,6 +13,11 @@ from .dim_stabilizer_K import *
 
 import sys
 
+__all__ = (
+    "main",
+    "main_from_input",
+)
+
 def main(d: Iterable[int] | Dimension,
          tpi_method: str | Method,
          ram_schub_method: str | Method,

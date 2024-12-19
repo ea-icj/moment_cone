@@ -19,6 +19,7 @@ from .list_of_W import *
 from .ramification import *
 from .Normaliz2python import *
 from .dim_stabilizer_K import *
+from .main import *
     
 
 #def fct_Weights_of_Nu(nu: PartialMatrix[Partition]) -> PartialMatrix[int]:
