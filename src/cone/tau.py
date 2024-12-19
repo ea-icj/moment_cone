@@ -615,6 +615,7 @@ def find_1PS_reg_mod_sym_dim(d: Dimension, u: int) -> Iterable[Tau]:
     """
     from .hyperplane_candidates import find_hyperplanes_reg_mod_sym_dim
     list_hr = find_hyperplanes_reg_mod_sym_dim(d, u)
+    print(list_hr)
     list_1PS = unique_modulo_symmetry_list_of_tau(Tau.from_zero_weights(h, d) for h in list_hr)
     list_1PS_sign = (t for tau in list_1PS for t in (tau, tau.opposite))
     return filter(lambda tau: tau.is_dom_reg, list_1PS_sign)
