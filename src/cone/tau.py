@@ -589,7 +589,7 @@ def unique_modulo_symmetry_list_of_tau(seq_tau: Iterable[Tau]) -> set[Tau]:
     """
     return {tau.end0_representative.sort_mod_sym_dim for tau in seq_tau}
 
-def full_under_symmetry_list_of_tau(seq_tau: Sequence[Tau]) -> Iterable[Tau]:
+def full_under_symmetry_list_of_tau(seq_tau: Iterable[Tau]) -> Iterable[Tau]:
     """ TODO """
     return itertools.chain.from_iterable(tau.orbit_symmetries() for tau in seq_tau)
 
