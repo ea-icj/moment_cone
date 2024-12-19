@@ -13,13 +13,10 @@ import sys
 
 ####
 d0=Dimension([4,4,4])
-#stabilizer_method='symbolic'
-stabilizer_method='probabilistic'
-tpi_method='symbolic'
+tpi_method: Method ='symbolic'
 #tpi_method='probabilistic'
-ram_schub_method='probabilistic'
-ram_schub_method='symbolic'
-ram0_method='probabilistic'
+ram_schub_method: Method = 'symbolic'
+ram0_method: Method = 'probabilistic'
 ####
 
 
@@ -40,12 +37,12 @@ else:
 #Candidates_for_tau=find_hyperplanes_mod_sym_dim(d0,d0.dimU) # This is the function for regular ops (todo : include this info in the name) - To be changed.
 print('Step 1, looking for a first list of dominant 1-PS whose kernel is supported at hyperplanes of weights.')
 
-Candidates_for_tau=find_1PS_mod_sym_dim(d0)
+Candidates_for_tau_1ps =find_1PS_mod_sym_dim(d0)
 
-print(len(Candidates_for_tau), ' dominant 1-PS selected in Step 1')
-for tau in Candidates_for_tau:
+print(len(Candidates_for_tau_1ps), ' dominant 1-PS selected in Step 1')
+for tau in Candidates_for_tau_1ps:
     print(tau)
-Candidates_for_tau=unique_modulo_symmetry_list_of_tau(Candidates_for_tau) # todo : inutile car déjà fait dans find_1PS ?
+Candidates_for_tau=unique_modulo_symmetry_list_of_tau(Candidates_for_tau_1ps) # todo : inutile car déjà fait dans find_1PS ?
 print(len(Candidates_for_tau), ' dominant 1-PS selected in Step 1 After Unicity')
 
 for tau in Candidates_for_tau:
