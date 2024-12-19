@@ -59,6 +59,14 @@ def is_not_contracted(inversions_v: Sequence[Root], tau: Tau, method: Method) ->
     rank_A = A.change_ring(ring.fraction_field()).rank()
     return rank_A == len(list_inversions_v)
 
+def Normalization_Factorized_Polynomial(Jb) :
+    d={}
+    for P in Jb.keys():
+        a=P.monomial_coefficient(P.monomials()[0])
+        new_key=P/a
+        d[new_key]=Jb[P]
+    return(d)
+
 def Compute_JA(ineq : Inequality) : # Return a dictionnary polynom :  int
     tau=ineq.tau
     d = tau.d
@@ -78,12 +86,13 @@ def Compute_JA(ineq : Inequality) : # Return a dictionnary polynom :  int
             for row, chi in enumerate(tau.positive_weights[x]): # List of weights such that tau.scalar(chi)=x 
                 M[row,col]=uv[chi.index_in(d)]
         #print('M',M)        
-        Jb=dict(M.det().factor())   
-        for F in Jb.keys(): # We could make a function add_dictionaries
+        Jb=dict(M.det().factor())
+        Jbn=Normalization_Factorized_Polynomial(Jb)
+        for F in Jbn.keys(): # We could make a function add_dictionaries
             if F in J.keys():
-                J[F]+=Jb[F]
+                J[F]+=Jbn[F]
             else:
-                J[F]=Jb[F]
+                J[F]=Jbn[F]
     return(J)
 
 def Smith_n_1(A):

@@ -9,11 +9,11 @@ from cone.ramification import *
 from cone.Normaliz2python import *
 
 ####
-d0=Dimension([3,3,3])
+d0=Dimension([4,4,4])
 #stabilizer_method='symbolic'
 stabilizer_method='probabilistic'
 tpi_method='symbolic'
-tpi_method='probabilistic'
+#tpi_method='probabilistic'
 ram_schub_method='probabilistic'
 ram0_method='probabilistic'
 ####
