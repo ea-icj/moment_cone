@@ -9,7 +9,7 @@ from cone.ramification import *
 from cone.Normaliz2python import *
 
 ####
-d0=Dimension([5,4,4])
+d0=Dimension([4,4,4])
 #stabilizer_method='symbolic'
 stabilizer_method='probabilistic'
 tpi_method='symbolic'
