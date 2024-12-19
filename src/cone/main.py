@@ -24,7 +24,46 @@ def main(d: Iterable[int] | Dimension,
          ram0_method: str | Method = "probabilistic",
          quiet: bool = False,
          ) -> list[Inequality]:
-    """ Main entrance of the algorithm """
+    """
+    Main entrance of the algorithm
+    
+    Example in 2, 2, 2:
+    >>> d = Dimension((2, 2, 2))
+    >>> for ineq in main(d, quiet=True):
+    ...     print(ineq)
+    Inequality(tau  = -2 | 1 0 | 1 0 | 1 0,
+               w    =     0 1 | 0 1 | 1 0,
+               wtau = -2 | 1 0 | 1 0 | 0 1)
+
+    Example in 3, 3, 3:
+    >>> d = Dimension((3, 3, 3))
+    >>> for ineq in main(d, quiet=True):
+    ...     print(ineq)
+    Inequality(tau  = -4 | 2 1 0 | 2 1 0 | 2 1 0,
+               w    =     0 2 1 | 1 0 2 | 2 0 1,
+               wtau = -4 | 2 0 1 | 1 2 0 | 1 0 2)
+    Inequality(tau  = -1 | 0 0 0 | 0 0 0 | 1 1 0,
+               w    =     0 1 2 | 0 1 2 | 0 1 2,
+               wtau = -1 | 0 0 0 | 0 0 0 | 1 1 0)
+    Inequality(tau  = -2 | 1 0 0 | 1 0 0 | 1 1 0,
+               w    =     0 1 2 | 1 0 2 | 0 2 1,
+               wtau = -2 | 1 0 0 | 0 1 0 | 1 0 1)
+    Inequality(tau  = -4 | 2 1 0 | 2 1 0 | 2 1 0,
+               w    =     0 1 2 | 1 0 2 | 2 1 0,
+               wtau = -4 | 2 1 0 | 1 2 0 | 0 1 2)
+    Inequality(tau  = -2 | 1 0 0 | 1 0 0 | 1 1 0,
+               w    =     0 1 2 | 2 0 1 | 0 1 2,
+               wtau = -2 | 1 0 0 | 0 0 1 | 1 1 0)
+    Inequality(tau  = -4 | 2 1 0 | 2 1 0 | 2 1 0,
+               w    =     0 1 2 | 0 2 1 | 2 1 0,
+               wtau = -4 | 2 1 0 | 2 0 1 | 0 1 2)
+    Inequality(tau  = -4 | 2 1 0 | 2 1 0 | 2 1 0,
+               w    =     0 2 1 | 0 2 1 | 1 2 0,
+               wtau = -4 | 2 0 1 | 2 0 1 | 0 2 1)
+    Inequality(tau  = -2 | 1 0 0 | 1 0 0 | 1 1 0,
+               w    =     0 1 2 | 0 1 2 | 1 2 0,
+               wtau = -2 | 1 0 0 | 1 0 0 | 0 1 1)
+    """
     if not isinstance(d, Dimension):
         d = Dimension(d)
     tpi_method = to_method(tpi_method)
