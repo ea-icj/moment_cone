@@ -22,6 +22,7 @@ def main(d: Iterable[int] | Dimension,
          tpi_method: str | Method = "probabilistic",
          ram_schub_method: str | Method = "probabilistic",
          ram0_method: str | Method = "probabilistic",
+         quiet: bool = False,
          ) -> list[Inequality]:
     """ Main entrance of the algorithm """
     if not isinstance(d, Dimension):
@@ -30,49 +31,59 @@ def main(d: Iterable[int] | Dimension,
     ram_schub_method = to_method(ram_schub_method)
     ram0_method = to_method(ram0_method)
 
-    print("d =", d)
-    print("tpi_method =", tpi_method)
-    print("ram_schub_method =", ram_schub_method)
-    print("ram0_method =", ram0_method)
+    if not quiet:
+        print("d =", d)
+        print("tpi_method =", tpi_method)
+        print("ram_schub_method =", ram_schub_method)
+        print("ram0_method =", ram0_method)
+        print()
 
     # Reset task history
     Task.reset_all()
+    Task.quiet = quiet
 
     ## Checking if the cone has the expected dimension
-    print()
     with Task("Step 0: checking cone dimension"):
         Ms=Lie_action_as_matrices_V(d)
         MsR=[mat_C_to_R(M) for M in Ms]
         if dim_gen_stab_of_K(MsR)>len(d)-1: # Check that the dim is computed in U_n(C)^s without the isolated S^1
-            print('The moment cone has codimension bigger that the length of d. Namely',dim_gen_stab_of_K(MsR))
-            print('The program does not work in this case')
-            sys.exit()
-        else:
+            raise ValueError(
+                f'The moment cone has codimension bigger that the length of d. Namely {dim_gen_stab_of_K(MsR)}.'
+                'The program does not work in this case.'
+            )
+        elif not quiet:
             print('The cone has the expected dimension.')
+            print()
 
     ## Generate the list of candidates for tau
     #Candidates_for_tau=find_hyperplanes_mod_sym_dim(d0,d0.dimU) # This is the function for regular ops (todo : include this info in the name) - To be changed.
-    print()
-    with Task('Step 1: looking for a first list of dominant 1-PS whose kernel is supported at hyperplanes of weights.'):
-        Candidates_for_tau_1ps =find_1PS_mod_sym_dim(d)
-        Candidates_for_tau=unique_modulo_symmetry_list_of_tau(Candidates_for_tau_1ps) # todo : inutile car déjà fait dans find_1PS ?
+    with Task('Step 1: looking for a first list of dominant 1-PS whose kernel is supported at hyperplanes of weights'):
+        Candidates_for_tau_1ps = find_1PS_mod_sym_dim(d, quiet)
 
-    print(len(Candidates_for_tau_1ps), ' dominant 1-PS selected in Step 1')
-    for tau in Candidates_for_tau_1ps:
-        print(tau)
+    if not quiet:
+        print(len(Candidates_for_tau_1ps), ' dominant 1-PS selected in Step 1')
+        for tau in Candidates_for_tau_1ps:
+            print(tau)
+        print()
 
-    print(len(Candidates_for_tau), ' dominant 1-PS selected in Step 1 After Unicity')
-    for tau in Candidates_for_tau:
-        print(tau)
+    with Task('Step 1.5: unicity of this list'):
+        Candidates_for_tau = unique_modulo_symmetry_list_of_tau(Candidates_for_tau_1ps) # todo : inutile car déjà fait dans find_1PS ?
+
+    if not quiet:
+        print(len(Candidates_for_tau), ' dominant 1-PS selected in Step 1 After Unicity')
+        for tau in Candidates_for_tau:
+            print(tau)
+        print()
  
     # Filter 1: submodule condition
-    print()
     with Task('Step 2: checking submodule condition'):
         Candidates_for_tau1=[tau for tau in Candidates_for_tau if tau.is_sub_module]
-    print(len(Candidates_for_tau1), ' dominant 1-PS selected in Step 2')
+
+    if not quiet:
+        print(len(Candidates_for_tau1), ' dominant 1-PS selected in Step 2')
+        print()
 
     # Filter 2: stabilizer condition
-    print()
     with Task('Step 3: stabilizer condition'):
         ### Avec le nouveau dimStab
         Candidates_for_tau2=[]
@@ -85,46 +96,55 @@ def main(d: Iterable[int] | Dimension,
                 if dim_gen_stab_of_K(Ms_tauR)==len(d):
                     Candidates_for_tau2.append(tau)   
 
-    print(len(Candidates_for_tau2), ' dominant 1-PS selected in Step 3')
-    for tau in Candidates_for_tau2:
-        print(tau)
+    if not quiet:
+        print(len(Candidates_for_tau2), ' dominant 1-PS selected in Step 3')
+        for tau in Candidates_for_tau2:
+            print(tau)
+        print()
 
-    ## Generate the list of candidates for the inequalites (pairs tau,w)
+    ## Generate the list of candidates for the inequalities (pairs tau,w)
     ## Here w has to belong to P^tau and U(w) is tau-isomorphic to V(tau>0)
-    print()
     with Task('Step 4: computing action of W, in order to get a first list of inequalities containing all the expected ones'):
-        Candidates_for_Ineq=[]
+        Candidates_for_Ineq: list[Inequality] = []
         for tau in Candidates_for_tau2 :
-            Lw=ListWs_Mod(tau)
-            Candidates_for_Ineq+=[Inequality(tau,w) for w in Lw] # Fait-on un dictionnaire tau : Lw ??
+            Lw = ListWs_Mod(tau)
+            Candidates_for_Ineq += [Inequality(tau, w) for w in Lw] # Fait-on un dictionnaire tau : Lw ??
 
-    print(len(Candidates_for_Ineq), ' inequalities selected in Step 4')
-    for ineq in Candidates_for_Ineq :
-        print(ineq)
+    if not quiet:
+        print(len(Candidates_for_Ineq), ' inequalities selected in Step 4')
+        for ineq in Candidates_for_Ineq :
+            print(ineq)
+        print()
 
     # Filter 0: unicity modulo sym(d)
-    print()
     with Task('Step 5, Reduction modulo symmetries of the dimension vector'):
         Candidates_for_Ineq1=unique_modulo_symmetry_list_of_ineq(Candidates_for_Ineq)
 
-    print(len(Candidates_for_Ineq1), ' inequalities selected in Step 5')
-    for ineq in Candidates_for_Ineq1 :
-        print(ineq.tau)
+    if not quiet:
+        print(len(Candidates_for_Ineq1), ' inequalities selected in Step 5')
+        for ineq in Candidates_for_Ineq1 :
+            print(ineq.tau)
+        print()
 
     # Filter 1: pi is dominant
-    print()
     with Task('Step 6: checking dominancy of the map pi'):
         Dominant_Ineq=[ineq for ineq in Candidates_for_Ineq1 if Check_Rank_Tpi(ineq,tpi_method)] 
 
-    print(len(Dominant_Ineq), ' inequalities selected in Step 6')
-    for ineq in Dominant_Ineq :
-        print(ineq.tau)
+    if not quiet:
+        print(len(Dominant_Ineq), ' inequalities selected in Step 6')
+        for ineq in Dominant_Ineq :
+            print(ineq.tau)
+        print()
 
     # Filter 2: pi is birational (ramification divisor contracted)
-    print()
     with Task('Step 7: checking birationality (ramification divisor contracted) of the map pi'):
         Birational_Ineq=[ineq for ineq in Dominant_Ineq if Is_Ram_contracted(ineq,ram_schub_method,ram0_method)]
-    print(len(Birational_Ineq), ' inequalities selected in Step 7')    
+
+    if not quiet:
+        print(len(Birational_Ineq), ' inequalities selected in Step 7')    
+        for ineq in Birational_Ineq :
+            print(ineq)
+        print()
 
     #path="/home/bm29130h/Documents/Recherche/Ressources_autres/GDT/Machine Learning/calculs Kron/2 oct/"
     #reference=[Inequality.from_tau(tau) for tau in convert_file_Nout2pyth(path,d0)]
@@ -134,8 +154,6 @@ def main(d: Iterable[int] | Dimension,
     #unique_reference=unique_modulo_symmetry_list_of_ineq(reference)
     #dictionary_list_lengths(compare_tau_candidates_reference_mod_sym_dim(Candidates_for_tau,[ineq.tau for ineq in reference]))
 
-    for ineq in Birational_Ineq :
-        print(ineq)
     
     # Disabling this part since the reference files are missing
     # TODO: move to a unittest ?
@@ -150,10 +168,11 @@ def main(d: Iterable[int] | Dimension,
         #FIXME: d[0]-1 has to be adapted when values differ (prod of different d[i]-1)
         print("if perfect: should return 0 for candidates_only and ", d[0]-1, "for reference_only")
     
-    print()
-    print(80 * "#")
-    print("Summary of the tasks:")
-    Task.print_all(disp_interlude=False)
+    if not quiet:
+        print()
+        print(80 * "#")
+        print("Summary of the tasks:")
+        Task.print_all(disp_interlude=False)
 
     return Birational_Ineq
 
@@ -207,10 +226,9 @@ This software compute a redundant list of inequalities for the cone Kron(d1, d2,
 
     config = parser.parse_args()
 
-    Task.quiet = config.quiet
-
     main(Dimension(config.d),
          tpi_method=config.tpi,
          ram_schub_method=config.ram_schub,
          ram0_method=config.ram0,
+         quiet=config.quiet,
     )

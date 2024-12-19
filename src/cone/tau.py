@@ -619,7 +619,7 @@ def find_1PS_reg_mod_sym_dim(d: Dimension, u: int) -> Iterable[Tau]:
     return filter(lambda tau: tau.is_dom_reg, list_1PS_sign)
 
 
-def find_1PS_mod_sym_dim(d: Dimension) -> Sequence["Tau"]:
+def find_1PS_mod_sym_dim(d: Dimension, quiet: bool = False) -> Sequence["Tau"]:
     """
     Same as find_1PS_reg_mod_sym_dim without regularity condition
     Computed by 
@@ -628,15 +628,20 @@ def find_1PS_mod_sym_dim(d: Dimension) -> Sequence["Tau"]:
     """
     # Initialisation with regular 1-PS
     Liste_1PS = list(find_1PS_reg_mod_sym_dim(d,d.u_max(d)))
-    print('For d=',d,'we get',len(Liste_1PS),' candidates regular dominant up to symmetry')
+    if not quiet:
+        print('For d=',d,'we get',len(Liste_1PS),' candidates regular dominant up to symmetry')
+
     # Looking for 1-PS by extension
     sub_dim=[Dimension(p) for p in Partition(d).all_subpartitions()][1:-1] #[1:-1] excludes 1... 1 and d
     for small_d in sub_dim:  
         umax=d.u_max(small_d)
+
         #Recover by induction all candidates 1-PS mod symmetry
         Liste_1PS_smalld_reg_mod_sym= list(find_1PS_reg_mod_sym_dim(small_d,umax))
-        print('For d=',small_d,'we get',len(Liste_1PS_smalld_reg_mod_sym),' candidates regular dominant up to symmetry')
+        if not quiet:
+            print('For d=',small_d,'we get',len(Liste_1PS_smalld_reg_mod_sym),' candidates regular dominant up to symmetry')
         Liste_1PS_smalld_reg=full_under_symmetry_list_of_tau(Liste_1PS_smalld_reg_mod_sym)
+
         #Liste_1PS_smalld_reg=sum([list(tau.orbit_symmetries()) for tau in Liste_1PS_smalld_reg_mod_sym]  ,[])
         Liste_1PS_smalld_extended=[]
         for permut in Permutation.embeddings_mod_sym(d, small_d):
@@ -647,8 +652,5 @@ def find_1PS_mod_sym_dim(d: Dimension) -> Sequence["Tau"]:
                     if len(flatten_dictionary(tau_ext.positive_weights))<=tau_ext.dim_Pu:
                         Liste_1PS_smalld_extended.append(tau_ext)
         Liste_1PS+=unique_modulo_symmetry_list_of_tau(Liste_1PS_smalld_extended)
-    return(Liste_1PS)
 
-
-
-#    return list(set(Liste_1PS))
+    return Liste_1PS
