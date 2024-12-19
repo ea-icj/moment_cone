@@ -133,6 +133,20 @@ def main(d: Iterable[int] | Dimension,
 
     for ineq in Birational_Ineq :
         print(ineq)
+    
+    if d in [Dimension([3,3,3]), Dimension([4,4,4]), Dimension([5,4,4])]:
+        print()
+        print(80 * "#")
+        print("Comparison with values of reference for ", d)
+        path="./cone/References/"
+        reference=[Inequality.from_tau(tau) for tau in convert_file_Nout2pyth(path,d)]
+        diff_with_reference=compare_ineq_candidates_reference_mod_sym_dim( Birational_Ineq , reference)
+        print( dictionary_list_lengths(diff_with_reference))
+        #FIXME: d[0]-1 has to be adapted when values differ (prod of different d[i]-1)
+        print("if perfect: should return 0 for candidates_only and ", d[0]-1, "for reference_only")
+    
+    #FIXME: when launching the program 2 times (via main(Dimension([3,3,3]), tpi_method="p", ram_schub_method="p", ram0_method="p")), the tasks printed in the 2nd call include tasks of the 1st call.
+
 
     print()
     print(80 * "#")
