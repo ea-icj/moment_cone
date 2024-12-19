@@ -19,7 +19,10 @@ ram_schub_method: Method = 'symbolic'
 ram0_method: Method = 'probabilistic'
 ####
 
+task = Task("main_total")
+print(task)
 
+task.start()
 
 ## Checking if the cone has the expected dimension
 
@@ -74,7 +77,6 @@ print(len(Candidates_for_tau2), ' dominant 1-PS selected in Step 3')
 for tau in Candidates_for_tau2:
     print(tau)
 
-
 ## Generate the list of candidates for the inequalites (pairs tau,w)
 ## Here w has to belong to P^tau and U(w) is tau-isomorphic to V(tau>0)
 
@@ -109,9 +111,6 @@ print('Step 7, checking birationality (ramification divisor contracted) of the m
 Birational_Ineq=[ineq for ineq in Dominant_Ineq if Is_Ram_contracted(ineq,ram_schub_method,ram0_method)]
 print(len(Birational_Ineq), ' inequalities selected in Step 7')
 
-#path="/home/bm29130h/Documents/Recherche/Ressources_autres/GDT/Machine Learning/calculs Kron/2 oct/"
-#reference=[Inequality.from_tau(tau) for tau in convert_file_Nout2pyth(path,d0)]
-#dictionary_list_lengths(compare_ineq_candidates_reference_mod_sym_dim(Candidates_for_Ineq1,reference))
 
 #test fails following fusion 17dec 12h11
 
@@ -120,3 +119,14 @@ print(len(Birational_Ineq), ' inequalities selected in Step 7')
 
 for ineq in Birational_Ineq :
     print(ineq)
+    
+
+task.stop()
+
+print(task)
+
+#path="./src/cone/References/"
+path="./cone/References/"
+reference=[Inequality.from_tau(tau) for tau in convert_file_Nout2pyth(path,d0)]
+dictionary_list_lengths(compare_ineq_candidates_reference_mod_sym_dim(Birational_Ineq,reference))
+

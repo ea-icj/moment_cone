@@ -161,7 +161,6 @@ def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) ->
     J_square_free=1
     for pol in Jf.keys():
         J_square_free*=pol # todo : prod(list(Jf.keys())) ne semble pas fonctionner
-
     # FIXME: type ignore
     if len(Jf.keys())!=len(dict(J_square_free.factor()).keys()): # type: ignore
         print('Error in factor with:',Jf,J_square_free)

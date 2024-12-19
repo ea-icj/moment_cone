@@ -6,6 +6,8 @@ from .tau import *
 from .rings import matrix, Matrix, vector, Vector, QQ, I, real_part, imag_part
 from random import randint
 
+
+
 def mat_C_to_R(M : Matrix) -> Matrix :
     "M is a matrix with complex coefficients. Replace each coefficient coefficien a+bI by a 2x2-matrix [a,-b,b,a]"
     A = real_part(M)
@@ -80,7 +82,6 @@ def dim_gen_stab_of_K(matrices) -> int:
     n = matrices[0].nrows()  # Size of the square matrices
     # Create the vector v in the representation
     v = vector(QQ, [randint(-3,3) for i in range(n)])
-
     # Construct the matrix M
     M = matrix(QQ, n, dk, lambda i, k: sum([matrices[k][i,j] * v[j] for j in range(n)]))
     
@@ -94,7 +95,7 @@ def dim_gen_stab_of_K(matrices) -> int:
         v = vector(QQ,n)
         v[k]=1
         M = matrix(QQ, n, dk, lambda i, k: sum([matrices[k][i,j] * v[j] for j in range(n)]))
-     
+
     # Echelon form of M.transpose() to computation modulo the image F of M
     B_tmp = M.transpose().echelon_form().rref() # reduced echelon form
     B: Matrix = B_tmp.matrix_from_rows(B_tmp.pivot_rows()) # Suppress zero rows
@@ -102,7 +103,7 @@ def dim_gen_stab_of_K(matrices) -> int:
 
     # Dimension of V/F
     qn = n-len(List_Pivots)
-    
+
     # If V/F is trivial then we can conclude
     if qn == 0 :
         return(dk-n)
