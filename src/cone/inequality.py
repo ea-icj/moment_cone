@@ -151,6 +151,21 @@ def unique_modulo_symmetry_list_of_ineq(seq_ineq: Iterable[Inequality]) -> set[I
     Inequality(tau  = 1 | 1 4 | 1 4 | 6 2 | 5 3 1,
                w    =     0 1 | 1 0 | 0 1 | 2 0 1,
                wtau = 1 | 1 4 | 4 1 | 6 2 | 3 1 5)
+
+    Another example:
+    >>> d = Dimension((2, 2, 2))
+    >>> ineq1 = Inequality(Tau.from_flatten((-1, 0, 0, 1, 0, 1, 0), d), (Permutation((0, 1)), Permutation((1, 0)), Permutation((1, 0))))
+    >>> ineq2 = Inequality(Tau.from_flatten((-2, 1, 0, 1, 0, 1, 0), d), (Permutation((0, 1)), Permutation((0, 1)), Permutation((1, 0))))
+    >>> ineq3 = Inequality(Tau.from_flatten((-2, 1, 0, 1, 0, 1, 0), d), (Permutation((0, 1)), Permutation((1, 0)), Permutation((0, 1))))
+    >>> ineq4 = Inequality(Tau.from_flatten((-2, 1, 0, 1, 0, 1, 0), d), (Permutation((1, 0)), Permutation((0, 1)), Permutation((0, 1))))
+    >>> for ineq in unique_modulo_symmetry_list_of_ineq((ineq1, ineq2, ineq3, ineq4)):
+    ...     print(ineq)
+    Inequality(tau  = -2 | 1 0 | 1 0 | 1 0,
+               w    =     0 1 | 0 1 | 1 0,
+               wtau = -2 | 1 0 | 1 0 | 0 1)
+    Inequality(tau  = -1 | 0 0 | 1 0 | 1 0,
+               w    =     0 1 | 1 0 | 1 0,
+               wtau = -1 | 0 0 | 0 1 | 0 1)
     """
     return set(ineq.sort_mod_sym_dim for ineq in seq_ineq)
 
