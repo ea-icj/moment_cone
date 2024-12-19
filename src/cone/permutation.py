@@ -78,7 +78,9 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         return f"Permutation({super().__repr__()})"
     
     def is_min_rep(self, symmetries: Iterable[int]) -> bool:
-        """ Check if permutation is decreasing along each block of given sizes 
+        """
+        Check if permutation is increasing along each block of given sizes
+
         Lie theoretically speaking: 
         symmetries encode the size of blocks of a Levi L, 
         Denote its Weyl group by W_L
