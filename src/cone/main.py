@@ -1,13 +1,5 @@
-from cone.typing import *
-from cone.dimension import Dimension
-
-def to_method(method: str) -> Method:
-    if method.startswith("p"):
-        return "probabilistic"
-    elif method.startswith("s"):
-        return "symbolic"
-    else:
-        raise ValueError(f"Unknown method {method}")
+from .typing import *
+from .dimension import Dimension
 
 def main(d: Iterable[int] | Dimension,
          stabilizer_method: str | Method,
@@ -30,6 +22,15 @@ def main(d: Iterable[int] | Dimension,
     print("ram0_method =", ram0_method)
 
     pass # TODO
+
+def to_method(method: str) -> Method:
+    """ Return full name of a method by looking only to the first letter """
+    if method.startswith("p"):
+        return "probabilistic"
+    elif method.startswith("s"):
+        return "symbolic"
+    else:
+        raise ValueError(f"Unknown method {method}")
 
 def main_from_input():
     """ Main entrance from user inputs """
@@ -80,6 +81,3 @@ This software compute a redundant list of inequalities for the cone Kron(d1, d2,
          ram_schub_method=config.ram_schub,
          ram0_method=config.ram0,
     )
-
-if __name__ == "__main__":
-    main_from_cmd()
