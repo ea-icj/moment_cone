@@ -15,6 +15,7 @@ stabilizer_method='probabilistic'
 tpi_method='symbolic'
 #tpi_method='probabilistic'
 ram_schub_method='probabilistic'
+ram_schub_method='symbolic'
 ram0_method='probabilistic'
 ####
 
@@ -25,7 +26,7 @@ ram0_method='probabilistic'
 Ms=Lie_action_as_matrices_V(d0)
 MsR=[mat_C_to_R(M) for M in Ms]
 if dim_gen_stab_of_K(MsR)>len(d0)-1: # Check that the dim is computed in U_n(C)^s without the isolated S^1
-    print('The moment cone has codimension bigger that the length of d. Namely', dim_of_stabilizer_in_K_tau(tau_triv,stabilizer_method))
+    print('The moment cone has codimension bigger that the length of d. Namely',dim_gen_stab_of_K(MsR))
     print('The program does not work in this case')
     sys.exit()
 else:
@@ -56,17 +57,6 @@ print(len(Candidates_for_tau1), ' dominant 1-PS selected in Step 2')
 # Filter 2: stabilizer condition
 print('Step 3, Stabilizer condition')
 
-"""
-##### TO BE SUPRESSED #####
-Candidates_for_tau2o=[]
-for tau in Candidates_for_tau1:
-    if  tau.is_dom_reg :
-        Candidates_for_tau2o.append(tau)
-    elif dim_of_stabilizer_in_K_tau(tau,stabilizer_method)==len(d0) :    
-        Candidates_for_tau2o.append(tau)
-print(len(Candidates_for_tau2o), ' dominant 1-PS selected in Step 3')
-####### END SUPRESS ######
-"""
 
 ### Avec le nouveau dimStab
 Candidates_for_tau2=[]
@@ -80,14 +70,10 @@ for tau in Candidates_for_tau1:
             Candidates_for_tau2.append(tau)    
 print(len(Candidates_for_tau2), ' dominant 1-PS selected in Step 3')
 
-"""
+
 for tau in Candidates_for_tau2:
     print(tau)
 
-##### TO BE SUPRESSED #####
-print('Test New Stab',Candidates_for_tau2==Candidates_for_tau2o,len(Candidates_for_tau2),len(Candidates_for_tau2o))
-####### END SUPRESS ######
-"""
 
 ## Generate the list of candidates for the inequalites (pairs tau,w)
 ## Here w has to belong to P^tau and U(w) is tau-isomorphic to V(tau>0)

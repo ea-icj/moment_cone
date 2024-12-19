@@ -120,12 +120,10 @@ def Smith_n_1(A):
 
 def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) -> bool :
     d=ineq.tau.d
-    if method_S == "probabilistic": 
-        ring = d.QI  # ou QQ ?
-        ring2= d.QZ
-    elif method_S == "symbolic":
-        ring = d.QV
-        ring2= d.QV2
+    if method_R0 == "probabilistic" :
+        ring_R0= d.QZ
+    elif method_R0 == "symbolic":
+        ring_R0= d.QV2
     else:
         raise ValueError(f"Invalid value {method} of the computation method")
     
@@ -231,7 +229,7 @@ def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) ->
     LIB=Bezout_Inverse(Ldelta,d.QZ)
     
     # Kernel of Az modulo delta
-    noyau=Kernel_modulo_P(ring2,Az,Ldelta,LIB,d)
+    noyau=Kernel_modulo_P(ring_R0,Az,Ldelta,LIB,d)
 
     #print('\n noyau\n',noyau,'\n\n')
     #for i in range(Az.nrows()):
