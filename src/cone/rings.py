@@ -32,6 +32,8 @@ __all__ = (
     'ZZ', 'QQ', 'I',
 )
 
+# TODO: independant type alias for Vector, Matrix et co. from Sage (to avoid Unknown)
+
 VariableName = str | Weight
 Variable = Any
 RingGens = dict[str, Variable]

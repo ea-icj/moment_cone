@@ -78,7 +78,9 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         return f"Permutation({super().__repr__()})"
     
     def is_min_rep(self, symmetries: Iterable[int]) -> bool:
-        """ Check if permutation is decreasing along each block of given sizes 
+        """
+        Check if permutation is increasing along each block of given sizes
+
         Lie theoretically speaking: 
         symmetries encode the size of blocks of a Levi L, 
         Denote its Weyl group by W_L
@@ -88,7 +90,7 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
             all(a < b for a, b in itertools.pairwise(block))
             for block in Blocks.from_flatten(self, symmetries)
         )
-
+    
     @staticmethod
     def all(n: int) -> Iterable["Permutation"]:
         """ Returns all the possible permutation of S_n """
@@ -179,12 +181,12 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         )
 
     @cached_property
-    def covering_relations_strong_Bruhat(self) -> tuple["Permutation", ...]:
+    def covering_relations_strong_Bruhat_old(self) -> tuple["Permutation", ...]:
         """
         Covering relations strong Bruhat
 
-        Liste of v <= self for the ??? order so that v <= self is wrong
-        for the weak order and v has a length that is equal to the length of self minus 1.
+        Liste of v <= self for the Bruhat order so that v <= self is wrong
+        for the weak Bruhat order and v has a length that is equal to the length of self minus 1.
         """
         n = len(self)
         return tuple(
@@ -194,7 +196,22 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
             if p.length == self.length - 1
         )
 
+    @cached_property
+    def covering_relations_strong_Bruhat(self) -> tuple["Permutation", ...]:
+        """
+        Covering relations strong Bruhat
 
+        Liste of v <= self for the Bruhat order so that v <= self is wrong
+        for the weak Bruhat order and v has a length that is equal to the length of self minus 1.
+        """
+        n = len(self)
+        return tuple(
+            p
+            for i, j in itertools.combinations(range(n), 2)
+            for p in [Permutation(list(self[:i]) + [self[j]] + list(self[i+1:j]) + [self[i]] + list(self[j+1:]))]
+            if (self[i] > self[j]+1) and (p.length == self.length - 1)
+        )
+    
     @staticmethod
     def all_transpositions(n: int) -> Iterable["Permutation"]:
         """

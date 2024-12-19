@@ -44,7 +44,7 @@ class TestPermutation(unittest.TestCase):
         self.assertEqual(pl[5], Permutation((3, 0, 1, 2)))
 
     def test_others(self) -> None:
-        p = Permutation((3, 2, 1, 4, 3, 5, 4, 3, 2))
+        p = Permutation((1, 2, 3, 3, 4, 2, 3, 4, 5))
         
         d1 = Dimension((3, 2, 4))
         self.assertTrue(p.is_min_rep(d1))

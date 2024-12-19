@@ -1,11 +1,13 @@
 from .rings import Matrix, vector, Polynomial
 
-def Bezout_Inverse(LP):
+def Bezout_Inverse(LP,ring):
     " LP is a list of polynomial pairwise coprime. Return a list of polynomial M_i such that Bezout inverse is sum(M_i*B_i)"
     res=[]
     for i,P in enumerate(LP):
-        Q=prod(LP[:i]+LP[i+1:])
-        u,A,B=xgcd(Q,P)
+        Q=ring(1)
+        for pol in LP[:i]+LP[i+1:]:
+            Q*=pol
+        u,A,B=Q.xgcd(P)
         res.append(A*Q)
     return(res)
 
@@ -19,13 +21,14 @@ def Kernel_modulo_P(ring,M : Matrix,LP,LIB,d)->Polynomial: # LP and LIB (list in
     for P in LP:
         Qring.append(ring.quotient(P))
         Mreduced=M.apply_map(lambda entry: Qring[-1](entry))
-        Kernel=Mreduced.right_kernel().basis()
-        if len(b)!=1:
+        Kernel_basis=Mreduced.right_kernel().basis()
+        if len(Kernel_basis)!=1:
             return "Erreur de rang"
         else:
-            Vreduced.append(b[0])
+            Vreduced.append(Kernel_basis[0])
+    #print(Vreduced,M.nrows())        
     # We now apply Bezout inverse to each coordinate of Vreduced      
-    v=vector(ring,len(LP))
+    v=vector(ring,M.nrows())
     for i in range(M.nrows()):
         v[i]=sum(Vreduced[k][i].lift()*LIB[k] for k in range(len(LP)))
     return(v)    
