@@ -3,6 +3,7 @@ import itertools
 import functools
 import time
 import signal
+from psutil import Process
 
 from .typing import *
 
@@ -16,6 +17,9 @@ class Task(contextlib.AbstractContextManager):
     """
     Context manager to measure and log task durations
 
+    Remark that cpu time measurement may be inconsistent if processes
+    are created or destructed during the usage of this class.
+
     Example:
     with Task("Computing stuff"):
         # do things
@@ -28,10 +32,23 @@ class Task(contextlib.AbstractContextManager):
     perf_counter: tuple[Optional[int], Optional[int]]
     process_time: tuple[Optional[int], Optional[int]]
 
+    process: Process = Process()
     all_tasks: list["Task"] = [] # All created tasks (static)
-    all_start: tuple[int, int] = (time.perf_counter_ns(), time.process_time_ns())
+    all_start: tuple[int, int] = (0, 0)
     quiet: bool = False
 
+
+    @classmethod
+    def current_wall_time(cls) -> int:
+        """ Wall time in ns """
+        return time.perf_counter_ns()
+    
+    @classmethod
+    def current_process_time(cls) -> int:
+        """ Process (including childrens) CPU time (user + system) """
+        cpu_times = sum(cpu_times.user + cpu_times.system for p in cls.process.children(recursive=True) for cpu_times in (p.cpu_times(),))
+        return round(1e9 * cpu_times) + time.process_time_ns()
+    
     @staticmethod
     def is_clear(task: "Task") -> TypeGuard["ClearTask"]:
         """ Is a task clear """
@@ -64,7 +81,7 @@ class Task(contextlib.AbstractContextManager):
 
         stop: tuple[int, int]
         if t2 is None or not (Task.is_running(t2) or Task.is_finished(t2)):
-            stop = (time.perf_counter_ns(), time.process_time_ns())
+            stop = (cls.current_wall_time(), cls.current_process_time())
         else:
             stop = (t2.perf_counter[0], t2.process_time[0])
 
@@ -89,7 +106,7 @@ class Task(contextlib.AbstractContextManager):
     def reset_all(cls) -> None:
         """ Clear the task list """
         cls.all_tasks.clear()
-        cls.all_start = (time.perf_counter_ns(), time.process_time_ns())
+        cls.all_start = (cls.current_wall_time(), cls.current_process_time())
 
     @classmethod
     def print_all(cls, disp_interlude: bool = True) -> None:
@@ -137,13 +154,13 @@ class Task(contextlib.AbstractContextManager):
 
     def start(self) -> None:
         assert Task.is_clear(self)
-        self.perf_counter = (time.perf_counter_ns(), None)
-        self.process_time = (time.process_time_ns(), None)
+        self.perf_counter = (self.current_wall_time(), None)
+        self.process_time = (self.current_process_time(), None)
 
     def stop(self) -> None:
         assert Task.is_running(self)
-        self.perf_counter = (self.perf_counter[0], time.perf_counter_ns())
-        self.process_time = (self.process_time[0], time.process_time_ns())
+        self.perf_counter = (self.perf_counter[0], self.current_wall_time())
+        self.process_time = (self.process_time[0], self.current_process_time())
 
     @property
     def duration(self) -> tuple[int, int]:
@@ -154,8 +171,8 @@ class Task(contextlib.AbstractContextManager):
             )
         elif Task.is_running(self):
             return (
-                time.perf_counter_ns() - self.perf_counter[0],
-                time.process_time_ns() - self.process_time[0]
+                self.current_wall_time() - self.perf_counter[0],
+                self.current_process_time() - self.process_time[0]
             )
         else:
             return (0, 0)
