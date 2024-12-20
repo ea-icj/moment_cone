@@ -29,6 +29,7 @@ dependencies = [
    "mypy",   # Checking unit tests
    "pytest", # Checking examples in docstring
    "pdoc3",  # Generating documentation
+   "psutil", # Performance monitoring
 ]
 requires-python = ">=3.10"
 
