@@ -1,8 +1,9 @@
-from .typing import *
-from .tau import Tau
-from .permutation import Permutation
-from .blocks import Blocks
-from .root import Root
+from cone.typing import *
+from cone.tau import Tau
+from cone.permutation import Permutation
+from cone.blocks import Blocks
+from cone.root import Root
+from sage.all import QQ,vector
 
 
 from functools import cached_property
@@ -130,6 +131,21 @@ class Inequality:
             for i, j in p.inversions:
                 yield Root(k, i, j)
 
+
+    @property
+    def weight_det(self) -> vector:
+        """
+        Weight chi_det of Theorem BKR
+        """
+        tau=self.tau
+        d=tau.d
+        listp=[]
+        for ll in list(tau.positive_weights.values()):
+            listp+=ll
+        if listp == [] and list(self.inversions)==[]:
+            return(vector(QQ,sum(d)+1))
+        else :
+            return(sum([chi.to_vector(d) for chi in listp])-sum([root.to_vector(d) for root in self.inversions]))
 
 def unique_modulo_symmetry_list_of_ineq(seq_ineq: Iterable[Inequality]) -> set[Inequality]:
     """

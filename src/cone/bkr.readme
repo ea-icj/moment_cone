@@ -1,0 +1,40 @@
+In bkr.py we make use of nonstard datum. Here is a guide.
+
+--------------
+
+small_d : is the dimension of tau.reduced.values
+
+-----------
+
+ListP : a list of lists [i_1, i_2, ..., i_s] of s integers
+      	  here, Nu[i_k,k] is not None, that is i_k<(small_d)_k
+	  Nu[i_k,k] has to be understood has an entries of the kth component of tau(tau.reduced.values)
+	  the set $\mathcal P$ in algoKron depending on an integer n=delta
+-----------
+
+Nu: is a table with max(small_d) x len(d) entries.
+       An entry at (i,k) is either a Partition of length at most the multiplicity of tau.reduced
+       	  	   	            or None if i>= small_d[k]
+
+        It encodes a dominant weight of $G^\tau$
+----------
+
+w_Nu: an integer matrix of size max(small_d) x len(d)
+           w_Nu[i,k]=|\lambda| if Nu[i,k] =lambda
+           the entries corresponding to None are 0's
+      
+----------
+
+Lambda: a rectangular len(P)xs table of partitions.
+	See Proposition multCVtau
+
+----------
+ List_of_Lambdas: a rectangular len(P)xs table of list of partitions.
+ 		    		The point is that conditions on partitions in Lambda are pair-wise independant. But they depends on the position.
+				 En each position, we have the list possible partitions
+----------
+
+delta: a integer vector of size len(P)
+       	 it encodes degrees
+
+---------

@@ -94,9 +94,7 @@ class Dimension(tuple[int, ...]):
     def QV2(self) -> "PolynomialRingForWeights":
         from .rings import PolynomialRingForWeights, QQ
         from .weight import Weight
-        return PolynomialRingForWeights(
-            QQ,
-            "z",
+        return PolynomialRingForWeights(QQ,
             weights=Weight.all(self),
             seed=('va', 'vb'),
         )

@@ -1,5 +1,6 @@
-from .typing import *
-from .dimension import Dimension
+from sage.all import QQ,vector
+from cone.typing import *
+from cone.dimension import Dimension
 from dataclasses import dataclass
 import itertools
 
@@ -23,6 +24,18 @@ class Root:
     def opposite(self) -> "Root":
         """ Return the opposite of a root (k,i,j -> kj,i) """
         return Root(self.k, self.j, self.i)
+
+    
+    def to_vector(self, d: Dimension) -> vector:
+        """
+        Returns self as a vector in Z**(sum(d)+1. A kind of flatten.
+        
+        """
+        v=vector(QQ,sum(d)+1)
+        shift=1+sum(d[:self.k]) # 1 because the fist term is for C^* and has not root
+        v[shift+self.i]=1
+        v[shift+self.j]=-1
+        return(v)
     
     @staticmethod
     def all_of_U(d: Dimension) -> Iterable["Root"]:

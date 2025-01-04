@@ -1,5 +1,6 @@
-from .typing import *
-from .dimension import Dimension
+from cone.typing import *
+from  cone.dimension import Dimension
+from sage.all import QQ,vector
 
 import itertools
 import operator
@@ -74,6 +75,22 @@ class Weight:
             self.index = sum(v * s for v, s in zip(reversed(self._weights), stride))
         return self.index
 
+    
+    def to_vector(self, d: Dimension) -> vector:
+        """
+        Returns self as a vector in Z**(sum(d)+1. A kind of flatten.
+        
+        """
+        v=vector(QQ,sum(d)+1)
+        # Action of the C^* component
+        v[0]=1
+        # Action of the tori of the GL components
+        shift=1
+        for k,x in  enumerate(self):
+            v[shift+x]=1
+            shift+=d[k]
+        return(v)
+    
     def orbit_symmetries(self, symmetries: Iterable[int]) -> Iterable["Weight"]:
         """
         Permutation inside each block of given sizes

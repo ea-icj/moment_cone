@@ -9,6 +9,7 @@ from .permutation import *
 from .kx_mod import *
 from random import randint
 import itertools
+from sage.all import PolynomialRing
 
 # FIXME: we get d from tau but in the current code, it will leads to recreate the rings for each tau.
 def is_not_contracted(inversions_v: Iterable[Root], tau: Tau, method: Method) -> bool:
@@ -47,7 +48,6 @@ def is_not_contracted(inversions_v: Iterable[Root], tau: Tau, method: Method) ->
     non_positive_weights = list(chain.from_iterable(tau.non_positive_weights.values())) # todo : Cela est aussi fait avant l'appel à la fonction.
     positive_weights = list(chain.from_iterable(tau.positive_weights.values())) # todo : Cela est aussi fait avant l'appel à la fonction.
 
-    # FIXME: why not positive_weights instead of non_negative_weights?
     v = point_vect(non_positive_weights, d, ring, bounds=(-1000, 1000))
     list_inversions_v = list(inversions_v)
     A = matrix(ring, len(positive_weights), len(list_inversions_v))
@@ -85,7 +85,7 @@ def Compute_JA(ineq : Inequality) : # Return a dictionnary polynom :  int
             uv=action_op_el(root, v, d)
             for row, chi in enumerate(tau.positive_weights[x]): # List of weights such that tau.scalar(chi)=x 
                 M[row,col]=uv[chi.index_in(d)]
-        #print('M',M)        
+    
         Jb=dict(M.det().factor())
         Jbn=Normalization_Factorized_Polynomial(Jb)
         for F in Jbn.keys(): # We could make a function add_dictionaries
@@ -123,7 +123,8 @@ def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) ->
     if method_R0 == "probabilistic" :
         ring_R0= d.QZ
     elif method_R0 == "symbolic":
-        ring_R0= d.QV2
+        K=d.QV2.fraction_field()
+        ring_R0 = PolynomialRing(K,"z")
     else:
         raise ValueError(f"Invalid value {method_R0} of the computation method")
     
@@ -153,64 +154,50 @@ def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) ->
                 if is_not_contracted(ineqv.inversions,tau,method_S) :
                     return(False)
 
-    #return(True) # Freeze the second checking
     ### Divisor R_0
     Jf=Compute_JA(ineq) # The Jacobian factorized as a dictionnary
-    #print('Jf',Jf)
-    #print(list(Jf.keys())[0] in d.QV)
+    
     J_square_free=1
     for pol in Jf.keys():
         J_square_free*=pol # todo : prod(list(Jf.keys())) ne semble pas fonctionner
     # FIXME: type ignore
     if len(Jf.keys())!=len(dict(J_square_free.factor()).keys()): # type: ignore
         print('Error in factor with:',Jf,J_square_free)
-    #print('J square free',J_square_free)        
-    # gradiant of J_square_free
-    L0=matrix(d.QV,1,len(Neg0_Weights_dic[0]))
-    for col,chi in enumerate(Neg0_Weights_dic[0]) :
-        # FIXME: type ignore
-        L0[0,col]=J_square_free.derivative(d.QV.variable(chi)) # type: ignore
-    #L=matrix(d.QV,1,d.dimV)# A suprimer
-    #for col,chi in enumerate(Weight.all(d)) : #A suprimer
-    #    L[0,col]=J_square_free.derivative(d.QV.variable(chi))#A suprimer
-
-    #print('L',L)
-    #print('L0',L0)
-    #print(len(L))
-    #cpt=0
-    #for i in range(27):
-    #    if L[0,i]!=0 : cpt+=1
-    #print('nb var in J',cpt)
-    
+ 
     # Generic point v of V(tau<=0) and matrix of Tpi at (e,v)
-    v = point_vect(Neg0_Weights_sorted,d,d.QV, bounds=(-4, 4)) # Augmenter les bornes
-    #v = point_vect(Neg0_Weights_sorted,d,d.QV, bounds=(-1000, 1000))
-    T=matrix(d.QV,d.dimV,dU)
+    v = point_vect(Neg0_Weights_sorted,d,d.QV, bounds=(-4, 4))
+    A=matrix(d.QV,len(Pos_Weights_sorted),dU)
+    B0=matrix(d.QV,len(tau.orthogonal_weights),dU)
     gr = tau.grading_roots_in(ineq.inversions)
     col=0
-    for x in sorted(gr.keys(),reverse=True): # Choose a diagonal block of Tpi that is a weight of tau        
-        for root in gr[x]: # List of roots such that tau.scalar(root)=x
-            uv=action_op_el(root, v, d)
-            row=0
-            for row,chi in enumerate(Pos_Weights_sorted+Neg0_Weights_sorted):
-                T[row,col]=uv[chi.index_in(d)]
-            col+=1
-    A=T[:dU,0:dU] # equivalent to T.submatrix(0, 0, shift, shift)
-    B0=T[dU:dU+len(Neg0_Weights_dic[0]),0:dU] #0:dU is any
-    
-    # The line
+    for x in sorted(gr.keys(),reverse=True): # Choose a diagonal block of Tpi that is a weight of tau
+        if x > 0 :   
+            for root in gr[x]: # List of roots such that tau.scalar(root)=x
+                uv=action_op_el(root, v, d)
+                for row,chi in enumerate(Pos_Weights_sorted):
+                    A[row,col]=uv[chi.index_in(d)]
+                for row,chi in enumerate(tau.orthogonal_weights):
+                    B0[row,col]=uv[chi.index_in(d)]
+                col+=1
+       
+    # The line: gradiant of J
+    L0=matrix(d.QV,1,len(tau.orthogonal_weights))
+    for col,chi in enumerate(tau.orthogonal_weights) :
+        L0[0,col]=J_square_free.derivative(d.QV.variable(chi))
+
+    # Dictionnary for substitution    
     subs_dict = {}    
     for chi in Neg0_Weights_sorted:
         if method_R0 == "probabilistic":
             subs_dict[d.QV.variable(chi)]= randint(-500,500)*d.QZ('z')+randint(-500,500)# todo :Tester l'effet du changement de 500. Doit-on mettre du I ? 
         else:
-            subs_dict[d.QV.variable(chi)]= d.QV2.variable(chi)*d.QV2('z')+d.QV2.variable(chi) # Mettre a et b 
+            va, vb = d.QV2.variable(chi) 
+            subs_dict[d.QV.variable(chi)]= va*ring_R0('z')+vb 
     # Substitutions
     Az=A.subs(subs_dict)
     #D, U, V = Az.smith_form()
     #print('Smith')
-    #for i in range(D.nrows()):
-    #    print(D[i,i])
+   
     B0z=B0.subs(subs_dict)
     L0z=L0.subs(subs_dict)
     # FIXME: type ignore
@@ -223,14 +210,14 @@ def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) ->
     s=Jz.degree()-Smith_n_un.degree() # type: ignore
     exponent=max(s-1,1)
     pgcd=Jz.gcd(Smith_n_un**exponent)
-    #print('Jz,Smith_n_un,pgcd:',Jz,Smith_n_un,pgcd)
-    delta1 = Jz // pgcd # delta1 =Jz.quo(pgcd)
-    delta = delta1 // delta1.gcd(delta1.derivative()) #delta = delta1.quo(gcd(delta1,delta_1.derivative()))
+    
+    delta1 = Jz // pgcd 
+    delta = delta1 // delta1.gcd(delta1.derivative()) 
     Ldelta=list(dict(delta.factor()).keys())
-    #print('delta',delta,Ldelta)
+    
 
     # Computation of Bezout inverse
-    LIB=Bezout_Inverse(Ldelta,d.QZ)
+    LIB=Bezout_Inverse(Ldelta,ring_R0)
     
     # Kernel of Az modulo delta
     noyau=Kernel_modulo_P(ring_R0,Az,Ldelta,LIB,d)
@@ -240,7 +227,7 @@ def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) ->
     #    print((Az*noyau)[i] % delta)
     # Check divisibility
     check=L0z*B0z*noyau
-    check=d.QZ(check[0])
+    check=ring_R0(check[0])
     #print('check',check)
     quo, rem = check.quo_rem(delta)
     #print('A Quotient:',rem)
