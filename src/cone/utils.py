@@ -1,4 +1,5 @@
-from cone.typing import *
+from .typing import *
+
 import itertools
 import functools
 import operator

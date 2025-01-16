@@ -2,14 +2,16 @@ from .typing import *
 from .tau import Tau
 from .root import Root
 from .weight import Weight
-from .vector_chooser import point_vect, vector, matrix
+from .vector_chooser import point_vect
 from .spaces import action_op_el
 from .inequality import *
 from .permutation import *
 from .kx_mod import *
+from .rings import PolynomialRing, matrix
+
 from random import randint
 import itertools
-from sage.all import PolynomialRing
+
 
 # FIXME: we get d from tau but in the current code, it will leads to recreate the rings for each tau.
 def is_not_contracted(inversions_v: Iterable[Root], tau: Tau, method: Method) -> bool:
@@ -123,8 +125,8 @@ def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) ->
     if method_R0 == "probabilistic" :
         ring_R0= d.QZ
     elif method_R0 == "symbolic":
-        K=d.QV2.fraction_field()
-        ring_R0 = PolynomialRing(K,"z")
+        K = d.QV2.fraction_field()
+        ring_R0 = PolynomialRing(K, "z")
     else:
         raise ValueError(f"Invalid value {method_R0} of the computation method")
     
@@ -157,21 +159,21 @@ def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) ->
     ### Divisor R_0
     Jf=Compute_JA(ineq) # The Jacobian factorized as a dictionnary
     
-    J_square_free=1
+    J_square_free: Any = 1 # TODO
     for pol in Jf.keys():
-        J_square_free*=pol # todo : prod(list(Jf.keys())) ne semble pas fonctionner
+        J_square_free*=pol # TODO : prod(list(Jf.keys())) ne semble pas fonctionner
     # FIXME: type ignore
     if len(Jf.keys())!=len(dict(J_square_free.factor()).keys()): # type: ignore
         print('Error in factor with:',Jf,J_square_free)
  
     # Generic point v of V(tau<=0) and matrix of Tpi at (e,v)
     v = point_vect(Neg0_Weights_sorted,d,d.QV, bounds=(-4, 4))
-    A=matrix(d.QV,len(Pos_Weights_sorted),dU)
-    B0=matrix(d.QV,len(tau.orthogonal_weights),dU)
+    A = matrix(d.QV, len(Pos_Weights_sorted), dU)
+    B0 = matrix(d.QV, len(tau.orthogonal_weights), dU)
     gr = tau.grading_roots_in(ineq.inversions)
-    col=0
+    col = 0
     for x in sorted(gr.keys(),reverse=True): # Choose a diagonal block of Tpi that is a weight of tau
-        if x > 0 :   
+        if x > 0:   
             for root in gr[x]: # List of roots such that tau.scalar(root)=x
                 uv=action_op_el(root, v, d)
                 for row,chi in enumerate(Pos_Weights_sorted):
@@ -192,7 +194,8 @@ def Is_Ram_contracted(ineq : Inequality, method_S: Method, method_R0: Method) ->
             subs_dict[d.QV.variable(chi)]= randint(-500,500)*d.QZ('z')+randint(-500,500)# todo :Tester l'effet du changement de 500. Doit-on mettre du I ? 
         else:
             va, vb = d.QV2.variable(chi) 
-            subs_dict[d.QV.variable(chi)]= va*ring_R0('z')+vb 
+            # FIXME: type ignore
+            subs_dict[d.QV.variable(chi)]= va*ring_R0('z')+vb # type: ignore
     # Substitutions
     Az=A.subs(subs_dict)
     #D, U, V = Az.smith_form()

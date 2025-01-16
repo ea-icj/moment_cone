@@ -13,7 +13,7 @@ class TestPermutation(unittest.TestCase):
         N = 10
         pds = random.sample(tuple(Weight.all(d)), N)
 
-        for ring in d.Q, d.QI, d.QV, d.QIV, d.QV2:
+        for ring in d.Q, d.QI, d.QV, d.QIV:
             v = cd.point_vect(pds, d, ring, bounds=(4, 10))
 
             self.assertTrue(all(

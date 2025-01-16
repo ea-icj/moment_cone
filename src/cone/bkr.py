@@ -1,21 +1,20 @@
-from sage.all import SymmetricFunctions,ZZ,QQ,vector,matrix,Polyhedron,Partitions
-from cone.typing import *
-from cone.utils import *
-from cone.dimension import *
-from cone.weight import *
-from cone.tau import *
-from cone.inequality import *
-
-sym_f = SymmetricFunctions(QQ).s()
-import sage.libs.lrcalc.lrcalc as lr
 import numpy as np
+from numpy.typing import NDArray
 import itertools
 
+from sage.all import SymmetricFunctions # type: ignore
+
+from .typing import *
+from .dimension import Dimension
+from .tau import Tau
+from .rings import ZZ, QQ, Vector, matrix
+
+_sym_f = SymmetricFunctions(QQ).s()
 
 def Kron_multi(L) -> int :
     """
     L is a list of partitions of the same weight, length at least 2
-    return the multiple Kronecker coeffient
+    return the multiple Kronecker coefficient
     """
     
     if len(L)==2:
@@ -24,7 +23,7 @@ def Kron_multi(L) -> int :
         else:
             return 0
         
-    product = sym_f(L[0]).kronecker_product(sym_f(L[1]))
+    product = _sym_f(L[0]).kronecker_product(_sym_f(L[1]))
     #### This part is unuseful but should go slightly faster with
     if len(L)==3 : # We look for L[2] in product
         for monomial, coeff in product.monomial_coefficients().items():
@@ -40,12 +39,13 @@ def Kron_multi(L) -> int :
     return(tot)    
         
 
-def LR_multi(L,nu):
-    
+def LR_multi(L,nu):  
     """
     L is a list of partitions, nu is a partition
     return the multiple LR-coeffient
     """
+    import sage.libs.lrcalc.lrcalc as lr # type: ignore
+
     if len(L)==0:
         if nu==[]:
             return 1
@@ -102,6 +102,8 @@ def chi2Numat(chi, mult_tau ): # chi is a sage vector - mult_tau est un tau.redu
     Nu is a list of columns that are lists of partitions. Each partition is a list itself. 
 
     """
+    from .utils import trim_zeros
+
     Nu = np.empty((max([len(x) for x in mult_tau]), len(mult_tau)), dtype=object)
     shift = 1
     for k,col in enumerate(mult_tau.blocks):
@@ -158,24 +160,25 @@ def Enumerate_delta(delta : int,ListP,sizenu) : # output : of list of integer ve
                         v.append(0)
                 eqs.append(tuple(v))
 
-    #Create the polyhedron        
+    #Create the polyhedron
+    from sage.all import Polyhedron # type: ignore     
     PP=Polyhedron(ieqs=ineqs,eqns=eqs)
 
     #Return the integral points
     return [PP.dim(),PP.integral_points()]
 
-def Fill_Table_of_Lambdas(delta,ListP,tau : Tau,d : Dimension,table): # delta is a sage vector in ZZ -  output : void
+def Fill_Table_of_Lambdas(delta, ListP, tau: Tau, d: Dimension, table: NDArray[Any]): # delta is a sage vector in ZZ -  output : void
     """
     Fill the table with the possible entries for Lambda.
     """
-    BL=[]
+    # FIXME: why not reusing Partition from our library?
+    from sage.all import Partitions # type: ignore
+
     for k in range(len(d)):
         for j in range(len(delta)):
-            table[j,k]=Partitions(delta[j],max_length=tau.components[k][ListP[j][k]]).list()
+            # max_length triggers the type checker.
+            table[j,k]=Partitions(delta[j], max_length=tau.components[k][ListP[j][k]]).list() # type: ignore
     
-
-
-
 
 def LR_mat(Nu,Lambda,ListP) -> int : # Lambda is a table of partitions
                        # Nu is a "partial table" of partitions
@@ -203,7 +206,7 @@ def LR_mat(Nu,Lambda,ListP) -> int : # Lambda is a table of partitions
     return(tot)        
                        
 
-def Multiplicity_SV_tau(tau : Tau,chi : vector) -> int:
+def Multiplicity_SV_tau(tau : Tau,chi : Vector) -> int:
 
     d=tau.d
     delta=chi[0]
@@ -244,7 +247,7 @@ def Multiplicity_SV_tau(tau : Tau,chi : vector) -> int:
                 mult+=LR_coeff*K_coeff
     return(mult)            
 
-def Is_Multiplicity_SV_tau_one(tau : Tau,chi : vector) -> bool:
+def Is_Multiplicity_SV_tau_one(tau : Tau,chi : Vector) -> bool:
 
     d=tau.d
     delta=chi[0]

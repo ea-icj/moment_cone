@@ -1,12 +1,12 @@
-from cone.typing import *
-from  cone.dimension import Dimension
-from cone.partition import *
-from cone.blocks import Blocks
-from cone.weight import Weight
-from cone.root import Root
-from cone.rings import matrix, ZZ, QQ
-from cone.utils import extend_with_repetitions, flatten_dictionary, grading_dictionary, orbit_symmetries
-from cone.permutation import Permutation
+from .typing import *
+from .dimension import Dimension
+from .partition import *
+from .blocks import Blocks
+from .weight import Weight
+from .root import Root
+from .rings import matrix, ZZ, QQ
+from .utils import extend_with_repetitions, flatten_dictionary, grading_dictionary, orbit_symmetries
+from .permutation import Permutation
 
 
 import itertools
@@ -502,13 +502,18 @@ class Tau:
         return (sum_di2 - sum_mi2) // 2
 
     @cached_property
-    def indices_in_tau_red_that_sum_to_zero(self)  -> list[list[int]] : 
+    def indices_in_tau_red_that_sum_to_zero(self) -> list[tuple[int, ...]]:
         """ 
-        Create the list of lists L=[i_0, i_2, ..., i_{s-1}] such that tau.ccomponent + \sum_k tau_red[k][i_k] = 0
+        Create the list of lists L=[i_0, i_2, ..., i_{s-1}] such that tau.ccomponent + sum_k tau_red[k][i_k] = 0
+
+        FIXME: isn't that already implemented in ReducedTau.Pzero ?!!
         """
-        tau_red=Tau(self.reduced.values)
-        result = []
-        for idx in itertools.product(*(range(di) for di in tau_red.d)): # Choice of one index in each component of tau ie a row in each column of the partial matrix
+        assert self.ccomponent is not None
+
+        tau_red = Tau(self.reduced.values)
+        result: list[tuple[int, ...]] = []
+        # Choice of one index in each component of tau ie a row in each column of the partial matrix
+        for idx in itertools.product(*(range(di) for di in tau_red.d)):
             if sum(tau_red.components[j][i] for j,i in enumerate(idx)) + self.ccomponent == 0:
                 result.append(idx)
         return result

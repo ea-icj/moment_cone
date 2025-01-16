@@ -1,14 +1,18 @@
-from cone.typing import *
-from  cone.dimension import Dimension
-from sage.all import QQ,vector
-
-import itertools
-import operator
-
 __all__ = (
     "Weight",
 )
 
+import itertools
+import operator
+
+from .typing import *
+from .dimension import Dimension
+
+# To fix circular imports with type linting
+if TYPE_CHECKING:
+    from .rings import Vector
+
+    
 class Weight:
     """ A weight on which tau can be applied """
     __slots__ = '_weights', 'index'
@@ -76,20 +80,30 @@ class Weight:
         return self.index
 
     
-    def to_vector(self, d: Dimension) -> vector:
+    def to_vector(self, d: Dimension) -> "Vector":
         """
-        Returns self as a vector in Z**(sum(d)+1. A kind of flatten.
+        Returns self as a vector in Z**(sum(d)+1.
         
+        A kind of flatten.
+
+        Example:
+        >>> p = Weight((2, 2, 4))
+        >>> d = Dimension((3, 5, 5))
+        >>> p.to_vector(d)
+        (1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1)
         """
-        v=vector(QQ,sum(d)+1)
+        from .rings import vector, QQ
+        v = vector(QQ, d.sum + 1)
+
         # Action of the C^* component
-        v[0]=1
+        v[0] = 1
+
         # Action of the tori of the GL components
-        shift=1
-        for k,x in  enumerate(self):
-            v[shift+x]=1
-            shift+=d[k]
-        return(v)
+        shift = 1
+        for k, x in enumerate(self):
+            v[shift + x] = 1
+            shift += d[k]
+        return v
     
     def orbit_symmetries(self, symmetries: Iterable[int]) -> Iterable["Weight"]:
         """

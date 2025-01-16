@@ -1,6 +1,7 @@
-from sage.all import QQ,vector
-from cone.typing import *
-from cone.dimension import Dimension
+from .typing import *
+from .dimension import Dimension
+from .rings import QQ, vector, Vector
+
 from dataclasses import dataclass
 import itertools
 
@@ -26,16 +27,23 @@ class Root:
         return Root(self.k, self.j, self.i)
 
     
-    def to_vector(self, d: Dimension) -> vector:
+    def to_vector(self, d: Dimension) -> Vector:
         """
-        Returns self as a vector in Z**(sum(d)+1. A kind of flatten.
+        Returns self as a vector in Z**(sum(d) + 1.
         
+        A kind of flatten.
+
+        Example:
+        >>> d = Dimension((2, 3))
+        >>> root = Root(1, 0, 2)
+        >>> root.to_vector(d)
+        (0, 0, 0, 1, 0, -1)
         """
-        v=vector(QQ,sum(d)+1)
-        shift=1+sum(d[:self.k]) # 1 because the fist term is for C^* and has not root
-        v[shift+self.i]=1
-        v[shift+self.j]=-1
-        return(v)
+        v = vector(QQ, d.sum + 1)
+        shift = 1+sum(d[:self.k]) # 1 because the fist term is for C^* and has not root
+        v[shift + self.i] = 1
+        v[shift + self.j] = -1
+        return v
     
     @staticmethod
     def all_of_U(d: Dimension) -> Iterable["Root"]:
