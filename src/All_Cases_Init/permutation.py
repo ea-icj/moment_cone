@@ -152,18 +152,20 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         # TODO: check if group_by_block and expand_blocs can be rewritten in another way
         eg = list(group_by_block(Gred))
         dg = list(group_by_block(G))
-        partial_sum_mult_d = [0] + list(itertools.accumulate([x for _,x in dg]))
+        partial_sum_mult_d = [0] + list(itertools.accumulate([x for _,x in dg])) #indexes of the first element in each block
         partial_sum_mult_e = [0] + list(itertools.accumulate([x for _,x in eg]))
-        indices_eg = expand_blocks([i for i, x in enumerate(eg)], [x[1] for i, x in enumerate(eg)]) # same as e, but with repetition of indices, rather than values
-        for ep in multiset_permutations(indices_eg):
-            p_i = partial_sum_mult_e[:-1]
+        indices_eg = expand_blocks([i for i, x in enumerate(eg)], [x[1] for i, x in enumerate(eg)]) # same shape as Gred, but with 0,1,2 as values exple : [4,3,3,1] --> [0,1,1,2]
+        for ep in multiset_permutations(indices_eg): # Any permutation of the list Gred
+            p_i = partial_sum_mult_e[:-1] # Same as length of Gred
 
             indices_e = []
-            for i in range(len(e)):
-                indices_e.append(p_i[ep[i]])
-                p_i[ep[i]] += 1
+            for i in range(len(ep)):
+                indices_e.append(p_i[ep[i]]) # p_i[ep[i]] index in Gred of a value of the block indexed by ep[i]
+                p_i[ep[i]] += 1 # we add 1 to take the next value the next time
 
-            if all(e[indices_e[i]] <= d[i] for i in range(len(e))) and all(is_increasing(indices_e[a:b]) for a,b in itertools.pairwise(partial_sum_mult_d)):
+            if all(Gred[indices_e[i]] <= G[i] for i in range(len(ep))) and all(is_increasing(indices_e[a:b]) for a,b in itertools.pairwise(partial_sum_mult_d)):
+                # The first all check that the permutted Gred is still at most G
+                # The second all check that in a block of G we took elements of Gred  from left to right                
                 yield Permutation(indices_e)
     
     def transpose(self, i: int, j: int) -> "Permutation":

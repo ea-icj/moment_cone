@@ -78,7 +78,7 @@ def Compute_JA(ineq : Inequality,V: Representation) : # Return a dictionnary pol
     tau=ineq.tau
     ring = V.QV
     # a generic vector in VV^tau
-    zero_weights = tau.orthogonal_weights
+    zero_weights = tau.orthogonal_weights(V)
     v = point_vect(zero_weights, V, ring, bounds=(-100, 100)) # bounds unuseful here
     # inversions of w
     Inv_w=ineq.inversions
@@ -89,7 +89,7 @@ def Compute_JA(ineq : Inequality,V: Representation) : # Return a dictionnary pol
         M=matrix(ring,len(gr[x]))
         for col,root in enumerate(gr[x]): # List of roots such that tau.scalar(root)=x
             uv=V.action_op_el(root, v)
-            for row, chi in enumerate(tau.positive_weights[x]): # List of weights such that tau.scalar(chi)=x 
+            for row, chi in enumerate(tau.positive_weights(V)[x]): # List of weights such that tau.scalar(chi)=x 
                 M[row,col]=uv[chi.idx(V)]
     
         Jb=dict(M.det().factor())
@@ -175,7 +175,7 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
     # Generic point v of V(tau<=0) and matrix of Tpi at (e,v)
     v = point_vect(Neg0_Weights_sorted,V,V.QV)
     A=matrix(V.QV,len(Pos_Weights_sorted),dU)
-    B0=matrix(V.QV,len(tau.orthogonal_weights),dU)
+    B0=matrix(V.QV,len(tau.orthogonal_weights(V)),dU)
     gr = tau.grading_roots_in(ineq.inversions)
     col=0
     for x in sorted(gr.keys(),reverse=True): # Choose a diagonal block of Tpi that is a weight of tau
@@ -184,7 +184,7 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
                 uv=V.action_op_el(root, v)
                 for row,chi in enumerate(Pos_Weights_sorted):
                     A[row,col]=uv[chi.idx(V)]
-                for row,chi in enumerate(tau.orthogonal_weights):
+                for row,chi in enumerate(tau.orthogonal_weights(V)):
                     B0[row,col]=uv[chi.idx(V)]
                 col+=1
        
@@ -197,14 +197,12 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
     subs_dict = {}    
     for chi in Neg0_Weights_sorted:
         if method_R0 == "probabilistic":
-            subs_dict[V.QV.variable(chi)]= randint(-500,500)*d.QZ('z')+randint(-500,500)# TODO :Tester l'effet du changement de 500. Math : Doit-on mettre du I ? 
+            subs_dict[V.QV.variable(chi)]= randint(-500,500)*V.QZ('z')+randint(-500,500)# TODO :Tester l'effet du changement de 500. Math : Doit-on mettre du I ? 
         else:
             va, vb = V.QV2.variable(chi) 
             subs_dict[V.QV.variable(chi)]= va*ring_R0('z')+vb 
     # Substitutions
     Az=A.subs(subs_dict)
-    #D, U, V = Az.smith_form()
-    #print('Smith')
    
     B0z=B0.subs(subs_dict)
     L0z=L0.subs(subs_dict)

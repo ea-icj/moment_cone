@@ -25,14 +25,16 @@ def mat_C_to_R(M : Matrix) -> Matrix :
             R[2*i,2*j+1]=-B[i,j]
     return(R)
 
-def Lie_action_as_matrices_Vtau(tau : Tau,matrices: list[Matrix], V: Representation) -> list[Matrix]: 
+def Lie_action_as_matrices_Vtau(tau : Tau,matrices: list[Matrix], V: Representation) -> dict[Root, Matrix]: 
     Indices_V_tau = [chi.idx(V) for chi in tau.orthogonal_weights(V)]
     n=len(Indices_V_tau)
-    res=[]
+    res={}
 
     # Todo faire tau.all_orthogonal_roots pour éviter les 3 cas ci-dessous
-    for beta in tau.orthogonal_rootsK :
-        res.append(matrices[beta.index_in_all_of_K(tau.G)].matrix_from_rows_and_columns(Indices_V_tau,Indices_V_tau))
+    for beta in tau.orthogonal_rootsB :
+        res[beta]=matrices[beta].matrix_from_rows_and_columns(Indices_V_tau,Indices_V_tau)
+        if beta.i != beta.j :
+            res[beta.opposite]=matrices[beta.opposite].matrix_from_rows_and_columns(Indices_V_tau,Indices_V_tau)
     return(res)
 
 
@@ -51,7 +53,6 @@ def dim_gen_stab_of_K(matrices) -> int:
     dk=len(matrices) # dimension of K
  
     if all(A.is_zero() for A in matrices):
-        #print('trivial representation of dimension',n,'dim K',dk)
         return dk
 
     n = matrices[0].nrows()  # Size of the square matrices

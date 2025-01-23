@@ -6,6 +6,7 @@ import operator
 
 #from .rings import ZZ
 from .typing import *
+from .utils import prod, orbit_symmetries
 from .group import *
 from sage.all import ZZ
 #from .rep import *
@@ -45,6 +46,20 @@ class Weight:
         else :
             return 'Coordinates of Weight: '+str(self.as_vector)
 
+    def __eq__(self,other: "Weight") -> bool:
+        
+        # TODO : J'ai supprimmer ces deux lignes car elles renvoyaient toujours faux. Il faudrait les remettre en corrigent, mais je n'ai pas réussi.
+        # L'erreur était à l'intérieur de hyperplane_candidats pour kron quand on demande si chi est dans St.indeterminate
+        
+        #if not isinstance(other, Weight) or self.G != other.G :
+        #    return(False)
+        
+        if self.as_list!=None and other.as_list!=None:
+            return self.as_list == other.as_list
+        if self.as_list_of_list!=None and other.as_list_of_list!=None:
+            return self.as_list_of_list == other.as_list_of_list
+        return self.as_vector == other.as_vector
+    
     #@staticmethod
     def idx(self,V : "Representation") -> int:
         if self._idx != None :
@@ -61,15 +76,21 @@ class Weight:
             for i,p in enumerate(itertools.pairwise(S)):
                 id+=sum([binomial(V.G.rank-j-1,k-i-2) for j in range(p[0]+1,p[1])]) # With j in position i+1 and equal for smaller indices       
             return(id)
+        else :
+            for i,chi in enumerate(V.all_weights):
+                if chi.as_vector==self.as_vector :
+                    return i
         
         ## TODO cas bosons
         
     @cached_property
     def as_vector(self) -> vector:
+        if self._as_vector != None:
+            return self._as_vector
         if self.as_list!=None:
            v=vector(ZZ,self.G.rank)
            shift=0
-           for i,x in enumerate(s) :
+           for i,x in enumerate(self.as_list) :
                 v[shift+x]+=1
                 shift+=self.G[i]
            return v
@@ -81,22 +102,36 @@ class Weight:
                     v[shift+y]+=1
                 shift+=self.G[i]
            return v
-        else :
-           return self._as_vector
+       
 
     def __le__(self, other: "Weight") -> bool:
-        """ Implementation of self <= other (partial ordering)"""
+        """ 
+        Used in type kron
+        Implementation of self <= other (partial ordering)
+        """
         if self.as_list != None and other.as_list != None :
             return all(ws >= wo for ws, wo in zip(self.as_list, other.as_list))
         if self.as_list_of_list != None and other.as_list_of_list != None :
             return all(all(ws >= wo for ws, wo in zip(ls, lo)) for ls, lo in zip(self.as_list_of_list, other.as_list_of_list))
-        return self.leq(other)
+        #return self.leq(other)
     
     def leq(self,other,sym : list[int]=None) -> bool:
         """
+        Used in type boson and fermion
         Dominance order (partial sums) on each block given by sym. 
+        The convention is 
+                     chi2.leq(chi,sym) and tau dominant => <chi2,tau> <= <chi2,tau>
+        sym precise the sense of tau strictly dominant (decreasing on each block of sizes given by sym).
+        TODO : check that is works. Je ne suis pas sûr du sens vu que ça ne marche pas pour Kron.
         """
-        v=self.as_vector-other.as_vector
+        
+        if sym == None:
+            if self.as_list != None and other.as_list != None :
+                return all(ws >= wo for ws, wo in zip(self.as_list, other.as_list))
+            if self.as_list_of_list != None and other.as_list_of_list != None :
+                return all(all(ws >= wo for ws, wo in zip(ls, lo)) for ls, lo in zip(self.as_list_of_list, other.as_list_of_list))
+            
+        v=other.as_vector-self.as_vector
         if sym == None :
             sym=self.G
         shift=0
@@ -110,4 +145,10 @@ class Weight:
                 return False
             shift+=s
         return True
+
+    def orbit_symmetries(self,S : list[int]) -> Iterable["Weight"]:
+        if self.as_list != None :
+            orbit=orbit_symmetries(self.as_list,S)
+            for sym_w in orbit:
+                yield Weight(self.G,as_list=list(sym_w))
     

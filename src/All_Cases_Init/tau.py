@@ -44,6 +44,7 @@ class Tau:
     _components: Blocks[int]
 
     def __init__(self, components: Iterable[Sequence[int]] | Blocks[int],G : LinGroup):
+        # TODO :j'ai mis G ici. Je viens de me rendre compte que c'est superflux par rapport aux blocks. Peut-être peut-on supprimer ? 
         """
         Tau initialization from a sequence of sub-group or directly from a partial matrix
         
@@ -61,7 +62,6 @@ class Tau:
     def from_flatten(s: Iterable[int], G: LinGroup) -> "Tau":
         """ Returns tau from its flattened version """
         all_components = tuple(s)
-        #print('s,comp,rank',s,all_components,G.rank)
         if len(all_components) != G.rank:
             raise ValueError("Invalid number of components")
 
@@ -82,8 +82,8 @@ class Tau:
             M = M.augment(matrix(ZZ, [(len(V.G)-1) * [0] for i in range(V.G.rank)]))
             shift_i = 0
             shift_j = len(weights)
-            for j,d in enumerate(V.G[1:]):           
-               M[shift_i + d,shift_j+j] = 1
+            for j,d in enumerate(V.G[:-1]):           
+               M[shift_i + d-1,shift_j+j] = 1
                shift_i += d
 
         b = M.kernel().basis()
@@ -158,9 +158,9 @@ class Tau:
         -1 | 5 5 4 0 | 4 3 3 0 | 4 2 0
         -1 | 5 5 4 0 | 4 4 3 0 | 4 2 0
         """
-        extend_each_comp=[extend_with_repetitions(x,d[i]) for i,x in enumerate(self._components)]
+        extend_each_comp=[extend_with_repetitions(x,G[i]) for i,x in enumerate(self.components)]
         for ext in itertools.product(*extend_each_comp):
-            yield Tau(ext)
+            yield Tau(ext,G)
 
     def __repr__(self) -> str:
         return repr(self._components)
@@ -259,7 +259,10 @@ class Tau:
         """
         return self.grading_roots_in(Root.all_of_U(self.G))
 
-    
+    @cached_property
+    def grading_rootsB(self) -> dict[int, list[Root]]:
+        return self.grading_roots_in(Root.all_of_B(self.G))
+        
     def positive_weights(self, V: Representation) -> dict[int, list[Weight]]:
         """
         Basis of the eigen space for positive eigen values for the action of tau on V.
@@ -349,7 +352,13 @@ class Tau:
         """
         return self.grading_rootsU.get(0, [])
 
-
+    @property
+    def orthogonal_rootsB(self) -> list[Root]:
+        """
+        All the positive of zero roots beta of V so that <beta, tau> = 0
+        """
+        return self.grading_rootsB.get(0, [])
+    
     @cached_property
     def orthogonal_rootsK(self) -> list[Root]:
         """
@@ -404,7 +413,7 @@ class Tau:
         1 | 1 4 | 1 4 | 6 2 | 1 | 3 | 5
         """
         blocks = (sorted(b) for b in Blocks(self.components, self.G.outer))
-        return Tau(itertools.chain.from_iterable(blocks))
+        return Tau(itertools.chain.from_iterable(blocks),self.G)
         
     def orbit_symmetries(self) -> Iterable["Tau"]:
         """
@@ -425,7 +434,7 @@ class Tau:
         1 | 6 2 | 1 4 | 1 4 | 5 | 3
         """
         for sym_comp in orbit_symmetries(self._components, self.G.outer):
-            yield Tau(sym_comp)
+            yield Tau(sym_comp,self.G)
 
     #@staticmethod
     def is_sub_module(self,V: Representation) -> bool :
@@ -472,16 +481,16 @@ class Tau:
         # Return self if not kron
         if len(self.G)==1:
             return selft
-        
-        from math import gcd
+
+        from sage.all import gcd
         total_shift = 0
         columns = []
-        for cj in self.components[1:]: # Components excepted that of the first GL(1)
+        for cj in self.components[:-1]: # Components excepted that of the last GL(1)
             columns+=[cji - cj[-1] for cji in cj]
             total_shift += cj[-1]
-        first_component = tau.flattened[0] + total_shift
-        columns=[first_component]+columns
-        res_gcd = gcd(first_component, *itertools.chain.from_iterable(columns))
+        last_component = self.flattened[-1] + total_shift
+        columns.append(last_component)
+        res_gcd = gcd(columns)
         
         return Tau.from_flatten([x // res_gcd for x in columns], self.G)
     
@@ -594,42 +603,42 @@ def find_1PS(V: Representation, quiet: bool = False) -> Sequence["Tau"]:
     Same as find_1PS_reg_mod_sym_dim without regularity condition
     Computed by 
     """
+    #tautracked2=Tau.from_flatten([3,2,1,0,3,2,1,0,3,2,1,0,-6],V.G)
+    #Lz=list(tautracked2.orthogonal_weights(V))
     # Initialisation with regular 1-PS
     List_1PS = []
     
     if V.type=='kron' :
         # List of representations corresponding to various tori S
-        sub_rep=[Representation(LinGroup([1]+list(p)),'kron') for p in OurPartition.all_for_integer(V.G[1:]).all_subpartitions()][1:] #[1:] excludes 1... 1
-        for small_V in sub_rep:  
-            umax=V.G.u_max(small_V.G)
+        sub_rep=[Representation(LinGroup(list(p)),'kron') for p in OurPartition(list(V.G)).all_subpartitions()][1:] #[1:] excludes 1... 1
+        for Vred in sub_rep:
+            umax=V.G.u_max(Vred.G)
             #Recover by induction all candidates 1-PS mod symmetry
-            Gred=LinGroup(p)
-            Vred=Representation(Gred,'kron')
-            List_1PS_smallV_reg=[]
+            List_1PS_Vred_reg=[]
             for H in find_hyperplanes_reg_mod_outer(Vred.all_weights, Vred, umax):
                 taured=Tau.from_zero_weights(H, Vred)
                 if taured.is_dom_reg : # We keep only dominant regular 1-PS
-                    List_1PS_smallV_dom_reg+=[t for t in taured.orbit_symmetries()]
+                    List_1PS_Vred_reg+=[t for t in taured.orbit_symmetries()]
                 elif taured.opposite.is_dom_reg :
-                    List_1PS_smallV_dom_reg+=[t for t in taured.oppositetau.orbit_symmetries()]
-
-            # Suppress repetition (an hyperplane can be spanned by several collections of weights)       
-            List_1PS_smallV_dom_reg=list(set(List_1PS_smallV_dom_reg))
+                    List_1PS_Vred_reg+=[t for t in taured.opposite.orbit_symmetries()]
+                
+            # Suppress the repetitions (one hyperplane can be spanned by several collections of weights)       
+            List_1PS_Vred_reg=list(set(List_1PS_Vred_reg))
             
-            #List_1PS_smalld_reg_mod_outer= list(find_1PS_reg_mod_sym_dim(small_V,umax))
+            #List_1PS_smalld_reg_mod_outer= list(find_1PS_reg_mod_sym_dim(Vred,umax))
             if not quiet:
-                print('For G=',Gred,'we get',len(List_1PS_smallV_dom_reg),' candidates regular dominant')
+                print('For G=',Vred.G,'we get',len(List_1PS_Vred_reg),' candidates regular dominant')
 
             #List_1PS_smalld_reg=sum([list(tau.orbit_symmetries()) for tau in List_1PS_smalld_reg_mod_sym]  ,[])
-            List_1PS_smallV_extended=[]
-            for permut in Permutation.embeddings_mod_sym(V.G, small_V.G):
-                for tau in List_1PS_smallV_dom_reg:
-                    tau_twist=Tau([tau._components[i] for i in permut])
+            List_1PS_Vred_extended=[]
+            for permut in Permutation.embeddings_mod_sym(V.G, Vred.G):
+                for tau in List_1PS_Vred_reg:
+                    tau_twist=Tau([tau.components[i] for i in permut],tau.G)
                     list_tau_extended=tau_twist.m_extend_with_repetitions(V.G)
                     for tau_ext in list_tau_extended:
                         if len(flatten_dictionary(tau_ext.positive_weights(V)))<=tau_ext.dim_Pu:
-                            List_1PS_smallV_extended.append(tau_ext)
-            List_1PS+=unique_modulo_symmetry_list_of_tau(List_1PS_smallV_extended)
+                            List_1PS_Vred_extended.append(tau_ext)
+            List_1PS+=unique_modulo_symmetry_list_of_tau(List_1PS_Vred_extended)
     else :
         list_partS=[p for p in OurPartition.all_for_integer(V.G.rank)][1:] #[1:] excludes n, so S is the center of G
         for partS in list_partS :
@@ -650,9 +659,6 @@ def find_1PS(V: Representation, quiet: bool = False) -> Sequence["Tau"]:
                 List_1PS+=[Tau.from_flatten(l1,V.G),Tau.from_flatten(l2,V.G)]
 
     List_1PS=list(set(List_1PS)) # Suppressing the repetitions
-    #print('Candidats:',List_1PS)
-    #tau=List_1PS[1]
-    #print(tau,[chi for chi in tau.orthogonal_weights(V)])
     
     # Checking that the candidates really give a candidate
         

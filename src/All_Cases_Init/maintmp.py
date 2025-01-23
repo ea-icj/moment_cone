@@ -1,18 +1,7 @@
-#from .typing import *
-#from typing import Iterable,Generic,TypeVar
-#T=TypeVar('T')
-#from .group import *
-#load("root.py")
-#load("combi.py")
-#load("weight.py")
-#load("rep.py")
-#load("hyperplane_candidates.py")
-#load("blocks.py")
-#load("tau.py")
-#load("stabK.py")
 
-G = LinGroup([7])
-V = Representation(G,'fermion',3)
+G = LinGroup([3,3,3,1])
+V = Representation(G,'kron')
+
 
 tpi_method: Method ='symbolic'
 tpi_method='probabilistic'
@@ -24,10 +13,11 @@ ram0_method: Method = 'probabilistic'
 
 Ms=V.actionK
 
+MsR = [mat_C_to_R(M) for M in Ms.values()]
         
-MsR=[mat_C_to_R(M) for M in Ms]
+#MsR=[mat_C_to_R(M) for M in Ms]
 if dim_gen_stab_of_K(MsR)>G.rank-V.dim_cone: # Check that the dim is computed in U_n(C)^s without the isolated S^1
-    print('The deneral stabilizer of K in V is too big. Namely of dimension',dim_gen_stab_of_K(MsR))
+    print('The general stabilizer of K in V is too big. Namely of dimension',dim_gen_stab_of_K(MsR))
     print('The program does not work in this case')
     sys.exit()
 else:
@@ -39,8 +29,9 @@ print('Step 1, looking for a first list of dominant 1-PS whose kernel is support
 
 Candidates_for_tau = find_1PS(V)
 
-print(Candidates_for_tau)
+#print(Candidates_for_tau)
 print(len(Candidates_for_tau), ' dominant 1-PS with hyperplane spanned by weights or no too many positive weights')
+
 
 # Filter 1: submodule condition
 
@@ -48,9 +39,9 @@ print('Step 2, Checking submodule condition')
 Candidates_for_tau1=[tau for tau in Candidates_for_tau if tau.is_sub_module(V)]
 print(len(Candidates_for_tau1), ' dominant 1-PS satisfying the submodule condition')
 
+
 # Filter 2: stabilizer condition
 print('Step 3, Stabilizer condition')
-
 
 Candidates_for_tau2=[]
 for tau in Candidates_for_tau1:
@@ -58,7 +49,8 @@ for tau in Candidates_for_tau1:
         Candidates_for_tau2.append(tau)
     else: 
         Ms_tau=Lie_action_as_matrices_Vtau(tau,Ms,V)
-        Ms_tauR=[mat_C_to_R(M) for M in Ms_tau]
+        Ms_tauR=[mat_C_to_R(M) for M in Ms_tau.values()]
+        
         if dim_gen_stab_of_K(Ms_tauR)==G.rank-V.dim_cone+1:
             Candidates_for_tau2.append(tau)    
 print(len(Candidates_for_tau2), ' dominant 1-PS satisfying the stabilizer condition')
@@ -86,4 +78,12 @@ print(len(Dominant_Ineq), ' inequalities selected in Step 6')
 # Filter 4: pi is birational (ramification divisor contracted)
 print('Step 9, checking birationality (ramification divisor contracted) of the map pi')
 Birational_Ineq=[ineq for ineq in Dominant_Ineq if Is_Ram_contracted(ineq,V,ram_schub_method,ram0_method)]
-print(len(Birational_Ineq), ' inequalities selected in Step 9 in',tps4-tps2,'seconds')
+print(len(Birational_Ineq), ' inequalities selected in Step 9 in','seconds')
+
+tau=Tau.from_flatten([2,1,0,2,1,0,2,1,0,0],G)
+for chi in V.all_weights:
+    for chi2 in V.all_weights:
+        if chi2.leq(chi) and chi != chi2:
+            print(tau.dot_weight(chi)-tau.dot_weight(chi2))
+#for ineq in Birational_Ineq :
+#    print(ineq.tau)

@@ -45,7 +45,7 @@ def variable_name(name_or_weight: VariableName, seed: str = "v") -> str:
     elif name_or_weight.as_list!=None:
         return seed + "_" + "_".join(map(str, name_or_weight.as_list))
     else :
-        return seed + "_" + "_".join(map(str, name_or_weight.as_list_of_list))
+        return seed + "_" + "_".join(map(str, name_or_weight.as_list_of_list[0])) #TODO : ceci ne marche que si len(G)==0. Sinon plusieurs variables ont le même nom.
 
 def variable(ring_or_gens: Ring | RingGens, name_or_weight: VariableName, seed: str = "v") -> Variable:
     """ Get variable of a ring from it's name or weight """
@@ -144,7 +144,6 @@ class PolynomialRingForWeights:
         ]
 
         from sage.all import PolynomialRing
-        print('Names',[n for n in names])
         self.sage_ring = PolynomialRing(base_ring, variables_names)
         self.ring_gens = self.sage_ring.gens_dict() # Faster if we don't regenerate the dictionary at each variable access
         self.seed = seed

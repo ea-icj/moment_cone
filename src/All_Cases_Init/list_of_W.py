@@ -34,7 +34,6 @@ def ListW_Mod(tau : Tau, pos : int, C_mod : dict[int, int],relation) -> list[Per
         
     for l in L:
         for w in ap[l] :
-            #print('w,tau_mult,minrep',w,tau.reduced.mult[pos],w.is_min_rep(tau.reduced.mult[pos]))
             if w.is_min_rep(tau.reduced.mult[pos]): 
                 List_Inv=[Root(pos, *inv) for inv in w.inversions]
                 gr=grading_dictionary(List_Inv, tau.dot_root)
@@ -63,7 +62,6 @@ def ListWs_Mod_rec(tau: Tau, pos : int, C_mod : dict[int, int]) -> list[list[Per
 
 def ListWs_Mod(tau : Tau,V: Representation) ->  list[list[Permutation]]:
     Poids_positive=tau.positive_weights(V)
-    print('Poids pos',Poids_positive)
     C_mod: dict[int, int] = {}
     for x in Poids_positive.keys():
         C_mod[x]=len(Poids_positive[x])

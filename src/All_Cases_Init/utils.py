@@ -1,5 +1,5 @@
 from collections.abc import Iterable, Sequence, Callable, Sized
-from typing import Generic,TypeVar, Mapping, Generator, Callable
+from typing import Generic,TypeVar, Mapping, Generator, Callable, cast
 T=TypeVar('T')
 U=TypeVar('U')
 import itertools
@@ -84,7 +84,7 @@ def prod(values: Iterable[int]) -> int:
     >>> prod([1, 2, 3, 0, 5])
     0
     """
-    return functools.reduce(operator.mul, values)
+    return functools.reduce(operator.mul, values,1)
 
 def short_prod(values: Iterable[int]) -> int:
     """
@@ -270,9 +270,9 @@ def quotient_C_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> dict[int, int]:
     >>> quotient_C_Mod(d1, d5)
     {}
     """
-    return {key: M1(key) - M2.get(key, 0)
+    return {key: M1[key] - M2.get(key, 0)
      for key in M1.keys()  
-     if M1(key) != M2.get(key, 0)}
+     if M1[key] != M2.get(key, 0)}
 
 def multiset_permutations(m: Iterable[T]) -> Generator[list[T],None,None]:
     """

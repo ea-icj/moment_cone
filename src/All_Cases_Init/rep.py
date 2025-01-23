@@ -4,7 +4,7 @@ from sage.all import Partition, matrix, binomial
 
 from math import prod
 from .typing import *
-from .rings import Vector,ZZ,QQ, I
+from .rings import Vector,ZZ,QQ, I,vector,Matrix
 from .combi import *
 from .partition import *
 from .group import *
@@ -111,12 +111,15 @@ class Representation:
                 L.append(Weight(self.G,as_list_of_list=[list(w)],idx=i))
         else :
             for i,w in enumerate(itertools.combinations(range(self.G[0]+self.nb_part-1),self.G[0]-1)) :
-                v=Vector(ZZ,self.G.rank)
+                v=vector(ZZ,self.G.rank)
                 v[0]=w[0]
-                for i,p in enumerate(itertools.pairwise(w)):
-                    v[i+1]=p[1]-p[0]-1
-                v[-1]=self.G.rank-w[-1]-1
-                L.append(Weight(self.G,as_vector=v,idx=i))
+                AsL=w[0]*[0]
+                for j,p in enumerate(itertools.pairwise(w)):
+                    v[j+1]=p[1]-p[0]-1
+                    AsL+=v[j+1]*[j+1]
+                v[-1]=self.G.rank+self.nb_part-w[-1]-2
+                AsL+=v[-1]*[self.G.rank-1]
+                L.append(Weight(self.G,as_vector=v,as_list_of_list=[AsL],idx=i))
         return(L)        
 
     @cached_property 
@@ -147,7 +150,10 @@ class Representation:
         )
 
         for w in itertools.product(*block_weights):
-            yield Weight(self.G,as_vector=Vector(sum(w, start=()))) # Summing tuples is concatenating them 
+            Lw=[]
+            for x in w :
+                Lw+=list(x)
+            yield Weight(self.G,as_list=list(vector(sum(w, start=())))) # Summing tuples is concatenating them 
 
     def weights_of_S(self, p : OurPartition) -> Iterable["Weight"] : # Could be improved
         """
@@ -181,20 +187,46 @@ class Representation:
             Gred=LinGroup(self.G[:alpha.k]+self.G[alpha.k+1:])
             Vred=Representation(Gred,'kron')
             for w in Vred.all_weights:
-                wj = Weight(self.G,as_list=list(w.epsi[:k])+[alpha.j]+list(w.epsi[k:]))
-                idj=wj.idx(self) 
-            if alpha.i==alpha.j:
-                M[idj,idj]=1
-            else :    
-                wi = Weight(self.G,as_list=list(w.epsi[:k])+[alpha.i]+list(w.epsi[k:]))
-                idi=wi.idx(self)
-                M[idi,idj]=1
-        else :
+                wj = Weight(self.G,as_list=list(w.as_list[:alpha.k])+[alpha.j]+list(w.as_list[alpha.k:]))
+                idj=wj.idx(self)
+                if alpha.i == alpha.j :
+                    M[idj,idj]=1
+                else :    
+                    wi = Weight(self.G,as_list=list(w.as_list[:alpha.k])+[alpha.i]+list(w.as_list[alpha.k:]))
+                    idi=wi.idx(self)
+                    M[idi,idj]=1
+        #elif self.type == 'fermion' :
             # List of weights with j by inserting j from smaller
-            Vred=Representation(LinGroup([self.G[0]-1]),self.type,self.nb_part-1)
+        #    Vred=Representation(LinGroup([self.G[0]-1]),self.type,self.nb_part-1)
+        #    for w in Vred.all_weights: 
+        #        L1=[s for s in w.as_list_of_list[0] if s<alpha.j]
+        #        L2=[s+1 for s in w.as_list_of_list[0] if s>=alpha.j]
+        #        lj=L1+[alpha.j]+L2  # we insert j
+        #        if alpha.i == alpha.j:
+        #                wj  = Weight(self.G,as_list_of_list=[lj])
+        #                idj = wj.idx(self)
+        #                M[idj,idj]=1
+        #        elif self.type == 'boson' or alpha.i not in lj : # Otherwise E_ij v =0
+        #            wj  = Weight(self.G,as_list_of_list=[lj])
+        #            idj = wj.idx(self)
+        #            li=L1+[alpha.i]+L2  # we insert i
+        #            li.sort()
+        #            wi = Weight(self.G,as_list_of_list=[li])
+        #            idi=wi.idx(self)
+        #            if self.type == 'fermion' :
+        #                M[idi,idj]=(-1)**(len(L1)-li.index(alpha.i))
+        #            else :
+        #                M[idi,idj]=lj.count(alpha.j)
+        else : # Case Fermion and Boson
+            
+            if self.type == 'fermion' :
+                shiftrank=1
+            else :
+                shiftrank=0
+            Vred=Representation(LinGroup([self.G[0]-shiftrank]),self.type,self.nb_part-1)
             for w in Vred.all_weights: 
-                L1=[s for s in w.as_list_of_list[0] if s<alpha.j]
-                L2=[s+1 for s in w.as_list_of_list[0] if s>=alpha.j]
+                L1=[s for s in w.as_list_of_list[0] if s<alpha.j]                
+                L2=[s+shiftrank for s in w.as_list_of_list[0] if s>=alpha.j]
                 lj=L1+[alpha.j]+L2  # we insert j
                 if alpha.i == alpha.j:
                         wj  = Weight(self.G,as_list_of_list=[lj])
@@ -215,19 +247,20 @@ class Representation:
         return M
 
     @cached_property
-    def actionK(self) -> list[matrix]:
+    def actionK(self) -> dict[Root, Matrix]: #TODO : typer dictionnaire Root -> matrix
         """
         The list of matrices rho_V(xi) for xi in the bases of K.
         """
-        L=[]
-        for beta in Root.all_of_K(self.G) : # TODO : Défaut : calcule deux fois chaque rhoEij 
+        L={}
+        for beta in Root.all_of_B(self.G) : 
             i,j = beta.i,beta.j
             if i == j :
-                L.append(I*self.rhoEij(beta))
-            elif i<j:
-                L.append(self.rhoEij(beta)-self.rhoEij(beta.opposite))
+                L[beta]=I*self.rhoEij(beta)
             else :
-                L.append(I*self.rhoEij(beta)+I*self.rhoEij(beta.opposite))
+                A=self.rhoEij(beta)
+                B=self.rhoEij(beta.opposite)
+                L[beta]=A-B
+                L[beta.opposite]=I*(A+B)
         return(L)
 
     def action_op_el(self,alpha: Root, v: Vector) -> Vector:
@@ -261,8 +294,8 @@ class Representation:
             Gred=LinGroup(self.G[:alpha.k]+self.G[alpha.k+1:])
             Vred=Representation(Gred,'kron')
             for w in Vred.all_weights:
-                wj = Weight(self.G,as_list=list(w.epsi[:k])+[alpha.j]+list(w.epsi[k:]))
-                wi = Weight(self.G,as_list=list(w.epsi[:k])+[alpha.j]+list(w.epsi[k:]))
+                wj = Weight(self.G,as_list=list(w.as_list[:alpha.k])+[alpha.j]+list(w.as_list[alpha.k:]))
+                wi = Weight(self.G,as_list=list(w.as_list[:alpha.k])+[alpha.i]+list(w.as_list[alpha.k:]))
                 vp[wi.idx(self)] = v[wj.idx(self)]
                 
         else :

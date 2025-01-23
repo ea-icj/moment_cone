@@ -58,6 +58,25 @@ class Root:
         for k, dk in enumerate(G):
             for i, j in itertools.combinations(range(dk), 2):
                 yield Root(k, i, j)
+
+    @staticmethod
+    def all_of_B(G: LinGroup) -> Iterable["Root"]:
+        """
+        Returns all possible root from B for a given group
+        
+        Example:
+        >>> d = Dimension((2, 3))
+        >>> for root in Root.all_of_B(G):
+        ...     print(root)
+        Root(k=0, i=0, j=1)
+        Root(k=1, i=0, j=1)
+        Root(k=1, i=0, j=2)
+        Root(k=1, i=1, j=2)
+        """
+        for k, dk in enumerate(G):
+            for i in range(dk):
+                for j in range(i,dk):
+                    yield Root(k, i, j)
                 
     @staticmethod
     def all_of_K(G: LinGroup) -> Iterable["Root"]:
