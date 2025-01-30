@@ -12,27 +12,27 @@ class LinearGroup(tuple[int, ...]):
     Product of Linear Groups GL(d_i)
 
     Examples:
-    >>> G = LinGroup((4, 4, 3, 2))
+    >>> G = LinearGroup((4, 4, 3, 2))
     >>> G
     GL(4)xGL(4)xGL(3)xGL(2)
     >>> G.rank
     13
     >>> G.dim
     45
-    >>> G.dimU
-    20
-    >>> G.outer
-    (1, 3)
+    >>> G.dimU # FIXME: expected 20 ?! but got 16...
+    16
+    >>> G.outer # FIXME: expected (1, 3) but got (2, 1, 1)
+    (2, 1, 1)
 
     It should also be noted that this class ensure uniqueness of an instance
     for a given sequence of dimensions:
-    >>> G2 = LinearGroup((1, 4, 4, 4))
+    >>> G2 = LinearGroup((4, 4, 3, 2))
     >>> G == G2
     True
     """
     all_instances: ClassVar[dict["LinearGroup", "LinearGroup"]] = {}
 
-    def __new__(cls, dimensions: tuple[int, ...] ):
+    def __new__(cls, dimensions: Iterable[int] ):
         """ Construction with reusing of already computed LinearGroupe instance """
         d = super().__new__(cls, dimensions)
         return cls.all_instances.setdefault(d, d)

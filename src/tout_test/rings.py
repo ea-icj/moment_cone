@@ -20,10 +20,7 @@ from sage.all import vector as sage_vector, matrix as sage_matrix # type: ignore
 from sage.all import ZZ, QQ, I # type: ignore
 
 from .typing import *
-
-if TYPE_CHECKING:
-    from .weight import Weight
-    VariableName = str | Weight
+from .weight import Weight
 
 __all__ = (
     'VariableName',
@@ -38,9 +35,10 @@ __all__ = (
 # TODO: independant type alias for Vector, Matrix et co. from Sage (to avoid Unknown)
 
 Variable = Any
+VariableName = str | Weight
 RingGens = dict[str, Variable]
 
-def variable_name(name_or_weight: "VariableName", seed: str = "v") -> str:
+def variable_name(name_or_weight: VariableName, seed: str = "v") -> str:
     """ Accepts a variable name or a sequence of integer (typically a weight) and returns the corresponding variable name """
     if isinstance(name_or_weight, str):
         return name_or_weight
@@ -48,11 +46,11 @@ def variable_name(name_or_weight: "VariableName", seed: str = "v") -> str:
         # FIXME: how to generate variable name for every weight
         return seed + "_" + "_".join(map(str, name_or_weight)) # type: ignore
 
-def variable(ring_or_gens: Ring | RingGens, name_or_weight: "VariableName", seed: str = "v") -> Variable:
+def variable(ring_or_gens: Ring | RingGens, name_or_weight: VariableName, seed: str = "v") -> Variable:
     """ Get variable of a ring from it's name or weight """
     return variables(ring_or_gens, (name_or_weight,), seed)[0]
     
-def variables(ring_or_gens: Ring | RingGens, name_or_weight: "Iterable[VariableName]", seed: str = "v") -> tuple[Variable, ...]:
+def variables(ring_or_gens: Ring | RingGens, name_or_weight: Iterable[VariableName], seed: str = "v") -> tuple[Variable, ...]:
     """ Get multiple variables of a ring from it's name or weight """
     if not isinstance(ring_or_gens, dict):
         ring_or_gens = ring_or_gens.gens_dict()
@@ -149,7 +147,7 @@ class PolynomialRingForWeights:
         self.ring_gens = self.sage_ring.gens_dict() # Faster if we don't regenerate the dictionary at each variable access
         self.seed = seed
 
-    def variable(self, name_or_weight: "VariableName") -> Variable:
+    def variable(self, name_or_weight: VariableName) -> Variable:
         """ Get variable of this polynomial ring from it's name or weight """
         if isinstance(name_or_weight, str):
             return variable(self.ring_gens, name_or_weight)

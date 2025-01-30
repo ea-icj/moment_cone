@@ -6,7 +6,9 @@ from functools import cached_property
 
 from .typing import *
 from .linear_group import LinearGroup
-from .rings import Vector
+
+if TYPE_CHECKING:
+    from .rings import Vector
 
 
 class Weight:
@@ -17,15 +19,16 @@ class Weight:
     def __init__(self,
                  G: LinearGroup,
                  *,
-                 as_vector: Optional[Vector] = None,
+                 as_vector: "Optional[Vector]" = None,
                  index: Optional[int] = None):
         self.G = G
         if as_vector is not None:
+            assert len(as_vector) == G.rank
             self.as_vector = as_vector
         self.index = index
     
     @cached_property
-    def as_vector(self) -> Vector:
+    def as_vector(self) -> "Vector":
         """ Vector representation of the weight """
         # Must be implemented in derived class if not given at construction.
         raise NotImplementedError
@@ -129,3 +132,6 @@ class Weight:
     def __le__(self, other: "Weight") -> bool:
         """ Implementation of self <= other (partial ordering) """
         return self.leq(other)
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(as_vector={self.as_vector}" + (f", idx: {self.index}" if self.index is not None else "") + ")"

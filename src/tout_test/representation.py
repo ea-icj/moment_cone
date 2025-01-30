@@ -15,9 +15,13 @@ class Representation(ABC):
         """ Creates a weight for the given representation """
         return self.Weight(self.G, *args, **kwargs)
     
-    #@abstractmethod
-    #def all_weights(self) -> Iterable[WeightBase]:
-    #    ...
+    @abstractmethod
+    def all_weights(self) -> Iterable[WeightBase]:
+        ...
+
+    @abstractmethod
+    def index_of_weight(self, chi: WeightBase, use_internal_index: bool = True) -> int:
+        ...
 
     @property
     @abstractmethod
