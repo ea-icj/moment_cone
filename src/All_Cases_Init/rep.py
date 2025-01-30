@@ -195,28 +195,6 @@ class Representation:
                     wi = Weight(self.G,as_list=list(w.as_list[:alpha.k])+[alpha.i]+list(w.as_list[alpha.k:]))
                     idi=wi.idx(self)
                     M[idi,idj]=1
-        #elif self.type == 'fermion' :
-            # List of weights with j by inserting j from smaller
-        #    Vred=Representation(LinGroup([self.G[0]-1]),self.type,self.nb_part-1)
-        #    for w in Vred.all_weights: 
-        #        L1=[s for s in w.as_list_of_list[0] if s<alpha.j]
-        #        L2=[s+1 for s in w.as_list_of_list[0] if s>=alpha.j]
-        #        lj=L1+[alpha.j]+L2  # we insert j
-        #        if alpha.i == alpha.j:
-        #                wj  = Weight(self.G,as_list_of_list=[lj])
-        #                idj = wj.idx(self)
-        #                M[idj,idj]=1
-        #        elif self.type == 'boson' or alpha.i not in lj : # Otherwise E_ij v =0
-        #            wj  = Weight(self.G,as_list_of_list=[lj])
-        #            idj = wj.idx(self)
-        #            li=L1+[alpha.i]+L2  # we insert i
-        #            li.sort()
-        #            wi = Weight(self.G,as_list_of_list=[li])
-        #            idi=wi.idx(self)
-        #            if self.type == 'fermion' :
-        #                M[idi,idj]=(-1)**(len(L1)-li.index(alpha.i))
-        #            else :
-        #                M[idi,idj]=lj.count(alpha.j)
         else : # Case Fermion and Boson
             
             if self.type == 'fermion' :

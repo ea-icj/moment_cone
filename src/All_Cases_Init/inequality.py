@@ -144,5 +144,5 @@ class Inequality:
         if listp == [] and list(self.inversions)==[]:
             return(vector(QQ,sum(d)+1))
         else :
-            return(sum([chi.as_vector for chi in listp])-sum([root.as_vector for root in self.inversions]))
+            return(sum([chi.as_vector for chi in listp])-sum([root.to_vector(V.G) for root in self.inversions]))
 

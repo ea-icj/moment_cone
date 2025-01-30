@@ -495,7 +495,7 @@ class Tau:
         return Tau.from_flatten([x // res_gcd for x in columns], self.G)
     
     @cached_property
-    def indices_in_tau_red_that_sum_to_zero(self)  -> list[list[int]] : 
+    def indices_in_tau_red_that_sum_to_zero(self)  -> list[list[int]] : #TODO : supprimer cette propriété
         """ 
         Create the list of lists L=[i_0, i_2, ..., i_{s-1}] such that  \sum_k tau_red[k][i_k] = 0
         """
@@ -504,6 +504,33 @@ class Tau:
         for idx in itertools.product(*(range(di) for di in tau_red.G)): # Choice of one index in each component of tau ie a row in each column of the partial matrix
             if sum(tau_red.components[j][i] for j,i in enumerate(idx))  == 0:
                 result.append(idx)
+        return result
+
+    def summands_Vtau(self,V : Representation)  -> list[list[int]] : 
+        """ 
+        V^\tau can be written as a direct sum. Compute the index set of this sum. Namely :
+        For Kron : Create the list of lists L=[i_0, i_2, ..., i_{s-1}] such that  \sum_k tau_red[k][i_k] = 0
+        For Fermion or Boson : s=len(tau_red.values). Create the list of lists L=[i_0, i_2, ..., i_{s-1}] such that  \sum_k i_k * tau_red[k] = 0
+        """
+        tau_red=Tau(self.reduced.values,LinGroup([len(x) for x in self.reduced.values]))
+        result = []
+        if V.type == 'kron':
+            for idx in itertools.product(*(range(di) for di in tau_red.G)): # Choice of one index in each component of tau ie a row in each column of the partial matrix
+                if sum(tau_red.components[j][i] for j,i in enumerate(idx))  == 0:
+                    result.append(idx)
+            return result
+
+        # In this case it a kind of mix between all-weights for boson and orthogonal weights
+        s=len(self.reduced.values[0])
+        for i,w in enumerate(itertools.combinations(range(s+V.nb_part-1),s-1)) :
+                L=[w[0]]
+                for j,p in enumerate(itertools.pairwise(w)):
+                    L.append(p[1]-p[0]-1)
+                #Lself.G.rank+V.nb_part-w[-1]-2
+                L.append(s+V.nb_part-w[-1]-2)
+                # check the weight condition
+                if sum(i*t for i,t in zip(L,self.reduced.values[0])) == 0:
+                    result.append(L)                        
         return result
 
 class ReducedTau:
@@ -615,7 +642,7 @@ def find_1PS(V: Representation, quiet: bool = False) -> Sequence["Tau"]:
             umax=V.G.u_max(Vred.G)
             #Recover by induction all candidates 1-PS mod symmetry
             List_1PS_Vred_reg=[]
-            for H in find_hyperplanes_reg_mod_outer(Vred.all_weights, Vred, umax):
+            for H in find_hyperplanes_reg_mod_outer(Vred.all_weights, Vred, umax): # Important to keep sym at None
                 taured=Tau.from_zero_weights(H, Vred)
                 if taured.is_dom_reg : # We keep only dominant regular 1-PS
                     List_1PS_Vred_reg+=[t for t in taured.orbit_symmetries()]

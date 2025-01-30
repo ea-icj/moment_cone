@@ -43,7 +43,7 @@ class OurPartition:
         return self._data + (0,) * (length - len(self._data))
 
     @staticmethod
-    def all_for_integer(n: int) -> Iterable["OurPartition"]:
+    def all_for_integer(n: int) -> Iterable["OurPartition"]: #TODO : est utilisé plusieurs fois pour le même n. staticmethod est adapté ?
         """
         Generates all partitions of an integer n >= 0.
 

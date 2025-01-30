@@ -1,7 +1,8 @@
 
 G = LinGroup([3,3,3,1])
 V = Representation(G,'kron')
-
+G = LinGroup([7])
+V = Representation(G,'fermion',nb_part=3)
 
 tpi_method: Method ='symbolic'
 tpi_method='probabilistic'
@@ -75,11 +76,36 @@ print('Step 6, checking dominancy of the map pi')
 Dominant_Ineq=[ineq for ineq in Candidates_for_Ineq1 if Check_Rank_Tpi(ineq,V,tpi_method)] 
 print(len(Dominant_Ineq), ' inequalities selected in Step 6')
 
+# Filter 3: BKR condition
+print('Step 8, checking if BKR condition is fullfilled')
+List_BKR=[]
+for ineq in Dominant_Ineq :
+    #print('ineq',ineq)
+    #print('pos weights:',[chi for chi in ineq.tau.positive_weights(V)])
+    #print('pos roots:',[chi for chi in ineq.inversions])
+    chi=ineq.weight_det(V)
+    print('Mult Vtau', Multiplicity_SV_tau(ineq.tau,chi,V)) 
+    #if list(ineq.inversions)==[] or Is_Multiplicity_SV_tau_one(ineq.tau,chi):
+    #    List_BKR.append(ineq)
+        
 # Filter 4: pi is birational (ramification divisor contracted)
 print('Step 9, checking birationality (ramification divisor contracted) of the map pi')
 Birational_Ineq=[ineq for ineq in Dominant_Ineq if Is_Ram_contracted(ineq,V,ram_schub_method,ram0_method)]
 print(len(Birational_Ineq), ' inequalities selected in Step 9 in','seconds')
 
+
+
+
+
+
+
+
+###### TODO : TESTS A SUPPRIMMER CI-APRES #########
+
+for ineq in Birational_Ineq :
+    chi=ineq.weight_det(V)
+    print('Mult Vtau', Multiplicity_SV_tau(ineq.tau,chi,V))
+    
 tau=Tau.from_flatten([2,1,0,2,1,0,2,1,0,0],G)
 for chi in V.all_weights:
     for chi2 in V.all_weights:
@@ -87,3 +113,5 @@ for chi in V.all_weights:
             print(tau.dot_weight(chi)-tau.dot_weight(chi2))
 #for ineq in Birational_Ineq :
 #    print(ineq.tau)
+
+#########
