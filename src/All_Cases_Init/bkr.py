@@ -16,7 +16,7 @@ from .inequality import *
 sym_f = SymmetricFunctions(QQ).s()
 
 
-def Kron_multi(L) -> int :
+def Kron_multi_old(L) -> int :
     """
     L is a list of partitions of the same weight, length at least 2
     return the multiple Kronecker coeffient
@@ -43,7 +43,19 @@ def Kron_multi(L) -> int :
     for monomial, coeff in product.monomial_coefficients().items():
         tot+=coeff*Kron_multi(L[2:]+[monomial])
     return(tot)    
-        
+
+
+def Kron_multi(L) -> int:
+    """
+    L is a list of partitions of the same weight, length at least 2
+    return the multiple Kronecker coeffient
+    """
+    from sage.all import Partition as SagePartition
+    product = sym_f(tuple(L[0]))
+    for p in L[1:-1]:
+        product = product.kronecker_product(sym_f(tuple(p)))
+    return product.monomial_coefficients().get(SagePartition(L[-1]), 0)
+
 
 def LR_multi(L,nu) -> int:
     
