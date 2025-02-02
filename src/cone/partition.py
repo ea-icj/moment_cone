@@ -59,12 +59,12 @@ class Partition:
                     yield Partition((head,) + tail._data, check=False)
 
     @staticmethod
-    def all_of_height(height: int, lambda_max: int) -> Iterable["Partition"]:
+    def all_of_length(length: int, lambda_max: int) -> Iterable["Partition"]:
         """
-        Generates all partitions of given height and with given maximum value (included).
+        Generates all partitions of given length and with given maximum value (included).
         """
         # Note that combinations_with_replacement keeps order of input sequence
-        for w in itertools.combinations_with_replacement(reversed(range(lambda_max + 1)), height):
+        for w in itertools.combinations_with_replacement(reversed(range(lambda_max + 1)), length):
             yield Partition(w, check=False)
 
     # TODO: property? cached?

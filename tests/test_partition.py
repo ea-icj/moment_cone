@@ -39,7 +39,7 @@ class TestPartition(unittest.TestCase):
             self.assertEqual(p, Partition(r))
 
     def test_all_of_height(self):
-        partitions = Partition.all_of_height(2, 3)
+        partitions = Partition.all_of_length(2, 3)
         ref = ((3, 3), (3, 2), (3, 1), (3,), (2, 2), (2, 1), (2,), (1, 1), (1,), ())
         for p, r in zip(partitions, ref):
             self.assertEqual(p, Partition(r))
