@@ -1,7 +1,7 @@
 import numpy as np
 import itertools
 
-from sage.all import SymmetricFunctions,ZZ,QQ,vector,matrix,Polyhedron,Partitions as SagePartitions
+from sage.all import SymmetricFunctions,ZZ,QQ,vector,matrix,Polyhedron
 import sage.libs.lrcalc.lrcalc as lr
 
 from .typing import *
@@ -28,7 +28,7 @@ def ListNonZeroLR(nu : Partition,delta : list[int],l:int):
         nuc=nu.lambda_check(l).lambda_red(l)
         shift_max = delta[0]//l
         for a in range(shift_max+1):
-            for lar in SagePartitions(delta[0]-a*l, max_length=l-1):
+            for lar in Partition.all_for_integer(delta[0]-a*l, max_length=l-1):
                 #print('lambda reduit',lar)
                 prod=lr.mult(nuc,lar)
                 larn=Partition(lar)
@@ -79,9 +79,9 @@ def ListNonZeroLR(nu : Partition,delta : list[int],l:int):
 def ListNonZeroLR_vtest(nu : Partition,delta : list[int],l:int):
     s=len(delta)
     res=[]
-    for l0 in SagePartitions(delta[0], max_length=l):
-        for l1 in SagePartitions(delta[1], max_length=l):
-            for l2 in SagePartitions(delta[2], max_length=l):
+    for l0 in Partition.all_for_integer(delta[0], max_length=l):
+        for l1 in Partition.all_for_integer(delta[1], max_length=l):
+            for l2 in Partition.all_for_integer(delta[2], max_length=l):
                 lr=LR_multi([l0,l1,l2],nu)
                 print(lr)
                 if lr !=0:
@@ -295,7 +295,7 @@ def Fill_Table_of_Lambdas(delta,ListP,tau : Tau,V : Representation,table): # del
     BL=[]
     for k in range(len(V.G)):
         for j in range(len(delta)):
-            table[j,k]=SagePartitions(delta[j],max_length=tau.components[k][ListP[j][k]]).list()
+            table[j,k]=Partition.all_for_integer(delta[j],max_length=tau.components[k][ListP[j][k]]).list()
     
 
 def Fill_Table_of_Mus(delta,ListP, mtau : list[int],V : Representation,table): # delta is a sage vector in ZZ -  output : void
@@ -307,7 +307,7 @@ def Fill_Table_of_Mus(delta,ListP, mtau : list[int],V : Representation,table): #
     for k in range(len(mtau)):
         for j in range(len(delta)):
             #print('j,k:',j,k)
-            table[j,k]=SagePartitions(ListP[j][k]*delta[j],max_length=mtau[k]).list()
+            table[j,k]=Partition.all_for_integer(ListP[j][k]*delta[j],max_length=mtau[k]).list()
     
 
 
