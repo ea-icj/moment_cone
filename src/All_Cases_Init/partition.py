@@ -4,7 +4,7 @@ from .utils import is_decreasing, trim_zeros
 import itertools
 
 __all__ = (
-    "OurPartition",
+    "OurPartition", "ListPartPlus",
 )
 
 class OurPartition:
@@ -95,4 +95,47 @@ class OurPartition:
             for tail_sp in tail.all_subpartitions():
                 yield OurPartition((x + 1, *tail_sp), check=False)
 
+    def lambda_check(self,l : int) -> "OurPartition" :
+        """
+        l for GL(l). Max length of la. TODO : ajouter un assert
+        """
+        x = self[0]
+        return(OurPartition([x-self[i] for i in range(l-1, 0, -1)]))
+
+    def lambda_red(self,l : int) -> "OurPartition" : 
+        """
+        l for GL(l). Tensor with det to reduce la. The ouput can be thought as a representation of SL(l)
+        """
+        x = self[l-1]
+        return(OurPartition([self[i]-x for i in range(l-1)]))
+
+
+        
+
     
+class ListPartPlus: 
+    """
+    A list of partitions with two more properties 
+    - indices (a list of integers) and 
+    - mult (an integer which is a multiplicity in representation theory.
+    """
+
+    def __init__(self, L : list[OurPartition], c : int,indices : list[int]=None):
+        """
+        Initializes an instance of ListPartPlus.
+        """
+        self.parts=L
+        self.mult=c
+        self.indices=indices
+        
+
+    def __repr__(self) -> str:
+        if self.indices != None :
+            return 'Partitions: '+str(self.parts)+', Indices: '+str(self.indices)+', Multiplicity: '+str(self.mult)
+        else :
+            return 'Partitions: '+str(self.parts)+', Multiplicity: '+ str(self.mult)
+
+    def __eq__(self,other : "ListPartPlus") -> bool:
+        if all(l==m for l,m in zip(self.parts,other.parts)) and self.mult==other.mult and self.indices==other.indices :
+            return True
+        return False

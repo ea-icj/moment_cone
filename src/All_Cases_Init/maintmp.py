@@ -1,8 +1,10 @@
 
 G = LinGroup([3,3,3,1])
 V = Representation(G,'kron')
-G = LinGroup([7])
-V = Representation(G,'fermion',nb_part=3)
+#G = LinGroup([7])
+#V = Representation(G,'fermion',nb_part=3)
+#G = LinGroup([8])
+#V = Representation(G,'fermion',nb_part=3)
 
 tpi_method: Method ='symbolic'
 tpi_method='probabilistic'
