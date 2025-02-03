@@ -149,4 +149,16 @@ class Partition:
             for tail_sp in tail.all_subpartitions():
                 yield Partition((x + 1, *tail_sp), check=False)
 
+    def lambda_check(self, l: int) -> "Partition":
+        """
+        l for GL(l). Max length of la. TODO : ajouter un assert
+        """
+        x = self[0]
+        return Partition([x - self[i] for i in range(l - 1, 0, -1)])
 
+    def lambda_red(self, l: int) -> "Partition": 
+        """
+        l for GL(l). Tensor with det to reduce la. The output can be thought as a representation of SL(l)
+        """
+        x = self[l - 1]
+        return Partition([self[i] - x for i in range(l - 1)])
