@@ -76,7 +76,7 @@ def ListNonZeroLR(nu : Partition,delta : list[int],l:int):
     # Création de la nouvelle liste d'objets
     return(zipped_list)
     
-def ListNonZeroLR_vtest(nu : Partition,delta : list[int],l:int):
+def ListNonZeroLR_vtest(nu : Partition,delta : list[int],l:int): # TODO : supprimer quand le reste marchera
     s=len(delta)
     res=[]
     for l0 in Partition.all_for_integer(delta[0], max_length=l):
@@ -88,7 +88,7 @@ def ListNonZeroLR_vtest(nu : Partition,delta : list[int],l:int):
                      res.append(ListPartPlus([Partition(l0),Partition(l1),Partition(l2)],lr))
     return(res)                 
         
-def ListNonZeroLR_vtest2(nu : Partition,delta : list[int],l:int):
+def ListNonZeroLR_vtest2(nu : Partition,delta : list[int],l:int): # TODO : supprimer quand le reste marchera
     l=lr.coprod(nu)
     lt=[(x,l[x]) for x in l.keys() if len(x[0])<=l and len(x[1])<=l and sum(x[0])==delta[0]]
     return(lt)
@@ -361,7 +361,7 @@ def Multiplicity_SV_tau(tau : Tau,chi : vector, V : Representation, checkGreatEq
     mult=0
     
     for delta in Enumerate_delta(ListP,w_Nu,V)[1]: # Run over the dela satisfying Condition 2
-        #print('delta',delta)
+        print('delta',delta)
         if V.type == 'kron' :
             # Run over entries of Nu
             p,s = Nu.shape

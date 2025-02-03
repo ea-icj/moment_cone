@@ -137,12 +137,11 @@ class Inequality:
         Weight chi_det of Theorem BKR
         """
         tau=self.tau
-        G=tau.G
         listp=[]
         for ll in list(tau.positive_weights(V).values()):
             listp+=ll
         if listp == [] and list(self.inversions)==[]:
-            return(vector(QQ,sum(d)+1))
+            return(vector(QQ,sum(V.G)+1))
         else :
             return(sum([chi.as_vector for chi in listp])-sum([root.to_vector(V.G) for root in self.inversions]))
 
