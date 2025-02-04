@@ -119,7 +119,7 @@ def group_by_dom1PS(inequations):
 #TODO create a file
 #TODO make a caption
 
-def export_latex(V, inequations, sgn=1): #sgn=1 ou -1 allows to change the sign, exchange >=0 and <=0
+def export_latex(V, inequations, sgn=1, extra_info=""): #sgn=1 ou -1 allows to change the sign, exchange >=0 and <=0
     """ converts a list of Inequalities associated to a given dominant 1PS to a string describing part of a latex tabular
     """
     if V.type=='kron':
@@ -129,10 +129,14 @@ def export_latex(V, inequations, sgn=1): #sgn=1 ou -1 allows to change the sign,
     grouped_ineqs=group_by_dom1PS(inequations)
     chaine='$\\begin{array}{|c| c |c|} \n \\hline \n \\textrm{dominant 1-PS} & \\textrm{Inequality} & w \\\\ \n \\hline'
     for taudom_list in grouped_ineqs:
-        print(len(taudom_list))
         chaine+=Latex_string_of_cluster_dom1PS(taudom_list,lambda_notation) 
     chaine+='\\end{array}$'
-    return(chaine)
+    info=info_from_GV(V)+extra_info
+    file0 = open('ineq_Latex-'+info+'.tex','w')
+    file0.write("\\documentclass[12pt]{article} \n \\usepackage{amsmath} \n \\usepackage{multirow} \n \\usepackage{graphicx} \n \n  \\begin{document}\n \n")
+    file0.write(chaine)
+    file0.write("\n \n \\end{document}")
+    file0.close()
 
     
 
