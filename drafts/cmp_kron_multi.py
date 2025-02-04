@@ -138,20 +138,30 @@ class KroneckerCoefficient:
 class KroneckerCoefficientCache(KroneckerCoefficient):
     """ Kronecker coefficient computation using cache to store the computed decompositions """
     cache: dict[tuple[Partition, ...], dict[Partition, int]]
+    hit: int
+    miss: int
     def __init__(self, file_prefix: Optional[str] = None):
         super().__init__()
         self.cache = dict()
+        self.hit = 0
+        self.miss = 0
 
         if file_prefix is not None:
             self.load_cache(file_prefix)
 
     def product(self, partitions: list[Partition]) -> dict[Partition, int]:
         try:
-            return self.cache[tuple(partitions)]
+            product = self.cache[tuple(partitions)]
+            self.hit += 1
+            return product
         except KeyError:
+            self.miss += 1
             product = kronecker_product(partitions)
             self.cache[tuple(partitions)] = product
             return product
+        
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(#cache={len(self.cache)}, #hit={self.hit}, #miss={self.miss})"
 
     def load_cache(self, file_prefix: str) -> None:
         """ Load cache from given filename prefix (will append .pkl.xz) """
@@ -170,8 +180,11 @@ class KroneckerCoefficientCacheMultiLevel(KroneckerCoefficientCache):
     """ Kronecker coefficient computation using cache to store the computed full and intermediary decompositions """
     def product(self, partitions: list[Partition]) -> dict[Partition, int]:
         try:
-            return self.cache[tuple(partitions)]
+            product = self.cache[tuple(partitions)]
+            self.hit += 1
+            return product
         except KeyError:
+            self.miss += 1
             if len(partitions) == 2:
                 head = sym_f(partitions[0])
             else:
@@ -191,8 +204,11 @@ class KroneckerCoefficientCacheMultiLevel2(KroneckerCoefficientCache):
     """ Kronecker coefficient computation using cache to store the computed full and intermediary decompositions """
     def product(self, partitions: list[Partition]) -> dict[Partition, int]:
         try:
-            return self.cache[tuple(partitions)]
+            product = self.cache[tuple(partitions)]
+            self.hit += 1
+            return product
         except KeyError:
+            self.miss += 1
             if len(partitions) == 2:
                 head = sym_f(partitions[0])
                 tail = sym_f(partitions[1])
@@ -358,17 +374,29 @@ class KroneckerCoefficientCacheRaw(KroneckerCoefficientRaw):
     the Kronecker product on it.
     """
     cache: dict[tuple[Partition, ...], Any]
+    hit: int
+    miss: int
+
     def __init__(self):
         super().__init__()
         self.cache = dict()
+        self.hit = 0
+        self.miss = 0
 
     def product(self, partitions: list[Partition]) -> Any:
         try:
-            return self.cache[tuple(partitions)]
+            product = self.cache[tuple(partitions)]
+            self.hit += 1
+            return product
         except KeyError:
+            self.miss += 1
             product = kronecker_product_raw(partitions)
             self.cache[tuple(partitions)] = product
             return product
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(#cache={len(self.cache)}, #hit={self.hit}, #miss={self.miss})"
+
 
 
 class KroneckerCoefficientCacheMultiLevelRaw(KroneckerCoefficientCacheRaw):
@@ -381,8 +409,11 @@ class KroneckerCoefficientCacheMultiLevelRaw(KroneckerCoefficientCacheRaw):
     """
     def product(self, partitions: list[Partition]) -> Any:
         try:
-            return self.cache[tuple(partitions)]
+            product = self.cache[tuple(partitions)]
+            self.hit += 1
+            return product
         except KeyError:
+            self.miss += 1
             if len(partitions) == 2:
                 head = sym_f(partitions[0])
             else:
@@ -403,8 +434,11 @@ class KroneckerCoefficientCacheMultiLevelRaw2(KroneckerCoefficientCacheRaw):
     """
     def product(self, partitions: list[Partition]) -> Any:
         try:
-            return self.cache[tuple(partitions)]
+            product = self.cache[tuple(partitions)]
+            self.hit += 1
+            return product
         except KeyError:
+            self.miss += 1
             if len(partitions) == 2:
                 head = sym_f(partitions[0])
                 tail = sym_f(partitions[1])
@@ -513,11 +547,21 @@ if __name__ == "__main__":
     parser.add_argument("n", type=int, help="The length of the partitions")
     parser.add_argument("N", type=int, default=3, help="Computing the Kronecker coefficient for a N-uplet of partitions")
     parser.add_argument("--methods", choices=all_methods, nargs="*", default=all_methods, help="Methods to compare")
+    parser.add_argument("--not_methods", choices=all_methods, nargs="*", default=[], help="Methods that should not run")
     parser.add_argument("--use_generator", action="store_true", help="All n-uplets of partitions as a generator instead of a list")
+    parser.add_argument("--ncols", type=int, default=100, help="Number of columns for the display")
+    parser.add_argument("--timeout", type=float, default=None, help="Timeout per method in minutes")
     config = parser.parse_args()
 
-    all_nuplets = AllNupletOfFixedN(config.n, config.N)
+    for m in config.not_methods:
+        config.methods.remove(m)
+    if config.timeout is not None:
+        config.timeout *= 60
 
+    print("\n" * 2)
+    print("#" * config.ncols)
+
+    all_nuplets = AllNupletOfFixedN(config.n, config.N)
     print(f"Computing Kronecker coefficient for the {len(all_nuplets)} {config.N}-uplet of partitions of {config.n}:")
 
     if not config.use_generator:
@@ -530,11 +574,23 @@ if __name__ == "__main__":
         print(f"\t{p}")
 
     from tqdm.auto import tqdm
+    import time
     for method in config.methods:
-        print(f"\nUsing method {method}:")
-        fn = globals()[f"MultiKron{method}"](config.n, config.N)
+        try:
+            print(f"\nUsing method {method}:")
+            tic = time.monotonic()
+            fn = globals()[f"MultiKron{method}"](config.n, config.N)
 
-        for nuplet in tqdm(all_nuplets):
-            fn(nuplet)
+            for i, nuplet in enumerate(tqdm(all_nuplets, ncols=100)):
+                fn(nuplet)
+                if i % 1000 == 0 and config.timeout is not None and time.monotonic() - tic > config.timeout:
+                    break
 
-        print("Check on the reference partitions:", [fn(p) for p in partitions_check])
+            print("Check on the reference partitions:", [fn(p) for p in partitions_check])
+            try:
+                cache = fn.cache
+                print(f"Cache info: #cache={len(cache.cache)}, #hit={cache.hit}, #miss={cache.miss}")
+            except AttributeError:
+                pass
+        except KeyboardInterrupt:
+            pass
