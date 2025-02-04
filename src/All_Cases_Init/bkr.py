@@ -230,6 +230,8 @@ def chi2Numat(chi, mult_tau ): # chi is a sage vector - mult_tau est un tau.redu
     #print('chi',chi)
     #print('mult_tau',mult_tau)
     #print('Nu',Nu)
+    if shift!=len(chi):
+       print(shift,len(chi), chi,mult_tau)
     assert shift == len(chi)
     return Nu
 
