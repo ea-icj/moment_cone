@@ -65,7 +65,7 @@ class Inequality:
         ]
 
         taup = Tau(
-            Blocks.from_blocks([[t for t, i in taub] for taub in tau_pairs],tau.G)
+            Blocks.from_blocks([[t for t, i in taub] for taub in tau_pairs]),tau.G
             )
         w = (Permutation([i for t, i in taub]) for taub in tau_pairs)
         return Inequality(taup, w)

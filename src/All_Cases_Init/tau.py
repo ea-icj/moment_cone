@@ -206,7 +206,7 @@ class Tau:
         """
         Dictionary whose keys are eigenvalues of the action of tau on a give subset of V.
         """
-        from utils import grading_dictionary
+        from .utils import grading_dictionary
         return grading_dictionary(weights, self.dot_weight)
 
     
@@ -277,7 +277,7 @@ class Tau:
         2: [Weight((0, 0, 1), idx: 1), Weight((1, 0, 0), idx: 6), Weight((2, 0, 0), idx: 12)]
         3: [Weight((0, 0, 0), idx: 0)]
         """
-        from utils import filter_dict_by_key
+        from .utils import filter_dict_by_key
         return filter_dict_by_key(self.grading_weights(V), lambda x: x > 0)
 
     
@@ -495,6 +495,29 @@ class Tau:
         return Tau.from_flatten([x // res_gcd for x in columns], self.G)
     
     @cached_property
+    def sl_representative(self) -> "Tau":
+        """ Returns representative of tau in C^* x (SLn)^3 """
+        if len(self.G)==1:
+            return selft
+        from math import lcm, gcd
+        #flat_non_zero=[x for x in self.flattened if x!=0]
+        d=(len(v) for v in self.components)
+        tau_lcm = lcm(*d)
+        ccomponent = self.components[-1][0] * tau_lcm
+        columns = []
+        for cj in self.components[:-1]:
+            dj=len(cj)
+            column_sum = sum(cj)
+            shift = column_sum * tau_lcm // dj
+            columns.append([tau_lcm * cji - shift for cji in cj])
+            ccomponent += shift
+        res_gcd = gcd(ccomponent, *itertools.chain.from_iterable(columns))
+        return Tau(
+            tuple(tuple(v // res_gcd for v in cj) for cj in columns) +((ccomponent // res_gcd,),),self.G
+        )
+
+    
+    @cached_property
     def indices_in_tau_red_that_sum_to_zero(self)  -> list[list[int]] : #TODO : supprimer cette propriété
         """ 
         Create the list of lists L=[i_0, i_2, ..., i_{s-1}] such that  \sum_k tau_red[k][i_k] = 0
@@ -554,7 +577,7 @@ class ReducedTau:
     mult: Blocks[int]
 
     def __init__(self, tau: Tau):
-        from utils import group_by_block
+        from .utils import group_by_block
         values = Blocks.from_flatten([], (0,) * len(tau.G))
         mult = Blocks.from_flatten([], (0,) * len(tau.G))
 
