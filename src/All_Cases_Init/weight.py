@@ -37,14 +37,28 @@ class Weight:
         self._idx = idx
         self.as_list = as_list
         self.as_list_of_list = as_list_of_list
+        
+    @property    
+    def short_rep(self) -> Iterable:
+        """
+        Used in __rep__ and in Groebner.py. For the latter, the aim is to have short indices for variables)
+        """
+        if self.as_list!=None:
+            return self.as_list
+        elif  self.as_list_of_list!=None:
+            return self.as_list_of_list
+        else :
+            return self.as_vector
+
 
     def __repr__(self) -> str:
+        sr=self.short_rep
         if self.as_list!=None:
-            return 'One epsilon_i by copy of GL: '+ str(self.as_list)
+            return 'One epsilon_i by copy of GL: indices '+ str(sr)
         elif  self.as_list_of_list!=None:
-            return 'A list of epsilon_i for each copy of GL: '+ str(self.as_list_of_list)
+            return 'A list of epsilon_i for each copy of GL: '+ str(sr)
         else :
-            return 'Coordinates of Weight: '+str(self.as_vector)
+            return 'Coordinates of Weight: '+str(sr)
 
     def __eq__(self,other: "Weight") -> bool:
         

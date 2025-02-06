@@ -204,7 +204,7 @@ class Tau:
 
     def grading_weights_in(self, weights: Iterable[Weight]) -> dict[int, list[Weight]]:
         """
-        Dictionary whose keys are eigenvalues of the action of tau on a give subset of V.
+        Dictionary whose keys are eigenvalues of the action of tau on a given subset of V.
         """
         from .utils import grading_dictionary
         return grading_dictionary(weights, self.dot_weight)

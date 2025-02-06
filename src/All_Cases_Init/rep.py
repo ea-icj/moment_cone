@@ -84,7 +84,7 @@ class Representation:
             return binomial(self.G.rank+self.nb_part-1,self.G.rank-1)
         
     @cached_property    
-    def all_weights(self) -> list["Weight"] : # TODO : j'ai du remplacer itérable ar liste car iterable ne marche qu'une fois ?
+    def all_weights(self) -> list["Weight"] : # TODO : j'ai du remplacer itérable par liste car iterable ne marche qu'une fois ?
         """
         Create de the list of weights of T acting on V. 
 
@@ -157,7 +157,7 @@ class Representation:
 
     def weights_of_S(self, p : Partition) -> Iterable["Weight"] : # Could be improved
         """
-        Create de the list of weights of S\subset T acting on V. With multiplicities.
+        Create the list of weights of S \\subset T acting on V. With multiplicities.
         S is given by p.
         Only used for V.type='fermion' or 'boson'
         """
@@ -241,6 +241,7 @@ class Representation:
                 L[beta.opposite]=I*(A+B)
         return(L)
 
+    #TODO: adapt Exemple to our new notations 
     def action_op_el(self,alpha: Root, v: Vector) -> Vector:
         """
         Action of E_alpha on the Vector v in V

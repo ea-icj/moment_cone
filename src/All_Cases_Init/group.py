@@ -89,7 +89,18 @@ class LinGroup(tuple[int, ...]):
         # TODO : assert d_i and e_i ordered or sort then (choose)
         # TODO remplacer par la formule sur les entiers
         return sum(floor(d * d / 2 * (1 - 1 / e)) for d, e in zip(self, Gred))
-        
+    
+    @cached_property
+    def QU(self, base_ring=None) -> "PolynomialRingForWeights":
+        from .rings import PolynomialRingForWeights, QQ
+        from .root import Root
+        if base_ring==None:
+            base_ring=QQ
+        return PolynomialRingForWeights(base_ring,
+            weights=Root.all_of_U(self),
+            seed=('u'),
+        )
+
 
         
 

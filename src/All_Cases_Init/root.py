@@ -142,5 +142,13 @@ class Root:
         """
         for k, dk in enumerate(G):
             for i in range(dk):
-                yield Root(k, i, i)            
-
+                yield Root(k, i, i)       
+    
+    @property
+    #TODO: erase this one if not used in Groebner
+    def short_rep(self):
+        return[self.k,self.i,self.j]
+    
+    @property
+    def as_list(self):
+        return[self.k,self.i,self.j]
