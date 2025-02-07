@@ -107,6 +107,10 @@ print(len(Birational_Ineq), ' inequalities selected in Step 9 in','seconds')
 
 
 
+#exports possibles:
+from .export import export_normaliz, export_latex
+export_normaliz(V,Birational_Ineq)
+export_latex(V,Birational_Ineq)
 
 
 
