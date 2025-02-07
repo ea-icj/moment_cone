@@ -1,5 +1,5 @@
 
-G = LinGroup([3,3,3,1])
+G = LinGroup([4,4,4,1])
 V = Representation(G,'kron')
 #G = LinGroup([7])
 #V = Representation(G,'fermion',nb_part=3)
@@ -78,6 +78,11 @@ print('Step 6, checking dominancy of the map pi')
 Dominant_Ineq=[ineq for ineq in Candidates_for_Ineq1 if Check_Rank_Tpi(ineq,V,tpi_method)] 
 print(len(Dominant_Ineq), ' inequalities selected in Step 6')
 
+# Filter 2: Linear Triangular
+print('Step 7, checking Linear Triangular')
+#for ineq in Dominant_Ineq:
+#    print(Is_Lin_Triangular(V,ineq.tau,[alpha for alpha in ineq.inversions]))
+
 # Filter 3: BKR condition
 print('Step 8, checking if BKR condition is fullfilled')
 List_BKR=[]
@@ -86,36 +91,40 @@ for ineq in Dominant_Ineq :
     #print('pos weights:',[chi for chi in ineq.tau.positive_weights(V)])
     #print('pos roots:',[chi for chi in ineq.inversions])
     chi=ineq.weight_det(V)
-    print('Mult Vtau', Multiplicity_SV_tau(ineq.tau,chi,V)) 
-    #if list(ineq.inversions)==[] or Is_Multiplicity_SV_tau_one(ineq.tau,chi):
-    #    List_BKR.append(ineq)
+    #print('chi',ineq,chi)
+    #print('Mult Vtau', Multiplicity_SV_tau(ineq.tau,chi,V)) 
+    #if list(ineq.inversions)==[] or Multiplicity_SV_tau(ineq.tau,chi,V)==1:
+    if list(ineq.inversions)==[] or Multiplicity_SV_tau(ineq.tau,chi,V,True):    
+        List_BKR.append(ineq)
         
 # Filter 4: pi is birational (ramification divisor contracted)
 print('Step 9, checking birationality (ramification divisor contracted) of the map pi')
-Birational_Ineq=[ineq for ineq in Dominant_Ineq if Is_Ram_contracted(ineq,V,ram_schub_method,ram0_method)]
+#Birational_Ineq=[ineq for ineq in Dominant_Ineq if Is_Ram_contracted(ineq,V,ram_schub_method,ram0_method)]
+Birational_Ineq=[ineq for ineq in List_BKR if Is_Ram_contracted(ineq,V,ram_schub_method,ram0_method)]
 print(len(Birational_Ineq), ' inequalities selected in Step 9 in','seconds')
 
 
 
 
-#Test possible:
-from reference_datas.comparisons import compare_to_reference
-compare_to_reference(Birational_Ineq,V)
 
 
 
 
 ###### TODO : TESTS A SUPPRIMMER CI-APRES #########
 
+print('Checking')
 for ineq in Birational_Ineq :
     chi=ineq.weight_det(V)
+    #print(ineq)
+    #print([alpha for alpha in ineq.inversions])
+    #print('chi',chi)
     print('Mult Vtau', Multiplicity_SV_tau(ineq.tau,chi,V))
     
-tau=Tau.from_flatten([2,1,0,2,1,0,2,1,0,0],G)
-for chi in V.all_weights:
-    for chi2 in V.all_weights:
-        if chi2.leq(chi) and chi != chi2:
-            print(tau.dot_weight(chi)-tau.dot_weight(chi2))
+#tau=Tau.from_flatten([2,1,0,2,1,0,2,1,0,0],G)
+#for chi in V.all_weights:
+#    for chi2 in V.all_weights:
+#        if chi2.leq(chi) and chi != chi2:
+#            print(tau.dot_weight(chi)-tau.dot_weight(chi2))
 #for ineq in Birational_Ineq :
 #    print(ineq.tau)
 

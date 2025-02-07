@@ -16,6 +16,7 @@ from .list_of_W import *
 #from .ramification import *
 from .stabK import *
 from .ramification import *
+from .tri_lin import *
 from .bkr import *
 
     

@@ -4,6 +4,7 @@ import itertools
 from sage.all import SymmetricFunctions,ZZ,QQ,vector,matrix,Polyhedron # type: ignore
 import sage.libs.lrcalc.lrcalc as lr
 
+
 from .typing import *
 from .utils import *
 from .partition import *
@@ -12,52 +13,27 @@ from .weight import *
 from .tau import *
 from .rep import *
 from .inequality import *
-from .kronecker import KroneckerCoefficientMLCache
 
 sym_f = SymmetricFunctions(QQ).s()
 
-class ListPartPlus:
-    """
-    A list of partitions with two more properties 
-    - indices (a list of integers) and 
-    - mult (an integer which is a multiplicity in representation theory.
-    """
 
-    def __init__(self, L : list[Partition], c : int,indices : Optional[list[int]]=None):
-        """
-        Initializes an instance of ListPartPlus.
-        """
-        self.parts=L
-        self.mult=c
-        self.indices=indices
-        
-
-    def __repr__(self) -> str:
-        if self.indices != None :
-            return 'Partitions: '+str(self.parts)+', Indices: '+str(self.indices)+', Multiplicity: '+str(self.mult)
-        else :
-            return 'Partitions: '+str(self.parts)+', Multiplicity: '+ str(self.mult)
-
-    def __eq__(self,other : "ListPartPlus") -> bool:
-        if all(l==m for l,m in zip(self.parts,other.parts)) and self.mult==other.mult and self.indices==other.indices :
-            return True
-        return False
-
-
-def ListNonZeroLR(nu : Partition,delta : list[int],l:int):  
+def ListNonZeroLR(nu : Partition,delta : list[int],l:int):
     s=len(delta)
     if not isinstance(nu, Partition):
         nu=Partition(nu)
+    if s==0 :
+        if len(nu) == 0 or nu[0]==0 :
+            return([ListPartPlus([Partition([0])],1)])
+        else :
+            return([])
     if s==1 :
         return([ListPartPlus([nu],1)])
     if s==2 :
         res=[]
-        #print('nu',nu)
         nuc=nu.lambda_check(l).lambda_red(l)
         shift_max = delta[0]//l
         for a in range(shift_max+1):
             for lar in Partition.all_for_integer(delta[0]-a*l, max_length=l-1):
-                #print('lambda reduit',lar)
                 prod=lr.mult(nuc,lar)
                 larn=Partition(lar)
                 lamb1=Partition([larn[i]+a for i in range(l)])
@@ -65,7 +41,7 @@ def ListNonZeroLR(nu : Partition,delta : list[int],l:int):
                     if mu.length() <= l :
                         muc=Partition(mu).lambda_check(l)
                         b=(delta[1]-sum(muc))//l
-                        #print(lar,lamb1,mu,muc,b)
+                        
                         if b+muc[l] >=0 :
                             lamb2=Partition([muc[i]+b for i in range(l)])
                             res.append(ListPartPlus([lamb1,lamb2],prod[mu]))
@@ -111,7 +87,6 @@ def ListNonZeroLR_vtest(nu : Partition,delta : list[int],l:int): # TODO : suppri
         for l1 in Partition.all_for_integer(delta[1], max_length=l):
             for l2 in Partition.all_for_integer(delta[2], max_length=l):
                 lr=LR_multi([l0,l1,l2],nu)
-                print(lr)
                 if lr !=0:
                      res.append(ListPartPlus([Partition(l0),Partition(l1),Partition(l2)],lr))
     return(res)                 
@@ -122,8 +97,32 @@ def ListNonZeroLR_vtest2(nu : Partition,delta : list[int],l:int): # TODO : suppr
     return(lt)
     
 
-# Kronecker coefficient of multiple partitions using a cache
-Kron_multi: Callable[[Sequence[Partition]], int] = KroneckerCoefficientMLCache() 
+def Kron_multi(L) -> int :
+    """
+    L is a np.array or a list of Partitions of the same weight, length at least 2
+    return the multiple Kronecker coeffient
+    """
+    
+    if len(L)==2:
+        if L[1]==L[0]:
+            return 1
+        else:
+            return 0
+        
+    product = sym_f(list(L[0])).kronecker_product(sym_f(list(L[1]))) 
+    #### This part is unuseful but should go slightly faster with
+    if len(L)==3 : # We look for L[2] in product
+        for monomial, coeff in product.monomial_coefficients().items():
+            if Partition(list(monomial))==L[2]:
+                return(coeff)
+        return(0)    
+    #### end unuseful
+    
+    # recursive part
+    tot=0
+    for monomial, coeff in product.monomial_coefficients().items():
+        tot+=coeff*Kron_multi(list(L[2:])+[Partition(monomial)])
+    return(tot)    
         
 
 def LR_multi(L,nu) -> int: 
@@ -189,8 +188,8 @@ def Pleth_list(Lambda,Theta,Mu):
     Compute the product of the corresponding list of plethysms
     """
     res=1
-    for l,t,n in zip(Lambda, Theta, Mu):
-        pl=sym_f(list(l)).plethysm(sym_f(list(t))).coefficient(n)
+    for l,t,n in zip(Lambda, Theta, Mu):        
+        pl=sym_f(list(l)).plethysm(sym_f(list(t))).coefficient(list(n)) #TODO : utiliser un caché pour sym_f(list(l)).plethysm(sym_f(list(t)))
         if pl == 0 :
             return 0
         else :
@@ -209,6 +208,8 @@ def fct_weights_of_Nu(Nu) -> matrix : # Nu is a partial matrix with Partitions a
         while i < p and Nu[i,k] is not None:
             M[i,k]=sum(Nu[i,k])
             i+=1
+        for j in range(i,p):
+             M[j,k]=-1        
     return M
 
 
@@ -224,12 +225,9 @@ def chi2Numat(chi, mult_tau ): # chi is a sage vector - mult_tau est un tau.redu
         for i,mult in enumerate(col):
             p=chi[shift:shift + mult]
             # Add in nu[-1] after removing tailing 0's
-            Nu[i,k]=trim_zeros(p)
+            Nu[i,k]=Partition(p)
             shift += mult
             
-    #print('chi',chi)
-    #print('mult_tau',mult_tau)
-    #print('Nu',Nu)
     assert shift == len(chi)
     return Nu
 
@@ -256,20 +254,16 @@ def Enumerate_delta(ListP : list[list[int]],sizenu,V : Representation,delta : in
     return the list of possible weight vectors delta. That is satisfying condition 2 of Proposition prop:multCVtau.
     delta is a vector of nonnegative integers of size len(ListP).
     """
-    #print('sizenu',sizenu,sizenu.nrows())
     # Polyhedron in Z^l
     l=len(ListP)
     # Polyhedron in N^l
     ineqs=ineqs_in_Nl(l)
-    if V.type == 'kron' : #TODO : modifier sans ccomponent
-        # Polyhedron in the hyperplan sum delta(j)=delta
-        v=[-delta]+[1]*l
-        eqs=[tuple(v)]
-
+    eqs=[]
+    if V.type == 'kron' : 
         # equalities corresponding to conditions 2
         for k in range(sizenu.ncols()): # Run over columns of Nu
             for i in range(sizenu.nrows()): # Run over the rows of the column
-                if sizenu[i,k]>0:
+                if sizenu[i,k]>=0:
                     v=[-sizenu[i,k]]
                     for j in range(l):
                         if ListP[j][k]==i:
@@ -278,12 +272,9 @@ def Enumerate_delta(ListP : list[list[int]],sizenu,V : Representation,delta : in
                             v.append(0)
                     eqs.append(tuple(v))
     else:
-        eqs=[]
+        
         for j in range(sizenu.nrows()):
-        #for j,n in enumerate(sizenu[0]):
             eqs.append(tuple([-sizenu[j,0]]+[I[j] for I in ListP]))            
-    #print('eqs',eqs)
-    #print('ineq',ineqs)
     #Create the polyhedron        
     PP=Polyhedron(ieqs=ineqs,eqns=eqs)
 
@@ -306,10 +297,9 @@ def Fill_Table_of_Mus(delta,ListP, mtau : list[int],V : Representation,table): #
     Fill the table with the possible entries for Lambda.
     Used for Fermion and Boson
     """
-    #print('table',table)
+    
     for k in range(len(mtau)):
         for j in range(len(delta)):
-            #print('j,k:',j,k)
             table[j,k]=Partition.all_for_integer(ListP[j][k]*delta[j],max_length=mtau[k]).list()
     
 
@@ -341,30 +331,51 @@ def LR_mat(Nu,Lambda,ListP) -> int : # Lambda is a table of partitions
             
     return(tot)        
                        
+
 def Product_of_Tables(table_of_lists) : #TODO : déplacer dans utils
     """
-    The entry is a table of lists. Produce the list of Tables obtained by picking (a product) one element in each list.
+    The entry is a bi-dimesional table of ListPartPlus. Produce the list of Tables obtained by picking (a product) one element in each list.
+    Let entries None in place. 
     """
     List_of_Tables=[]
     a,b=table_of_lists.shape
-    
+
+    Inone=[]
+    for i in range(a):
+        for j in range(b):
+            if table_of_lists[i,j]==None:
+                table_of_lists[i,j]=[0]
+                Inone.append([i,j])
+                
     for p in itertools.product(*table_of_lists.ravel()):
         T= np.empty(table_of_lists.shape, dtype=object)
         for i in range(a):
             for j in range(b):
                 T[i,j]=p[i*b+j]
+        for [i,j] in Inone:
+            T[i,j]=None
         List_of_Tables.append(T)
     return List_of_Tables
 
 def Multiplicity_SV_tau(tau : Tau,chi : vector, V : Representation, checkGreatEq2:bool=False) -> int:
+    from math import comb # equivalent to sage.binomial
 
     ListP=tau.summands_Vtau(V)
+    #print('tau',tau)
+    #print('ListP',ListP)
+    #print('chi,tauredmult',chi,tau,tau.reduced.mult)
     Nu=chi2Numat(chi,tau.reduced.mult)  # Nu is a dominant weight for G^\tau as a table of partitions
     w_Nu=fct_weights_of_Nu(Nu)
+    #print('Nu',Nu)
+    #print('sizeNu',Nu.shape)
+    #print('w_Nu',w_Nu)
     mult=0
+    Delta=Enumerate_delta(ListP,w_Nu,V)
+    if checkGreatEq2 and tau.is_dom_reg : # In this case we only need to check the dimension of the polyhedron of delta's
+        return Delta[0]==0
     
-    for delta in Enumerate_delta(ListP,w_Nu,V)[1]: # Run over the dela satisfying Condition 2
-        print('delta',delta)
+    for delta in Delta[1]: # Run over the dela satisfying Condition 2
+        #print('delta',delta)
         if V.type == 'kron' :
             # Run over entries of Nu
             p,s = Nu.shape
@@ -372,65 +383,95 @@ def Multiplicity_SV_tau(tau : Tau,chi : vector, V : Representation, checkGreatEq
             for k in range(s): # Two loops to run over the entries of Nu
                 i=0
                 while i < p and Nu[i,k] is not None:
-                    Indices=[j for j,I in enumerate(listP) if ListP[j][k]==i]
-                    max_length = Tau(tau.reduced.mult).components[k][i]
-                    L=ListNonZeroLR(Nu[i,k],[delta[j] for j in Indices],max_length) # A list of ListPartPlus with Indicies=None
+                    Indices=[j for j,I in enumerate(ListP) if ListP[j][k]==i]
+                    max_length = tau.reduced.mult[k][i]
+                    L=ListNonZeroLR(Nu[i,k],[delta[j] for j in Indices],max_length) # A list of ListPartPlus with Indices=None
                     ## Add indices
                     for l in L :
                         l.indices=Indices
                     table_Lambda[i,k] = L
                     i+=1
-                            
+
             List_of_Lambdas=Product_of_Tables(table_Lambda)
             List_of_Lambdas_plugged=[]
             for Lambda_tilde in List_of_Lambdas :
                 LR=1
                 Lambda=np.empty((len(ListP),s), dtype=object)
-                for L in Lambda_tilde:
-                    for k in range(s):
-                        i=0
-                        while i < p and L[i,k] is not None:
-                            l=L[i,k]
-                            LR*=l.mult
-                            for j,la in zip(l.indices,l.parts):
-                                Lambda[j,k]=la
-                            i+=1
+                
+                for k in range(s):
+                    i=0
+                    while i < p and Lambda_tilde[i,k] is not None:
+                        l=Lambda_tilde[i,k]
+                        LR*=l.mult
+                        for j,la in zip(l.indices,l.parts):
+                            Lambda[j,k]=la
+                        i+=1
                 List_of_Lambdas_plugged.append([Lambda,LR])
+                
             i=0
-            while i<len(List_of_Lambdas_plugge):
-                Lambda_tilde = List_of_Lambdas_plugged[i]    
-                K_coeff=Kron_mat(Lambda[0])
-                if K !=0 :
-                    mult+=Lambda[1]*K_coeff
-                    if checkGreatEq2 and mult>1:
-                        return(False)
-                else:
-                    ## Cancel the Lambda's having this row and hence giving K=0
-                    #TODO
-                    i=i
+            while i<len(List_of_Lambdas_plugged):
+                Lambda_tilde = List_of_Lambdas_plugged[i]
+                K_coeff=1
+                for j in range(len(ListP)) :
+                    L=Lambda_tilde[0][j,:]
+                    K=Kron_multi(L)
+                    if K !=0 :
+                        K_coeff*=K                                                
+                    else:
+                        ## Cancel the Lambda's having this row and hence giving K=0
+                        #TODO : peut-on faire mieux que ça ?
+                        #last=len(List_of_Lambdas_plugged)-1
+                        to_be_deleted=[]
+                        for i2,Lambda_tilde2 in  enumerate(reversed(List_of_Lambdas_plugged[i+1:])):
+                            for j2 in range(len(ListP)) :
+                                L2=Lambda_tilde2[0][j2,:]
+                                if all(x ==y for x,y in zip(L2,L)) :
+                                    #print('L2,L',L2,L)
+                                    to_be_deleted.append(i2)
+                                    #print('supprim')
+                                    #print('i,i2,len',i,i2,len(List_of_Lambdas_plugged),len(List_of_Lambdas_plugged[i+1:]))
+                                    #del List_of_Lambdas_plugged[-(i2+1)] #Remove Lambda_tilde2 from List_of_Lambdas_plugged
+                                    #TODO : la ligne ci-dessus compile mais introduit une erreur. A corriger.
+                                #else:
+                                #    print('not supprim')
+                                    break
+                        #print([x[1] for x in List_of_Lambdas_plugged])
+                        #print('to be deleted',to_be_deleted)
+                        leng=len(List_of_Lambdas_plugged)        
+                        for idx in to_be_deleted:
+                            del List_of_Lambdas_plugged[leng-idx-1]
+                        #print([x[1] for x in List_of_Lambdas_plugged])  
+                        K_coeff=0
+                        break
+                mult+=Lambda_tilde[1]*K_coeff    
+                if checkGreatEq2 and mult>1:
+                    return(False)        
                 i+=1    
         else :
             s=len(tau.reduced.mult[0]) #[0] for the first (and unique) bloc
-            table_Mu = np.empty((s), dtype=object) # table_Mu[i] will be the list of possible columns i for Mu
-            for i in range(s):
-                max_length = Tau(tau.reduced.mult).components[0][i]
-                table_Mu[i]=ListNonZeroLR(Nu[i,0],[ListP[j][i]*delta[j] for j in Indices],max_length)#coucou
+            table_Mu = np.empty((s,1), dtype=object) # table_Mu[i] will be the list of possible columns i for Mu
+            for j in range(s):
+                max_length = tau.reduced.mult[0][j]
+                table_Mu[j,0]=ListNonZeroLR(Nu[j,0],[ListP[i][j]*delta[i] for i in range(len(ListP))],max_length)
             #Fill_Table_of_Mus(delta,ListP,tau.reduced.mult[0],V,table_Mu) # The list of tabulars of partitions satisfying Condition 1 and 3, for the given delta
             List_of_Mus=Product_of_Tables(table_Mu)
-            for Mu in List_of_Mus:
-                #print('delta',delta)
-                #print('length ListP',ListP,len(ListP))
-                #print('Mu',Mu.shape,Mu)
-                #print('Nu',Nu)
-                #print('Nu1O',Nu[1,0])
-                lr=prod([l.mult for l in Mu]) # Each column of Mu has a multiplity we compute their product
-                #if lr != 0 :
-                  #if list(Mu[1,1])==[4,3,1] and list(Mu[1,0])==[5,3] and list(Mu[1,2])==[5,3] and list(Mu[0,1])==[3,3,3]: #TODO : A supprimer
-                    #print('Mu ok:',Mu, lr)
-                    #print('Mu :',Mu)    
+            List_of_Mus_plugged=[]
+            for Mu_tilde in List_of_Mus :
+                #print('Lambda_tilde',Lambda_tilde)
+                LR=1
+                Mu=np.empty((len(ListP),s), dtype=object)
+                for j in range(s):
+                    l=Mu_tilde[j,0]
+                    LR*=l.mult
+                    for i,la in enumerate(l.parts):
+                            Mu[i,j]=la
+                        
+                List_of_Mus_plugged.append([Mu,LR])
+                
+            for [Mu,lr] in List_of_Mus_plugged:
                 Atot=1
                 sumAg=1
-                i=0
+                k=0
                 while sumAg !=0 and k<len(ListP):
                     sumAg=0
                     I=ListP[k]
@@ -439,20 +480,14 @@ def Multiplicity_SV_tau(tau : Tau,chi : vector, V : Representation, checkGreatEq
                     else :
                         Theta=[Partition([t]) for t in I]
 
-                        #print('ici')    
-                    for Lambda in itertools.product(Partition.all_for_integer(delta[i]),repeat=s) :
+                    for Lambda in itertools.product(*[Partition.all_for_integer(delta[k],max_length=comb(tau.reduced.mult[0][j],I[j])) for j in range(s)]) :
                         g=Kron_multi(Lambda)
-                          #if list(Lambda[0])== [5,3] and list(Lambda[1])== [4,3,1] and list(Lambda[2])== [5,3] :#TODO : A supprimer
-                          #  print('Lambda cou',Lambda,g)
                         if g!=0 :
-                            a = Pleth_list(Lambda,Theta,Mu[i,:])
-                                #if list(Lambda[1])== [4,3,1] and g == 2:
-                                    #print('coucou')
-                                    #print('a,g',a,g)
+                            a = Pleth_list(Lambda,Theta,Mu[k,:])
                             sumAg +=a*g
                             if checkGreatEq2 and mult+lr*sumAg >1 :
                                 return(False)
-                    i+=1
+                    k+=1
                 mult+=lr*sumAg
                 if checkGreatEq2 and mult>1:
                     return(False)
