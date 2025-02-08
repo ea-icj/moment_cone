@@ -15,14 +15,7 @@ from .rep import *
 from .inequality import *
 from .kronecker import KroneckerCoefficientMLCache
 
-sym_f = SymmetricFunctions(QQ).s()
-
-def join(L : list[Partition]) -> Partition : # TODO : deplacer dans partition.py
-    res=[]
-    lmax=max(len(p) for p in L)
-    for i in range(lmax):
-        res.append(max(p[i] for p in L))
-    return(Partition(res))    
+sym_f = SymmetricFunctions(QQ).s() 
 
 def Search_Zero_a(Mu,ListP,Lambda,List_Vanishing_a): # Check if (Mu,Lambda) contains an already computer zero plethysm coefficient
     a,b=Mu.shape
@@ -368,14 +361,14 @@ def Multiplicity_SV_tau(tau : Tau,chi : vector, V : Representation, checkGreatEq
     if checkGreatEq2 and tau.is_dom_reg : # In this case we only need to check the dimension of the polyhedron of delta's
         return Delta[0]==0
     if V.type != 'kron': # In this case we compute Kron in cash
-        dict_delta_lenght={}
+        dict_delta_length={}
         for i,p in enumerate(delta):
             max_length=[Representation(LinGroup([tau.reduced.mult[j]]),V.type,nb_part=listP[i][j]).dim for j in range(s)].sort(reverse=True)
-            if p in dict_delta_lenght.keys():
-                dict_delta_lenght[p].append(max_lenght)
+            if p in dict_delta_length.keys():
+                dict_delta_length[p].append(max_length)
             else :
-                dict_delta_lenght[p]=[max_lenght]
-        dict_delta_max_lenght={d: join(l) for d, l in dict_delta_lenght.items()}
+                dict_delta_length[p]=[max_length]
+        dict_delta_max_lenght={d: Partition.join(l) for d, l in dict_delta_length.items()}
         # TODO : faire le caché pour chaque d,list(p) for d, l in dict_delta_max_lenght.items()
             
     for delta in Delta[1]: # Run over the dela satisfying Condition 2
