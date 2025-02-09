@@ -5,8 +5,8 @@ from cone.partition import Partition
 
 class TestKronecker(unittest.TestCase):
     def test_kronecker(self) -> None:
-        partitions = (3, 1, 1, 1, 1, 1), (4, 3, 1), (2, 2, 2, 2), (5, 1, 1, 1), (4, 2, 1,1)
-        partitions = tuple(Partition(p) for p in partitions)
+        partitions_as_tuple = (3, 1, 1, 1, 1, 1), (4, 3, 1), (2, 2, 2, 2), (5, 1, 1, 1), (4, 2, 1,1)
+        partitions = tuple(Partition(p) for p in partitions_as_tuple)
 
         a = Partition(3, 2, 1)
         b = Partition(2, 2, 2)
