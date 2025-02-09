@@ -4,6 +4,9 @@ efficient way using a cache
 """
 
 __all__ = (
+    "kronecker_product",
+    "KroneckerCoefficient",
+    "KroneckerCoefficientCache",
     "KroneckerCoefficientMLCache",
 )
 
@@ -44,7 +47,16 @@ def kronecker_product(partitions: Sequence[Partition]) -> dict[Partition, int]:
     Partition((2, 2, 1, 1)): 9
     Partition((2, 1, 1, 1, 1)): 5
     Partition((1, 1, 1, 1, 1, 1)): 1
+
+    >>> kronecker_product((Partition(3, 2, 1),))
+    {Partition((3, 2, 1)): 1}
+
+    >>> kronecker_product(())
+    {}
     """
+    if len(partitions) == 0:
+        return dict()
+    
     # Kronecker product
     product = sym_f(partitions[0])
     for p in partitions[1:]:
@@ -71,17 +83,35 @@ class KroneckerCoefficient:
     1607
     >>> kc(partitions[:3])
     1
+    >>> kc(partitions[:2])
+    0
+    >>> kc(partitions[:1])
+    1
+    >>> kc((partitions[0], partitions[0]))
+    1
     """
-    def __call__(self, partitions: Iterable[Partition]) -> int:
+    def __call__(self, partitions: Sequence[Partition]) -> int:
         """ Returns the Kronecker coefficient of given partitions
         
         May rely on symmetries and other properties.
         """
-        return self._kernel(self._sort(partitions))
+        if len(partitions) == 0:
+            return 0
+        elif len(partitions) == 1:
+            return 1
+        elif len(partitions) == 2:
+            return partitions[0] == partitions[1]
+        else:
+            return self._kernel(self._sort(partitions))
 
-    def product(self, partitions: Iterable[Partition]) -> dict[Partition, int]:
+    def product(self, partitions: Sequence[Partition]) -> dict[Partition, int]:
         """ Computes the Kronecker product of given partitions """
-        return self._product(self._sort(partitions))
+        if len(partitions) == 0:
+            return dict()
+        elif len(partitions) == 1:
+            return {partitions[0]: 1}
+        else:
+            return self._product(self._sort(partitions))
     
     def _sort(self, partitions: Iterable[Partition]) -> list[Partition]:
         """
@@ -128,6 +158,15 @@ class KroneckerCoefficientCache(KroneckerCoefficient):
     1
     >>> print(kc)
     KroneckerCoefficientCache(#cache=2 (#2=1,#4=1), #hit=0, #miss=2)
+
+    >>> kc(partitions[:3])
+    1
+    >>> kc(partitions[:2])
+    0
+    >>> kc(partitions[:1])
+    1
+    >>> kc((partitions[0], partitions[0]))
+    1
     """
     _cache: dict[tuple[Partition, ...], dict[Partition, int]]
     _hit: int
@@ -218,6 +257,15 @@ class KroneckerCoefficientMLCache(KroneckerCoefficientCache):
     1
     >>> print(kc)
     KroneckerCoefficientMLCache(#cache=3 (#2=2,#3=1), #hit=1, #miss=3)
+
+    >>> kc(partitions[:3])
+    1
+    >>> kc(partitions[:2])
+    0
+    >>> kc(partitions[:1])
+    1
+    >>> kc((partitions[0], partitions[0]))
+    1
     """
     def _product(self, partitions: Sequence[Partition]) -> dict[Partition, int]:
         partitions = tuple(partitions)
