@@ -4,13 +4,13 @@ all_tests: unittest doctest mypy fixme todo
 
 
 unittest:
-	python -m unittest discover --verbose .
+	python3 -m unittest discover --verbose .
 
 doctest:
-	python -m pytest --doctest-modules --verbose --ignore=src/cone/main_to_be_inserted.py src/cone
+	python3 -m pytest --doctest-modules --verbose --ignore=src/cone/main_to_be_inserted.py src/cone
 
 mypy:
-	python -m mypy src/cone tests
+	python3 -m mypy src/cone tests
 
 fixme:
 	grep -ir --exclude-dir=__pycache__ --color --line-number "FIXME" tests/ src/

@@ -10,9 +10,6 @@ from .weight import Weight
 from .rep import *
 from .rings import matrix, Matrix, ZZ
 
-#from typing import TypeVar
-#T=TypeVar('T')
-#from sage.all import matrix
 
 
 __all__ = (
@@ -123,7 +120,6 @@ def find_hyperplanes_reg_mod_outer(weights: list[Weight], V: Representation, u: 
             St.negative.append(chi)
         else:
             St.indeterminate.append(chi)
-
     if V.type != 'kron': #Trivial outer
         yield from find_hyperplanes_reg_impl(St, V.G, u,exp_dim,sym)
                                                  
@@ -177,15 +173,12 @@ def find_hyperplanes_reg_impl(St: WeightSieve, G: LinGroup, u: int,exp_dim: int,
         # Next element to consider
         chi = St.indeterminate.pop()
         St2 = St.copy()
-        #St3 = St.copy()
         
         # Two possible actions with this element:
 
         # 1. We explore the branch where it is excluded from the possible zero elements
-        ### TODO : suppress and replace St3 by St
         
         St.excluded.append(chi)
-        St3=St.copy()
         yield from find_hyperplanes_reg_impl(St, G, u,exp_dim,sym) # TODO : St n'est pas modifié par cet appel ?
         St.excluded.pop()
 
@@ -205,7 +198,6 @@ def find_hyperplanes_reg_impl(St: WeightSieve, G: LinGroup, u: int,exp_dim: int,
             yield from find_hyperplanes_reg_impl(St2, G, u,exp_dim,sym)
 
         # Current element back to the indeterminate
-        ## TODO : uncomment
         St.indeterminate.append(chi)
 
 

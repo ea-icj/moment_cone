@@ -1,11 +1,11 @@
-from .typing import *
-from .utils import is_decreasing, trim_zeros
-
-import itertools
-
 __all__ = (
     "Partition",
 )
+
+import itertools
+
+from .typing import *
+from .utils import is_decreasing, trim_zeros
 
 class Partition:
     """
@@ -162,3 +162,27 @@ class Partition:
         """
         x = self[l - 1]
         return Partition([self[i] - x for i in range(l - 1)])
+
+    @staticmethod
+    def join(partitions: "Iterable[Partition]") -> "Partition":
+        """
+        Returns the component-wise maximum of the given partitions
+        
+        Examples:
+        >>> Partition.join((
+        ...     Partition(3, 2, 2),
+        ...     Partition(4, 1, 1),
+        ...     Partition(3, 3, 2),
+        ... ))
+        Partition((4, 3, 2))
+        
+        >>> Partition.join((
+        ...     Partition(3, 2, 2, 2, 1),
+        ...     Partition(4, 1, 1, 1),
+        ...     Partition(3, 3, 3, 1, 1, 1),
+        ... ))
+        Partition((4, 3, 3, 2, 1, 1))
+        """
+        return Partition(
+            map(max, itertools.zip_longest(*partitions, fillvalue=0))
+        )

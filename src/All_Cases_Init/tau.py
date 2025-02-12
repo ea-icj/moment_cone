@@ -519,8 +519,8 @@ class Tau:
     
     @cached_property
     def indices_in_tau_red_that_sum_to_zero(self)  -> list[list[int]] : #TODO : supprimer cette propriété
-        """ 
-        Create the list of lists L=[i_0, i_2, ..., i_{s-1}] such that  \sum_k tau_red[k][i_k] = 0
+        """
+        Create the list of lists L=[i_0, i_2, ..., i_{s-1}] such that  sum_k tau_red[k][i_k] = 0
         """
         tau_red=Tau(self.reduced.values)
         result = []
@@ -530,10 +530,10 @@ class Tau:
         return result
 
     def summands_Vtau(self,V : Representation)  -> list[list[int]] : 
-        """ 
-        V^\tau can be written as a direct sum. Compute the index set of this sum. Namely :
-        For Kron : Create the list of lists L=[i_0, i_2, ..., i_{s-1}] such that  \sum_k tau_red[k][i_k] = 0
-        For Fermion or Boson : s=len(tau_red.values). Create the list of lists L=[i_0, i_2, ..., i_{s-1}] such that  \sum_k i_k * tau_red[k] = 0
+        """
+        V^tau can be written as a direct sum. Compute the index set of this sum. Namely :
+        For Kron : Create the list of lists L=[i_0, i_2, ..., i_{s-1}] such that  sum_k tau_red[k][i_k] = 0
+        For Fermion or Boson : s=len(tau_red.values). Create the list of lists L=[i_0, i_2, ..., i_{s-1}] such that  sum_k i_k * tau_red[k] = 0
         """
         tau_red=Tau(self.reduced.values,LinGroup([len(x) for x in self.reduced.values]))
         result = []

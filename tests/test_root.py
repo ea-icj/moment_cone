@@ -24,3 +24,20 @@ class TestRoot(unittest.TestCase):
         self.assertEqual(all_r[3], Root(1, 1, 2))
         self.assertEqual(all_r[5], Root(2, 0, 2))
         self.assertEqual(all_r[9], Root(2, 2, 3))
+
+    def test_hash(self) -> None:
+        s = {
+            Root(0, 0, 1),
+            Root(1, 1, 2),
+            Root(2, 1, 3),
+            Root(0, 0, 1),
+            Root(5, 2, 1),
+            Root(2, 1, 3),
+        }
+        s_ref = {
+            Root(0, 0, 1),
+            Root(1, 1, 2),
+            Root(2, 1, 3),
+            Root(5, 2, 1),
+        }
+        self.assertEqual(s, s_ref)
