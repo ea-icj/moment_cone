@@ -176,7 +176,6 @@ class Representation:
             chi.mult=prod([binomial(chiTot.as_vector[i],chi.as_vector[i]) for i in range(len(p))])
             yield chi
 
-
     #@staticmethod         
     def rhoEij(self,alpha : Root) -> matrix:
         """

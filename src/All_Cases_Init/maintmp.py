@@ -102,7 +102,7 @@ for ineq in Dominant_Ineq_filteredLT :
     #if list(ineq.inversions)==[] or Multiplicity_SV_tau(ineq.tau,chi,V)==1:
     if list(ineq.inversions)==[] or Multiplicity_SV_tau(ineq.tau,chi,V,True):    
         List_BKR.append(ineq)
-print('The BKR filter had eleminated',len(Dominant_Ineq)-len(List_BKR),'inequalities')
+print('The BKR filter has eliminated',len(Dominant_Ineq)-len(List_BKR),'inequalities')
 print("Final state of the Kronecker cache:", Kron_multi)
 print("Final state of the Plethysm cache: ", plethysm_cache)
 
@@ -128,7 +128,7 @@ print(len(Birational_Ineq), ' inequalities selected in Step 9 in','seconds')
 
 
 #exports possibles:
-export_normaliz(V,Birational_Ineq)
+export_normaliz(V,Birational_Ineq,add_dominance="sym")
 export_latex(V,Birational_Ineq)
 
 

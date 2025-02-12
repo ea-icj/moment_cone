@@ -2,6 +2,7 @@
 #TODO: integrate in the project
 
 from .tau import Tau
+from .inequality import Inequality
 
 def Liste_to_Normaliz_string(liste,sgn=1): #sgn=1 ou -1 allows to change the sign, exchange >=0 and <=0
     """ converts a list of list of numbers to a string with
@@ -14,6 +15,7 @@ def Liste_to_Normaliz_string(liste,sgn=1): #sgn=1 ou -1 allows to change the sig
             chaine+=str(sgn*x)+' '
         chaine+=str(sgn*l[-1])+'\n'
     return(chaine)
+    
 
 def info_from_GV(V):
     """ V a representation of a LinGroup G. It returns a nomalized string encoding the main information on G and V. To be used in the names of the input files given to Normaliz"""
@@ -27,25 +29,38 @@ def info_from_GV(V):
         info+=str(V.nb_part)+' '
     return info
 
-def export_normaliz(V, inequations, r=None, equations=[], extra_info=""):
+def export_normaliz(V, inequations, r=None, equations=[], extra_info="", add_dominance="", add_equations=""):
     """ V is a representation of a LinGroup G, 
     r is the rank of G aka the dimension of the ambient space of the equations (except possible customization, if our inequations contain a second member)
     inequations is a list of inequations (either of Inequality type or a list of coefficients)
     equations is an optional list of equations
-    extra_info is a string that one may add to the standard name of the output file, e.g. to indicate the origin of our list of inequations """
+    extra_info is a string that one may add to the standard name of the output file, e.g. to indicate the origin of our list of inequations 
+    add_dominance can take 2 non-trivial arguments: "all" and "sym". "all" argument adds all the inequalities expressing dominance. "sym" arguments adds the same inequalities
+    add_equations can take 2 non-trivial arguments: "all" and "sym". if V.type=kron, it adds the equations determining the subspace in which lie the equations
+    """
     if r==None:
         r=V.G.rank
-    if hasattr(inequations[0],"wtau"):
+    if hasattr(inequations[0],"wtau"): #checks if the inequalities are in the format Inequality
         True_inequations=[ineq.wtau.flattened for ineq in inequations]
     else:
         True_inequations=inequations
+    if add_dominance in ["all","sym"]:
+        if add_dominance=="all":
+            sym=False
+        else:
+            sym=True
+        True_inequations+=[ineq.wtau.flattened for ineq in Inequality.dominance(V,sym)]
     info=info_from_GV(V)+extra_info
-    print(True_inequations[0], info)
     fileO = open('ineq_Normaliz-'+info+'.in','w')
     fileO.write('amb_space '+str(r)+'\n\n')
-    if len(equations)!=0:
-        fileO.write('equations '+str(len(equations))+'\n\n')
-        List_Eq=Liste_to_Normaliz_string(equations)
+    new_equations=[] #copy of the list
+    if add_equations in ["all","sym"] and V.type=='kron':
+        for k,dk in enumerate(V.G[:-1]):
+            if add_equations=="all" or dk!=V.G[k+1]:
+                new_equations.append(sum(V.G[:k])*[0]+dk*[1]+(sum(V.G[k+1:])-1)*[0]+[-1])
+    if len(new_equations)!=0:
+        fileO.write('equations '+str(len(new_equations))+'\n\n')
+        List_Eq=Liste_to_Normaliz_string(new_equations)
         fileO.write(List_Eq)
     fileO.write('\n'+'inequalities '+str(len(True_inequations))+'\n\n')
     fileO.write(Liste_to_Normaliz_string(True_inequations,-1)) #Our conventions so far work with inequalities of the form \sum a_i\lambda_i<=0 whil Normaliz standard is ">=0"
