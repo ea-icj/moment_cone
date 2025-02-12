@@ -144,43 +144,7 @@ def all_lambda_matrix(delta: Sequence[int], max_length: NDArray, kro: KroneckerC
         lambda_matrix[:, :], coeffs = zip(*rows_and_coeff)
         yield lambda_matrix, prod(coeffs)
      
-
-
-# TODO: dedicated file like for Kronecker?
-class PlethysmCache:
-    """ Cache for the Plethysm product """
-    _cache: dict[tuple[Partition, Partition], dict[Partition, int]]
-
-    def __init__(self):
-        self._cache = dict()
-
-    def __sym_f(self, p: Partition) -> Any:
-        return sym_f(tuple(p))
-    
-    def product(self, lhs: Partition, rhs: Partition) -> dict[Partition, int]:
-        try:
-            return self._cache[(lhs, rhs)]
-        except KeyError:
-            pass
-
-        # Product using Sage
-        product = self.__sym_f(lhs).plethysm(self.__sym_f(rhs))
-
-        # Splitting decomposition
-        result: dict[Partition, int] = dict()
-        for monomial, coeff in product.monomial_coefficients().items():
-            # Forcing int coefficients to remove Sage custom Integer type
-            result[Partition(map(int, monomial))] = int(coeff)
-        self._cache[(lhs, rhs)] = result
-        return result
-    
-    def __call__(self, a: Partition, b: Partition, c: Partition) -> int:
-        return self.product(a, b).get(c, 0)
-    
-
-plethysm_cache = PlethysmCache()
-
-
+            
 def fct_weights_of_Nu(Nu) -> matrix : # Nu is a partial matrix with Partitions as entries
     """ 
         Nu is a partial matrix (as a list of columns) with Partitions as entries.
@@ -415,8 +379,27 @@ def Multiplicity_SV_tau(tau : Tau,chi : vector, V : Representation, checkGreatEq
                             theta=Partition(ListP[i][j]*[1])
                         else :
                             theta=Partition([ListP[i][j]])
-                        #print('data plethysm',list(Lambda[i,j]),list(theta))    
-                        a = plethysm_cache(Lambda[i, j], theta, Mu[i, j])
+                        #print('data plethysm',list(Lambda[i,j]),list(theta))
+                        if len(Lambda[i,j])==max_length[i,j] :
+                            print('lambda can be reduced',Lambda[i,j],max_length[i,j])
+                            la=Lambda[i,j].lambda_red(max_length[i,j])
+                            if len(Lambda[i,j])==0:
+                                shift=0
+                            else :    
+                                shift=theta[0]*Lambda[i,j][-1]
+                            print('La,theta,Mu',Lambda[i,j],theta,Mu[i,j])
+                            if len(Mu[i,j])==0 or Mu[i,j][-1]<shift :
+                                a=0
+                            else :
+                                mu=Partition([x-shift for x in Mu[i,j]])
+                                pl=sym_f(list(la)).plethysm(sym_f(list(theta)))#TODO : utiliser un cash ici.coefficient(list(n)) et Schur
+                                a = pl.coefficient(list(mu))                                    
+                            
+                        else :
+                            pl=sym_f(list(Lambda[i,j])).plethysm(sym_f(list(theta))) #TODO : utiliser un cash ici.coefficient(list(n)) et Schur
+                            a = pl.coefficient(list(Mu[i,j]))
+                            print('generic case',Lambda[i,j],theta,tau.reduced.mult[0][j])
+                        
                         #print('a',a)
                         if a != 0 :
                             A*=a
