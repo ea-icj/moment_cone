@@ -4,6 +4,9 @@ efficient way using a cache
 """
 
 __all__ = (
+    "kronecker_product",
+    "KroneckerCoefficient",
+    "KroneckerCoefficientCache",
     "KroneckerCoefficientMLCache",
 )
 
@@ -44,7 +47,16 @@ def kronecker_product(partitions: Sequence[Partition]) -> dict[Partition, int]:
     Partition((2, 2, 1, 1)): 9
     Partition((2, 1, 1, 1, 1)): 5
     Partition((1, 1, 1, 1, 1, 1)): 1
+
+    >>> kronecker_product((Partition(3, 2, 1),))
+    {Partition((3, 2, 1)): 1}
+
+    >>> kronecker_product(())
+    {}
     """
+    if len(partitions) == 0:
+        return dict()
+    
     # Kronecker product
     product = sym_f(partitions[0])
     for p in partitions[1:]:
@@ -71,8 +83,49 @@ class KroneckerCoefficient:
     1607
     >>> kc(partitions[:3])
     1
+    >>> kc(partitions[:2])
+    0
+    >>> kc(partitions[:1])
+    1
+    >>> kc((partitions[0], partitions[0]))
+    1
     """
+    def __call__(self, partitions: Sequence[Partition]) -> int:
+        """ Returns the Kronecker coefficient of given partitions
+        
+        May rely on symmetries and other properties.
+        """
+        if len(partitions) == 0:
+            return 0
+        elif len(partitions) == 1:
+            return 1
+        elif len(partitions) == 2:
+            return partitions[0] == partitions[1]
+        else:
+            return self._kernel(self._sort(partitions))
 
+    def product(self, partitions: Sequence[Partition]) -> dict[Partition, int]:
+        """ Computes the Kronecker product of given partitions """
+        if len(partitions) == 0:
+            return dict()
+        elif len(partitions) == 1:
+            return {partitions[0]: 1}
+        else:
+            return self._product(self._sort(partitions))
+    
+    def _sort(self, partitions: Iterable[Partition]) -> list[Partition]:
+        """
+        Internal method to sort partitions so that to reduce requests
+        
+        Ideally, to reduce the size of the cache, a same set of partitions but
+        in different order should lead to the same ordered list returned by
+        this method.
+
+        Sorting by increasing length and lexicographical order is faster
+        and requires a smaller cache.
+        """
+        return sorted(partitions, key=lambda p: (len(p), p))
+    
     def _product(self, partitions: Sequence[Partition]) -> dict[Partition, int]:
         """ Overridable kernel that computes the Kronecker product of given partitions """
         return kronecker_product(partitions)
@@ -81,13 +134,6 @@ class KroneckerCoefficient:
         """ Overridable kernel that computes the Kronecker coefficient """
         return self._product(partitions[:-1]).get(partitions[-1], 0)
 
-    def __call__(self, partitions: Sequence[Partition]) -> int:
-        """ Returns the Kronecker coefficient of given partitions
-        
-        May rely on symmetries and other properties.
-        """
-        return self._kernel(sorted(partitions))
-    
     def __repr__(self) -> str:
         return f"{type(self).__name__}()"
 
@@ -99,19 +145,28 @@ class KroneckerCoefficientCache(KroneckerCoefficient):
     Example:
     >>> kc = KroneckerCoefficientCache()
     >>> print(kc)
-    KroneckerCoefficientCache(#cache=0, #hit=0, #miss=0)
+    KroneckerCoefficientCache(#cache=0 (), #hit=0, #miss=0)
 
     >>> partitions = (3, 1, 1, 1, 1, 1), (4, 3, 1), (2, 2, 2, 2), (5, 1, 1, 1), (4, 2, 1, 1)
     >>> partitions = tuple(Partition(p) for p in partitions)
     >>> kc(partitions)
     1607
     >>> print(kc)
-    KroneckerCoefficientCache(#cache=1, #hit=0, #miss=1)
+    KroneckerCoefficientCache(#cache=1 (#4=1), #hit=0, #miss=1)
 
     >>> kc((partitions[0], partitions[1], partitions[3]))
     1
     >>> print(kc)
-    KroneckerCoefficientCache(#cache=2, #hit=0, #miss=2)
+    KroneckerCoefficientCache(#cache=2 (#2=1,#4=1), #hit=0, #miss=2)
+
+    >>> kc(partitions[:3])
+    1
+    >>> kc(partitions[:2])
+    0
+    >>> kc(partitions[:1])
+    1
+    >>> kc((partitions[0], partitions[0]))
+    1
     """
     _cache: dict[tuple[Partition, ...], dict[Partition, int]]
     _hit: int
@@ -139,9 +194,12 @@ class KroneckerCoefficientCache(KroneckerCoefficient):
             return product
 
     def __repr__(self) -> str:
+        from .utils import group_by_block
+        cache_details = group_by_block(sorted(len(key) for key in self._cache.keys()))
+        cache_details_str = ",".join(f"#{n}={c}" for n, c in cache_details)
         return (
             f"{type(self).__name__}("
-            f"#cache={len(self._cache)}, #hit={self._hit}, #miss={self._miss}"
+            f"#cache={len(self._cache)} ({cache_details_str}), #hit={self._hit}, #miss={self._miss}"
             ")"
         )
     
@@ -186,19 +244,28 @@ class KroneckerCoefficientMLCache(KroneckerCoefficientCache):
     Example:
     >>> kc = KroneckerCoefficientMLCache()
     >>> print(kc)
-    KroneckerCoefficientMLCache(#cache=0, #hit=0, #miss=0)
+    KroneckerCoefficientMLCache(#cache=0 (), #hit=0, #miss=0)
 
     >>> partitions = (3, 1, 1, 1, 1, 1), (4, 3, 1), (2, 2, 2, 2), (5, 1, 1, 1), (4, 2, 1,1)
     >>> partitions = tuple(Partition(p) for p in partitions)
     >>> kc(partitions)
     1607
     >>> print(kc)
-    KroneckerCoefficientMLCache(#cache=3, #hit=0, #miss=3)
+    KroneckerCoefficientMLCache(#cache=3 (#2=2,#3=1), #hit=0, #miss=3)
 
     >>> kc((partitions[0], partitions[1], partitions[3]))
     1
     >>> print(kc)
-    KroneckerCoefficientMLCache(#cache=3, #hit=1, #miss=3)
+    KroneckerCoefficientMLCache(#cache=3 (#2=2,#3=1), #hit=1, #miss=3)
+
+    >>> kc(partitions[:3])
+    1
+    >>> kc(partitions[:2])
+    0
+    >>> kc(partitions[:1])
+    1
+    >>> kc((partitions[0], partitions[0]))
+    1
     """
     def _product(self, partitions: Sequence[Partition]) -> dict[Partition, int]:
         partitions = tuple(partitions)

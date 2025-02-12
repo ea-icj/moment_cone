@@ -1,6 +1,7 @@
 #Python to normaliz and Python to latex
 #TODO: integrate in the project
 
+from .tau import Tau
 
 def Liste_to_Normaliz_string(liste,sgn=1): #sgn=1 ou -1 allows to change the sign, exchange >=0 and <=0
     """ converts a list of list of numbers to a string with

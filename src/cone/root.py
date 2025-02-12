@@ -16,6 +16,8 @@ class Root:
     i: int
     j: int
 
+    def __hash__(self) -> int:
+        return hash((self.k, self.i, self.j))
     
     @property
     def is_in_U(self) -> bool:

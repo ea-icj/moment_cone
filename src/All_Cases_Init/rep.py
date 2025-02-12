@@ -1,6 +1,6 @@
 from functools import cached_property
 import itertools
-from sage.all import Partition, matrix, binomial
+from sage.all import binomial,  matrix
 
 from math import prod
 from .typing import *
@@ -157,7 +157,7 @@ class Representation:
 
     def weights_of_S(self, p : Partition) -> Iterable["Weight"] : # Could be improved
         """
-        Create de the list of weights of S\subset T acting on V. With multiplicities.
+        Create de the list of weights of S subset T acting on V. With multiplicities.
         S is given by p.
         Only used for V.type='fermion' or 'boson'
         """
@@ -225,7 +225,7 @@ class Representation:
         return M
 
     @cached_property
-    def actionK(self) -> dict[Root, Matrix]: #TODO : typer dictionnaire Root -> matrix
+    def actionK(self) -> dict[Root, matrix]: #TODO : typer dictionnaire Root -> matrix
         """
         The list of matrices rho_V(xi) for xi in the bases of K.
         """
@@ -303,6 +303,50 @@ class Representation:
         return vp
 
 
+    def Matrix_Graph(self,Roots : list[Root]) -> matrix:
+        """
+        Return the matrix of the graph indexed by self.all_weights
+        """
+        M = matrix(ZZ,self.dim,self.dim)
+        if self.type == 'kron' :
+            for alpha in Roots:
+                Gred=LinGroup(self.G[:alpha.k]+self.G[alpha.k+1:])
+                Vred=Representation(Gred,'kron')
+                for w in Vred.all_weights:
+                    wj = Weight(self.G,as_list=list(w.as_list[:alpha.k])+[alpha.j]+list(w.as_list[alpha.k:]))
+                    idj=wj.idx(self)                   
+                    wi = Weight(self.G,as_list=list(w.as_list[:alpha.k])+[alpha.i]+list(w.as_list[alpha.k:]))
+                    idi=wi.idx(self)
+                    M[idi,idj]=1
+        else : # Case Fermion and Boson
+            
+            if self.type == 'fermion' :
+                shiftrank=1
+            else :
+                shiftrank=0                
+            Vred=Representation(LinGroup([self.G[0]-shiftrank]),self.type,self.nb_part-1)
+            for alpha in Roots:
+                for w in Vred.all_weights: 
+                    L1=[s for s in w.as_list_of_list[0] if s<alpha.j]                
+                    L2=[s+shiftrank for s in w.as_list_of_list[0] if s>=alpha.j]
+                    lj=L1+[alpha.j]+L2  # we insert j
+                    if self.type == 'boson' or alpha.i not in lj : # Otherwise E_ij v =0
+                        wj  = Weight(self.G,as_list_of_list=[lj])
+                        idj = wj.idx(self)
+                        li=L1+[alpha.i]+L2  # we insert i
+                        li.sort()
+                        wi = Weight(self.G,as_list_of_list=[li])
+                        idi=wi.idx(self)
+                        if self.type == 'fermion' :
+                            M[idi,idj]=1
+                        else :
+                            M[idi,idj]=1
+                        
+        return M
+
+
+
+    
     @cached_property
     def Q(self) -> "Ring":
         from .rings import QQ
