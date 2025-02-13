@@ -1,12 +1,11 @@
-from .typing import *
-#from typing import Generic,TypeVar
-#T=TypeVar('T')
-
-import itertools
-
 __all__ = (
     "Blocks",
 )
+
+import itertools
+
+from .typing import *
+
 
 class Blocks(Generic[T]):
     """
@@ -202,5 +201,6 @@ class Blocks(Generic[T]):
         if self.is_frozen:
             return hash((self.flatten, self._indexes))
         else:
+            # FIXME: should not be hashable, raise TypeError!
             return super().__hash__()
     
