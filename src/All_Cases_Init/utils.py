@@ -1,12 +1,3 @@
-from collections.abc import Iterable, Sequence, Callable, Sized
-from typing import Generic,TypeVar, Mapping, Generator, Callable, cast
-T=TypeVar('T')
-U=TypeVar('U')
-import itertools
-import functools
-import operator
-import copy as cp
-
 __all__ = (
     "is_decreasing",
     "is_increasing",
@@ -24,8 +15,16 @@ __all__ = (
     "dictionary_list_lengths",
     "symmetries",
     "orbit_symmetries",
-    
 )
+
+
+import itertools
+import functools
+import operator
+import copy as cp
+
+from .typing import *
+
 
 def is_decreasing(l: Iterable[int]) -> bool:
     """ Check if a given sequence is not increasing """
@@ -235,11 +234,14 @@ def quotient_C_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> dict[int, int]:
     >>> quotient_C_Mod(d1, d5)
     {}
     """
-    return {key: M1[key] - M2.get(key, 0)
-     for key in M1.keys()  
-     if M1[key] != M2.get(key, 0)}
+    # TODO: lowercase, move to list_of_W?
+    return {
+        key: M1[key] - M2.get(key, 0)
+        for key in M1.keys()  
+        if M1[key] != M2.get(key, 0)
+    }
 
-def multiset_permutations(m: Iterable[T]) -> Generator[list[T],None,None]:
+def multiset_permutations(m: Iterable[T]) -> Generator[list[T]]:
     """
     Returns the unique permutations of the given multiset m
     
@@ -247,9 +249,9 @@ def multiset_permutations(m: Iterable[T]) -> Generator[list[T],None,None]:
     so that to get the correct return type.
     """
     from sympy.utilities.iterables import multiset_permutations as mp
-    return cast(Generator[list[T],None,None], mp(m))
+    return cast(Generator[list[T]], mp(m))
 
-def orbit_symmetries(flatten: Iterable[T], symmetries: Iterable[int]) -> Generator[Iterable[T],None,None]:
+def orbit_symmetries(flatten: Iterable[T], symmetries: Iterable[int]) -> Generator[Iterable[T]]:
     """
     Permutation inside each block of given sizes
 
