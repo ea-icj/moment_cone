@@ -135,7 +135,14 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         ... )
         True
         """
-        def block_recurs(seq: tuple[int, ...], length: int, start: int = 0):
+        def block_recurs(
+                seq: tuple[int, ...],
+                length: int,
+                start: int = 0
+            ) -> Generator[tuple[tuple[int, ...], tuple[int, ...]]]:
+            """ For one block of symmetry of given length, returns all strictly
+            increasing permutations of seq (head) alongside the remaining
+            values to permute (tail)"""
             if length == 0:
                 yield (), seq[start:]
             else:
@@ -143,7 +150,13 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
                     for head, tail in block_recurs(seq, length - 1, start=i+1):
                         yield seq[i:i+1] + head, seq[start:i] + tail
 
-        def all_recurs(seq: tuple[int, ...], sym_tail: tuple[int, ...]):
+        def all_recurs(
+                seq: tuple[int, ...],
+                sym_tail: tuple[int, ...]
+            ) -> Generator[tuple[tuple[int, ...], ...]]:
+            """ For a given sequence and symmetries, returns all strictly
+            increasing permutations of the sequence by block of symmetry
+            as a tuple of one permutation per block """
             if len(sym_tail) == 0:
                 yield (),
             else:
