@@ -426,13 +426,13 @@ def Multiplicity_SV_tau(tau : Tau,chi : vector, V : Representation, checkGreatEq
                             theta=Partition([ListP[i][j]])
                         #print('data plethysm',list(Lambda[i,j]),list(theta))
                         if len(Lambda[i,j])==max_length[i,j] :
-                            print('lambda can be reduced',Lambda[i,j],max_length[i,j])
+                            #print('lambda can be reduced',Lambda[i,j],max_length[i,j])
                             la=Lambda[i,j].lambda_red(max_length[i,j])
                             if len(Lambda[i,j])==0:
                                 shift=0
                             else :    
                                 shift=theta[0]*Lambda[i,j][-1]
-                            print('La,theta,Mu',Lambda[i,j],theta,Mu[i,j])
+                            #print('La,theta,Mu',Lambda[i,j],theta,Mu[i,j])
                             if len(Mu[i,j])==0 or Mu[i,j][-1]<shift :
                                 a=0
                             else :
@@ -441,7 +441,7 @@ def Multiplicity_SV_tau(tau : Tau,chi : vector, V : Representation, checkGreatEq
                                                             
                         else :
                             a = plethysm_cache(Lambda[i, j], theta, Mu[i, j])
-                            print('generic case',Lambda[i,j],theta,tau.reduced.mult[0][j])
+                            #print('generic case',Lambda[i,j],theta,tau.reduced.mult[0][j])
                         
                         #print('a',a)
                         if a != 0 :

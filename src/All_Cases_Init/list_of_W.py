@@ -42,6 +42,28 @@ def ListW_Mod(tau : Tau, pos : int, C_mod : dict[int, int],relation) -> list[Per
                     res.append(w)
     return res         
 
+### TODO : ci-dessous tentative avec W^P natif
+def ListW_Mod(tau : Tau, pos : int, C_mod : dict[int, int],relation) -> list[Permutation]:
+    """
+    List of permutations w in W^{P(tau[pos])} such that tau.Scalar(Inv(w) in position pos) satisfies relation (leq or eq) with the C^*-module whose dimension of eigenspaces is encoded by C_mod.
+    """
+    D=sum(C_mod.values()) # Dimension of the C^*-module
+    e=tau.G[pos] # Rank of the current GL
+    #ap = AllPermutationsByLength(e)
+    res=[]
+    # Lenghts to run over
+    if relation==operator.eq and 2*D> e*(e-1):
+        return []
+    for w in Permutation.all_min_rep(tau.reduced.mult[pos]):
+        if relation(w.length,D): # The length makes possible the expected relation
+            List_Inv=[Root(pos, *inv) for inv in w.inversions]
+            gr=grading_dictionary(List_Inv, tau.dot_root)
+            Mw=dictionary_list_lengths(gr)
+            if compare_C_Mod(Mw,C_mod,relation):
+                res.append(w)
+    return res
+
+######## End TODO ######
 
 def ListWs_Mod_rec(tau: Tau, pos : int, C_mod : dict[int, int]) -> list[list[Permutation]]: # List of tuples [w_pos,...,w_len(d)-1] such that U(w)\isom C_mod as tau-module and w_i\in W^P
     G=tau.G

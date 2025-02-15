@@ -3,8 +3,8 @@ G = LinGroup([4,4,4,1])
 V = Representation(G,'kron')
 G = LinGroup([7])
 V = Representation(G,'boson',nb_part=3)
-G = LinGroup([8])
-V = Representation(G,'fermion',nb_part=3)
+G = LinGroup([4])
+V = Representation(G,'boson',nb_part=2)
 
 tpi_method: Method ='symbolic'
 tpi_method='probabilistic'
@@ -57,6 +57,8 @@ for tau in Candidates_for_tau1:
         if dim_gen_stab_of_K(Ms_tauR)==G.rank-V.dim_cone+1:
             Candidates_for_tau2.append(tau)    
 print(len(Candidates_for_tau2), ' dominant 1-PS satisfying the stabilizer condition')
+
+print(Candidates_for_tau2)
 
 ## Generate the list of candidates for the inequalites (pairs tau,w)
 ## Here w has to belong to P^tau and U(w) is tau-isomorphic to V(tau>0)
@@ -120,10 +122,11 @@ print(len(Birational_Ineq), ' inequalities selected in Step 9 in','seconds')
 #    print(ineq)
 
 #print('Birat')
-#for ineq in Birational_Ineq :
-#    print(ineq)
+for ineq in Birational_Ineq :
+    print(ineq)
 #    chi=ineq.weight_det(V)
 #    print('mult',Multiplicity_SV_tau(ineq.tau,chi,V))
+
 
 
 
