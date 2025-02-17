@@ -11,6 +11,10 @@ tpi_method='probabilistic'
 ram_schub_method: Method = 'symbolic'
 ram_schub_method: Method = 'probabilistic'
 ram0_method: Method = 'probabilistic'
+grobner_method: Method = 'symbolic'
+grobner_lim=3 #limit of time for each Grobner computation
+#grobner_method: Method = 'probabilistic'
+#grobner_lim=1
 
 ## Checking if the cone has the expected dimension
 
@@ -114,6 +118,13 @@ print('Step 9, checking birationality (ramification divisor contracted) of the m
 Birational_Ineq=[ineq for ineq in List_BKR if Is_Ram_contracted(ineq,V,ram_schub_method,ram0_method)]+Ineq_Triang
 #Birational_Ineq=[ineq for ineq in Dominant_Ineq_filteredLT if Is_Ram_contracted(ineq,V,ram_schub_method,ram0_method)]
 print(len(Birational_Ineq), ' inequalities selected in Step 9 in','seconds')
+
+print('alternative 8-9 Step, checking birationality via Grobner')
+Grobner_output=Grobner_List_Test(Dominant_Ineq_filteredLT,grobner_lim,V,grobner_method)
+True_Ineq=Grobner_output[0]+Ineq_Triang
+Dominant_Ineq_filteredGrobner=Grobner_output[1]
+print(len(True_Ineq), 'true inequalities after Grobner; presumably the only ones but', len(Dominant_Ineq_filteredGrobner), 'inequalities where Grobner was inconclusive')
+
 #for ineq in Ineq_Triang :
 #    if ineq not in Birational_Ineq:
 #        print('Tri Lin pas birational:',ineq,list(ineq.inversions),ineq.tau.positive_weights(V))

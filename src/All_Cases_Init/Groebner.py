@@ -203,5 +203,13 @@ def long_calculation(Liste, function, lim, extra_arguments):
        print(len([m for m in Res if m[-1]]), "results with output True")
     return(Res)
 
+def Grobner_List_Test(Liste,lim,V,method):
+    Grobner_Res=long_calculation(Liste,is_fiber_singleton_reorder,lim,[V,method])
+    Grobner_True=[m[1] for m in Grobner_Res if m[2]]
+    Grobner_False=[m[1] for m in Grobner_Res if not(m[2])]
+    conclusive_indices=[m[0] for m in Grobner_Res]
+    Grobner_Inconclusive=[Liste[i] for i in range(len(Liste)) if not(i in conclusive_indices)]
+    print(len(Grobner_True),'true inequalities found by Grobner method, ', len(Grobner_Inconclusive), 'inconclusive inequalities')
+    return(Grobner_True,Grobner_Inconclusive)
 
 
