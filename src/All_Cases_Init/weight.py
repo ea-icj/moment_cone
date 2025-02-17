@@ -146,7 +146,7 @@ class Weight:
             shift+=s
         return True
 
-    def orbit_symmetries(self,S : list[int]) -> Iterable["Weight"]:
+    def orbit_symmetries(self,S : Iterable[int]) -> Iterable["Weight"]:
         if self.as_list != None :
             orbit=orbit_symmetries(self.as_list,S)
             for sym_w in orbit:
