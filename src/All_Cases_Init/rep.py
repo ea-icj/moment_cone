@@ -298,7 +298,7 @@ class Representation:
                 wj  = Weight(self.G,as_list_of_list=[lj])
                 idj = wj.idx(self)            
                 if alpha.i==alpha.j:
-                    vp[wi.idx(self)] = v[wj.idx(self)]
+                    vp[wj.idx(self)] = v[wj.idx(self)]
                 else :
                     if self.type == 'boson' or alpha.i not in lj : # Otherwise E_ij v =0
                         li=L1+[alpha.i]+L2  # we insert i

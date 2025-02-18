@@ -419,8 +419,7 @@ class ParticleRepresentation(Representation):
             wj  = WeightAsListOfList(self.G, as_list_of_list=[lj])
             idj = self.index_of_weight(wj)
             if alpha.i == alpha.j:
-                # FIXME: wi ?!!
-                vp[self.index_of_weight(wi)] = v[self.index_of_weight(wj)] # type: ignore
+                vp[self.index_of_weight(wj)] = v[self.index_of_weight(wj)] # type: ignore
             else :
                 if isinstance(self, BosonRepresentation) or alpha.i not in lj : # Otherwise E_ij v =0
                     li=L1+[alpha.i]+L2  # we insert i
