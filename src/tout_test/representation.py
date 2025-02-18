@@ -30,9 +30,9 @@ class Representation(ABC):
         """ Creates a weight for the given representation """
         return self.Weight(self.G, *args, **kwargs)
     
-    @property
+    @cached_property
     @abstractmethod
-    def all_weights(self) -> Iterable[WeightBase]:
+    def all_weights(self) -> Sequence[WeightBase]:
         """ All meaningful weights in a specific order """
         ...
 
@@ -177,13 +177,15 @@ class KroneckerRepresentation(Representation):
         from .utils import prod
         return prod(self.G)
     
-    @property
-    def all_weights(self) -> Iterable[WeightAsList]:
+    @cached_property
+    def all_weights(self) -> list[WeightAsList]:
         """
-        Returns all possible weights for a given sequence of dimensions, in the lexicographical order
+        Returns all possible weights in the lexicographical order
         """
+        L: list[WeightAsList] = []
         for idx, w in enumerate(itertools.product(*(range(di) for di in self.G))):
-            yield WeightAsList(self.G, as_list=w, index=idx)
+            L.append(WeightAsList(self.G, as_list=w, index=idx))
+        return L
 
     def index_of_weight(self, chi: WeightBase, use_internal_index: bool = True) -> int:
         """
@@ -322,9 +324,9 @@ class ParticleRepresentation(Representation):
     def dim_cone(self) -> int:
         return self.G.rank
 
-    @property
+    @cached_property
     @abstractmethod
-    def all_weights(self) -> Iterable[WeightAsListOfList]:
+    def all_weights(self) -> Sequence[WeightAsListOfList]:
         ...
 
     @property
@@ -486,11 +488,13 @@ class FermionRepresentation(ParticleRepresentation):
         from math import comb
         return comb(self.G.rank, self.particle_cnt)
 
-    @property
-    def all_weights(self) -> Iterable[WeightAsListOfList]:
+    @cached_property
+    def all_weights(self) -> list[WeightAsListOfList]:
+        L: list[WeightAsListOfList] = []
         weights = itertools.combinations(range(self.G[0]), self.particle_cnt)
         for i, w in enumerate(weights):
-            yield WeightAsListOfList(self.G, as_list_of_list=(w,), index=i)
+            L.append(WeightAsListOfList(self.G, as_list_of_list=(w,), index=i))
+        return L
 
     def index_of_weight(self, chi: WeightBase, use_internal_index: bool = True) -> int:
         if not isinstance(chi, WeightAsListOfList):
@@ -514,9 +518,10 @@ class BosonRepresentation(ParticleRepresentation):
             self.G.rank - 1
         )
     
-    @property
-    def all_weights(self) -> Iterable[WeightAsListOfList]:
+    @cached_property
+    def all_weights(self) -> list[WeightAsListOfList]:
         from .rings import vector, ZZ
+        L: list[WeightAsListOfList] = []
         comb = itertools.combinations(
             range(self.G[0] + self.particle_cnt-1),
             self.G[0] - 1
@@ -530,10 +535,11 @@ class BosonRepresentation(ParticleRepresentation):
                 AsL += v[j + 1] * [j + 1]
             v[-1] = self.G.rank + self.particle_cnt - w[-1] - 2
             AsL += v[-1] * [self.G.rank - 1]
-            yield WeightAsListOfList(
+            L.append(WeightAsListOfList(
                 self.G,
                 as_vector=v,
                 as_list_of_list=[AsL],
                 index=i
-            )
+            ))
+        return L
             

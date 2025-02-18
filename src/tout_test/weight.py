@@ -31,6 +31,7 @@ class Weight:
             assert len(as_vector) == G.rank
             self.as_vector = as_vector
         self.index = index
+        self.mult = mult
     
     @cached_property
     def as_vector(self) -> "Vector":
@@ -140,6 +141,9 @@ class Weight:
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(as_vector={self.as_vector}" + (f", idx: {self.index}" if self.index is not None else "") + ")"
+
+    def orbit_symmetries(self, S: Iterable[int]) -> Iterable["Weight"]:
+        return iter(())
 
 
 class WeightAsList(Weight):
