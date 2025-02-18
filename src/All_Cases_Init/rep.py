@@ -122,7 +122,6 @@ class Representation:
                 L.append(Weight(self.G,as_vector=v,as_list_of_list=[AsL],idx=i))
         return(L)        
 
-    @cached_property 
     def weights_mod_outer(self) -> Iterable["Weight"]:
         """
         Returns all decreasing weights modulo the symmetries of V that is of G.
