@@ -10,9 +10,6 @@ from .weight import Weight
 from .rep import *
 from .rings import matrix, Matrix, ZZ
 
-#from typing import TypeVar
-#T=TypeVar('T')
-#from sage.all import matrix
 
 
 __all__ = (
@@ -117,19 +114,24 @@ def find_hyperplanes_reg_mod_outer(weights: list[Weight], V: Representation, u: 
     """
     exp_dim=V.dim_cone-1
     St = WeightSieve([], [], [], [], [])
+
+    ## TODO : améliorer has_too_much_geq_weights dans le cas Kronecker pour ordonner les poids de V.weights_mod_outer par #{\chi'>\chi} décroissant
+    # La fonction qui calcule ce cardinal est leq_cnt = short_prod(c + 1 for c in chi.as_list) - 1
+
+    ## TODO : pour parallelise !='kron' il suffit de faire la même boucle même si modulo outer est trivial
+    # On peut même générer les weights directement ordonnés de cette manière
     
     for chi in weights:
         if has_too_much_geq_weights(chi, weights, V, u, sym):
             St.negative.append(chi)
         else:
             St.indeterminate.append(chi)
-
     if V.type != 'kron': #Trivial outer
         yield from find_hyperplanes_reg_impl(St, V.G, u,exp_dim,sym)
                                                  
 
     else :
-      for chi in V.weights_mod_outer:
+      for chi in V.weights_mod_outer: #TODO : paralléliser cette boucle en mettant pour le i eme poids tous les poids strictement précédents (et leur orbite par sym) dans St.excluded
         # Checking if the element is indeterminate
         
         try:
@@ -177,15 +179,12 @@ def find_hyperplanes_reg_impl(St: WeightSieve, G: LinGroup, u: int,exp_dim: int,
         # Next element to consider
         chi = St.indeterminate.pop()
         St2 = St.copy()
-        #St3 = St.copy()
         
         # Two possible actions with this element:
 
         # 1. We explore the branch where it is excluded from the possible zero elements
-        ### TODO : suppress and replace St3 by St
         
         St.excluded.append(chi)
-        St3=St.copy()
         yield from find_hyperplanes_reg_impl(St, G, u,exp_dim,sym) # TODO : St n'est pas modifié par cet appel ?
         St.excluded.pop()
 
@@ -205,7 +204,6 @@ def find_hyperplanes_reg_impl(St: WeightSieve, G: LinGroup, u: int,exp_dim: int,
             yield from find_hyperplanes_reg_impl(St2, G, u,exp_dim,sym)
 
         # Current element back to the indeterminate
-        ## TODO : uncomment
         St.indeterminate.append(chi)
 
 

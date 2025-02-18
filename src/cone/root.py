@@ -16,10 +16,19 @@ class Root:
     i: int
     j: int
 
+    def __hash__(self) -> int:
+        return hash((self.k, self.i, self.j))
+    
     @property
     def is_in_U(self) -> bool:
         """ Check if this root is in U """
         return self.i < self.j
+    
+    
+    @property
+    def short_repr(self) -> Iterable[int]:
+        """  returns a short representation for our root """
+        return [self.k,self.i,self.j]
     
     @property
     def opposite(self) -> "Root":

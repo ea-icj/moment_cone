@@ -11,6 +11,7 @@ import itertools
 __all__ = (
     "Inequality",
     "unique_modulo_symmetry_list_of_ineq",
+    "full_under_symmetry_list_of_ineq"
 )
 
 class Inequality:
@@ -193,5 +194,6 @@ def unique_modulo_symmetry_list_of_ineq(seq_ineq: Iterable[Inequality]) -> set[I
                wtau = -1 | 0 0 | 0 1 | 0 1)
     """
     return set(ineq.sort_mod_sym_dim for ineq in seq_ineq)
+
 
 

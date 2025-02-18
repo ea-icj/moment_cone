@@ -62,6 +62,9 @@ def is_not_contracted(inversions_v: Iterable[Root], tau: Tau, V: Representation,
         uv = V.action_op_el(root, v)
         for i, chi in enumerate(positive_weights):
             A[i, j] = uv[chi.idx(V)]
+    #print('inv',list_inversions_v)
+    #print('pos weights', positive_weights)
+    #print('A',A)        
 
     rank_A = A.change_ring(ring.fraction_field()).rank()
     return rank_A == len(list_inversions_v)
@@ -91,7 +94,7 @@ def Compute_JA(ineq : Inequality,V: Representation) : # Return a dictionnary pol
             uv=V.action_op_el(root, v)
             for row, chi in enumerate(tau.positive_weights(V)[x]): # List of weights such that tau.scalar(chi)=x 
                 M[row,col]=uv[chi.idx(V)]
-    
+        #print('M',M)
         Jb=dict(M.det().factor())
         Jbn=Normalization_Factorized_Polynomial(Jb)
         for F in Jbn.keys(): # We could make a function add_dictionaries
@@ -158,12 +161,14 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
         for v in w.covering_relations_strong_Bruhat:
             if v.is_min_rep(tau.reduced.mult[k]): 
                 vs = list(ws[:k]) + [v] + list(ws[k+1:])
+                #print('Schub Div',vs)
                 ineqv = Inequality(tau,vs)
                 if is_not_contracted(ineqv.inversions,tau,V,method_S) :
                     return(False)
 
     ### Divisor R_0
     Jf=Compute_JA(ineq,V) # The Jacobian factorized as a dictionnary
+    #print('Jf',Jf)
     
     J_square_free=1
     for pol in Jf.keys():

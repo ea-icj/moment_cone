@@ -1,3 +1,4 @@
+
 from .typing import *
 from .utils import *
 from .permutation import *
@@ -15,35 +16,32 @@ __all__ = (
     "Check_Rank_Tpi",
 )
 
-
 def ListW_Mod(tau : Tau, pos : int, C_mod : dict[int, int],relation) -> list[Permutation]:
     """
-    List of permutations w in W^{P(tau[pos])} such that tau.Scalar(Inv(w) in position pos) satisfies relation (leq or eq) with the C^*-module whose dimension of eigenspaces is encoded by C_mod.
+    List of permutations w in W^{P(tau[pos])} such that tau.Scalar(Inv(w) in position pos) satisfies relation (leq or eq) 
+    with the C^*-module whose dimension of eigenspaces is encoded by C_mod.
     """
-    D=sum(C_mod.values())
-    e=tau.G[pos]
-    ap = AllPermutationsByLength(e)
+    D=sum(C_mod.values()) # Dimension of the C^*-module
+    e=tau.G[pos] # Rank of the current GL
     res=[]
     # Lenghts to run over
-    if relation==operator.eq :
-        if 2*D<=e*(e-1) :
-            L=[D]
-        else:
-            L=[]
-    else : L=[i for i in range(min(D+1,int(e*(e-1)/2)+1))]
-        
-    for l in L:
-        for w in ap[l] :
-            if w.is_min_rep(tau.reduced.mult[pos]): 
-                List_Inv=[Root(pos, *inv) for inv in w.inversions]
-                gr=grading_dictionary(List_Inv, tau.dot_root)
-                Mw=dictionary_list_lengths(gr)
-                if compare_C_Mod(Mw,C_mod,relation):
-                    res.append(w)
-    return res         
+    if relation==operator.eq and 2*D> e*(e-1):
+        return []
+    for w in Permutation.all_min_rep(tau.reduced.mult[pos]):
+        if relation(w.length,D): # The length makes possible the expected relation
+            List_Inv=[Root(pos, *inv) for inv in w.inversions]
+            gr=grading_dictionary(List_Inv, tau.dot_root)
+            Mw=dictionary_list_lengths(gr)
+            if compare_C_Mod(Mw,C_mod,relation):
+                res.append(w)
+    return res
 
 
-def ListWs_Mod_rec(tau: Tau, pos : int, C_mod : dict[int, int]) -> list[list[Permutation]]: # List of tuples [w_pos,...,w_len(d)-1] such that U(w)\isom C_mod as tau-module and w_i\in W^P
+def ListWs_Mod_rec(tau: Tau, pos : int, C_mod : dict[int, int]) -> list[list[Permutation]]:
+    """ 
+    List of tuples [w_pos,...,w_len(d)-1] such that U(w)\isom C_mod as tau-module and w_i\in W^P
+    """
+    
     G=tau.G
     if pos==len(G)-1: #Only one w has to be find
         relation = operator.eq
@@ -61,6 +59,9 @@ def ListWs_Mod_rec(tau: Tau, pos : int, C_mod : dict[int, int]) -> list[list[Per
     return res
 
 def ListWs_Mod(tau : Tau,V: Representation) ->  list[list[Permutation]]:
+    """
+    Initialisation and use the recursive function
+    """
     Poids_positive=tau.positive_weights(V)
     C_mod: dict[int, int] = {}
     for x in Poids_positive.keys():
@@ -69,6 +70,11 @@ def ListWs_Mod(tau : Tau,V: Representation) ->  list[list[Permutation]]:
 
 
 def Check_Rank_Tpi(ineq : Inequality, V: Representation, method: Method) -> bool :
+    """
+    Check if Tpi is inversible at a general point of V^\tau. 
+    General means randon if the method is probabilist and formal if the method is symbolic.
+    The matrix being block trinagular, the function check successively the diagonal blocks.
+    """
     tau=ineq.tau
     G = tau.G # FIXME: Here, d is recreated from scratch, without rings. Should we ensure the uniqueness of the instance of d?
 

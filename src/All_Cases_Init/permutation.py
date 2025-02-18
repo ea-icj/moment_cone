@@ -85,6 +85,13 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         symmetries encode the size of blocks of a Levi L, 
         Denote its Weyl group by W_L
         w satisfies is_min_rep if it is a representative of W/W_L of minimal length
+
+        Example:
+        >>> p = Permutation((1, 2, 3, 3, 4, 2, 3, 4, 5))
+        >>> p.is_min_rep((3, 2, 4))
+        True
+        >>> p.is_min_rep((2, 3, 4))
+        False
         """
         return all(
             all(a < b for a, b in itertools.pairwise(block))
@@ -107,6 +114,62 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         # More efficient way ?
         return filter(lambda p: p.length == l, Permutation.all(n))
     
+    @staticmethod
+    def all_min_rep(symmetries: Iterable[int]) -> Iterable["Permutation"]:
+        """
+        Returns all permutations of S_n that are increasing along each block of given symmetries.
+
+        n is defined by the sum of the block sizes.
+
+        Examples:
+        >>> n = 7
+        >>> symmetries = (2, 3, 2)
+        >>> naive_way = filter(
+        ...     lambda p: p.is_min_rep(symmetries),
+        ...     Permutation.all(n)
+        ... )
+        >>> this_way = Permutation.all_min_rep(symmetries)
+        >>> all(
+        ...     a == b
+        ...     for a, b in itertools.zip_longest(naive_way, this_way, fillvalue=None)
+        ... )
+        True
+        """
+        def block_recurs(
+                seq: tuple[int, ...],
+                length: int,
+                start: int = 0
+            ) -> Generator[tuple[tuple[int, ...], tuple[int, ...]]]:
+            """ For one block of symmetry of given length, returns all strictly
+            increasing permutations of seq (head) alongside the remaining
+            values to permute (tail)"""
+            if length == 0:
+                yield (), seq[start:]
+            else:
+                for i in range(start, len(seq) + 1 - length):
+                    for head, tail in block_recurs(seq, length - 1, start=i+1):
+                        yield seq[i:i+1] + head, seq[start:i] + tail
+
+        def all_recurs(
+                seq: tuple[int, ...],
+                sym_tail: tuple[int, ...]
+            ) -> Generator[tuple[tuple[int, ...], ...]]:
+            """ For a given sequence and symmetries, returns all strictly
+            increasing permutations of the sequence by block of symmetry
+            as a tuple of one permutation per block """
+            if len(sym_tail) == 0:
+                yield (),
+            else:
+                for head, rem_seq in block_recurs(seq, sym_tail[0]):
+                    for tail in all_recurs(rem_seq, sym_tail[1:]):
+                        yield head, *tail
+
+        symmetries = tuple(symmetries)
+        n = sum(symmetries)
+        for parts in all_recurs(tuple(range(n)), symmetries):
+            yield Permutation(itertools.chain.from_iterable(parts))
+
+        
     @staticmethod
     def from_cycles(n: int, *cycles: Sequence[int]) -> "Permutation":
         """

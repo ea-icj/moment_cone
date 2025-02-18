@@ -4,3 +4,5 @@ __pycache__
 build*
 *.egg-info
 html*
+src/All_Cases/
+src/All_Cases_Init/Old/

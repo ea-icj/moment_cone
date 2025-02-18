@@ -12,7 +12,7 @@ Remark: it is recommended to import this module instead of importing directly fr
 
 
 """
-from sage.all import Ring, PolynomialRing # type: ignore
+from sage.all import Ring, PolynomialRing, FractionField # type: ignore
 from sage.rings.polynomial.polynomial_element import Polynomial # type: ignore
 from sage.rings.polynomial.multi_polynomial_element import MPolynomial # type: ignore
 from sage.structure.element import Vector, Matrix # type: ignore

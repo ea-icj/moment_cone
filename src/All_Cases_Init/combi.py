@@ -7,6 +7,10 @@ def unique_combinations(mylist, k):
     The list is sorted.
     The list is viewed as a multiset. 
     Create the list of multisets contained in list of cardinality k
+
+    Example :
+    >>> unique_combinations([3,3,3,2,2,1],3)
+    [(3, 3, 3), (3, 3, 2), (3, 3, 1), (3, 2, 2), (3, 2, 1), (2, 2, 1)]
     """
     def backtrack(start, current):
         if len(current) == k:

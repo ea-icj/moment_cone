@@ -47,7 +47,7 @@ class Weight:
         block_weights = tuple(
             tuple( # Converting to tuple (instead of a map) seems necessary to keep the right hi (FIXME)
                 p.pad(hi) # Adding trailing zeros if necessary
-                for p in Partition.all_of_height(hi, di - 1)
+                for p in Partition.all_of_length(hi, di - 1)
             )
             for di, hi in group_by_block(d) # Compress returns (value, multiplicity) for each block of d
         )

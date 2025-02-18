@@ -19,6 +19,9 @@ class Root:
     i: int
     j: int
 
+    def __hash__(self) -> int:
+        return hash((self.k, self.i, self.j))
+
     @property
     def is_in_U(self) -> bool:
         """ Check if this root is in U """
@@ -142,5 +145,13 @@ class Root:
         """
         for k, dk in enumerate(G):
             for i in range(dk):
-                yield Root(k, i, i)            
-
+                yield Root(k, i, i)       
+    
+    @property
+    #TODO: erase this one if not used in Groebner
+    def short_rep(self):
+        return[self.k,self.i,self.j]
+    
+    @property
+    def as_list(self):
+        return[self.k,self.i,self.j]

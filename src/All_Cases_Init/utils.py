@@ -1,12 +1,3 @@
-from collections.abc import Iterable, Sequence, Callable, Sized
-from typing import Generic,TypeVar, Mapping, Generator, Callable, cast
-T=TypeVar('T')
-U=TypeVar('U')
-import itertools
-import functools
-import operator
-import copy as cp
-
 __all__ = (
     "is_decreasing",
     "is_increasing",
@@ -20,14 +11,20 @@ __all__ = (
     "flatten_dictionary",
     "grading_dictionary",
     "compare_C_Mod",
-    "Are_Isom_Mod",
-    "Is_Sub_Mod",
     "quotient_C_Mod",
     "dictionary_list_lengths",
     "symmetries",
     "orbit_symmetries",
-    
 )
+
+
+import itertools
+import functools
+import operator
+import copy as cp
+
+from .typing import *
+
 
 def is_decreasing(l: Iterable[int]) -> bool:
     """ Check if a given sequence is not increasing """
@@ -206,51 +203,18 @@ def dictionary_list_lengths(dic: Mapping[U, Sequence[T]]) -> dict[U, int]:
     """
     return {key: len(value) for key, value in dic.items()}
 
-def compare_C_Mod(M1: dict[int, int], M2: dict[int, int], relation: Callable[[int, int], bool]) -> bool :
-    return all(relation(M1.get(key, 0),M2.get(key, 0)) for key in set(M1) | set(M2))
-    
-def Is_Sub_Mod(M1: dict[int, int], M2: dict[int, int]) -> bool:
-    """
-    Kind of order on dictionary of int -> int.
 
-    Examples:
-    >>> d1 = {0: 0, 1: 1, 2: 2}
-    >>> d2 = {0: 0, 2: 2}
-    >>> Is_Sub_Mod(d1, d2)
-    False
-    >>> d3 = {0: 0, 1: 1, 2: 1}
-    >>> Is_Sub_Mod(d1, d3)
-    False
-    >>> d4 = {0: 0, 1: 1, 2: 3}
-    >>> Is_Sub_Mod(d1, d4)
-    True
-    """
-    # TODO: lowercase name, move to more specific file?
-    for p in M1.keys():
-        if p not in M2.keys() or M1[p] > M2[p] :
-            return False
-    return True
+def compare_C_Mod(
+        M1: dict[int, int],
+        M2: dict[int, int],
+        relation: Callable[[int, int], bool]
+    ) -> bool :
+    # TODO: lowercase, docstring, move to list_of_W ?
+    return all(
+        relation(M1.get(key, 0), M2.get(key, 0))
+        for key in set(M1) | set(M2)
+    )
 
-def Are_Isom_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> bool:
-    """ Comparison of dictionary of int -> int.
-    
-    Examples:
-    >>> d1 = {0: 0, 1: 1, 2: 2}
-    >>> d2 = {0: 0, 2: 2}
-    >>> Are_Isom_Mod(d1, d2)
-    False
-    >>> d3 = {0: 0, 1: 1, 2: 1}
-    >>> Are_Isom_Mod(d1, d3)
-    False
-    >>> d4 = {0: 0, 1: 1, 2: 3}
-    >>> Are_Isom_Mod(d1, d4)
-    False
-    >>> d5 = {0: 0, 1: 1, 2: 2}
-    >>> Are_Isom_Mod(d1, d5)
-    True
-    """
-    # TODO: lowercase name, move to more specific file, probably useless since it is simply a comparison
-    return M1 == M2
     
 def quotient_C_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> dict[int, int]:
     """ Quotient of two dictionary int -> int.
@@ -270,11 +234,14 @@ def quotient_C_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> dict[int, int]:
     >>> quotient_C_Mod(d1, d5)
     {}
     """
-    return {key: M1[key] - M2.get(key, 0)
-     for key in M1.keys()  
-     if M1[key] != M2.get(key, 0)}
+    # TODO: lowercase, move to list_of_W?
+    return {
+        key: M1[key] - M2.get(key, 0)
+        for key in M1.keys()  
+        if M1[key] != M2.get(key, 0)
+    }
 
-def multiset_permutations(m: Iterable[T]) -> Generator[list[T],None,None]:
+def multiset_permutations(m: Iterable[T]) -> Generator[list[T]]:
     """
     Returns the unique permutations of the given multiset m
     
@@ -282,9 +249,9 @@ def multiset_permutations(m: Iterable[T]) -> Generator[list[T],None,None]:
     so that to get the correct return type.
     """
     from sympy.utilities.iterables import multiset_permutations as mp
-    return cast(Generator[list[T],None,None], mp(m))
+    return cast(Generator[list[T]], mp(m))
 
-def orbit_symmetries(flatten: Iterable[T], symmetries: Iterable[int]) -> Generator[Iterable[T],None,None]:
+def orbit_symmetries(flatten: Iterable[T], symmetries: Iterable[int]) -> Generator[Iterable[T]]:
     """
     Permutation inside each block of given sizes
 
