@@ -1,8 +1,7 @@
 import contextlib
 import itertools
-import functools
 import time
-import signal
+from contextlib import contextmanager
 
 from .typing import *
 
@@ -189,13 +188,16 @@ class FinishedTask(Task):
 class TimeOutException(Exception):
     """ Exception raised when a task reach the assigned wall time """
     pass
-class timeout:
+
+
+@contextmanager
+def timeout(t: int, no_raise: bool = True):
     """
     Decorator and context manager to limit wall execution time of a code
     
     Example of usage as a decorator:
 
-    ```
+    ```Python
     @timeout(10)
     def compute(a, b, c):
         print(a, b, c)
@@ -206,7 +208,7 @@ class timeout:
 
     Example of usage as a context manager:
 
-    ```
+    ```Python
     a, b, c = 1, 2, 3
     with timeout(10):
         print(a, b, c)
@@ -216,11 +218,10 @@ class timeout:
     ```
 
     Example of usage as a context manager with raised exception:
-
-    ```
+    ```Python
     a, b, c = 1, 2, 3
     try:
-        with timeout(10)
+        with timeout(10, no_raise=False)
             print(a, b, c)
             ... # do some stuff
             result = a * b + c
@@ -228,44 +229,12 @@ class timeout:
         # Some something when task didn't finished
     ```
     """
-    t: int
-    no_raise: bool
-
-    def __init__(self, t: int, no_raise: bool = True):
-        """ Initialization of the timeout.
-        
-        Computational time in seconds.
-        no_raise to False if you want to capture the exception (usefull in a context)
-        """
-        self.t = t
-        self.no_raise = no_raise
-
-    def handler(self, signum, frame) -> None:
-        """ Signal handler called when time is out """
-        raise TimeOutException("Time is out!")
-    
-    def __call__(self, fn: Callable) -> Callable:
-        """
-        Decorator interface
-        
-        Return value is a TimeOutException if execution didn't finished
-        before the time is out.
-        """
-        @functools.wraps(fn)
-        def wrapper(*args, **kwargs):
-            result = TimeOutException("Time is out!")
-            with self:
-                result = fn(*args, **kwargs)
-            return result
-        
-        return wrapper
-    
-    def __enter__(self):
-        """ Beginning of the context """
-        signal.signal(signal.SIGALRM, self.handler)
-        signal.alarm(self.t)
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        """ End of the context """
-        signal.alarm(0)
-        return self.no_raise and exc_type == TimeOutException
+    from cysignals.alarm import alarm, AlarmInterrupt, cancel_alarm
+    try:
+        alarm(t)
+        yield
+    except AlarmInterrupt:
+        if not no_raise:
+            raise TimeOutException("Time is out!")
+    finally:
+        cancel_alarm()
