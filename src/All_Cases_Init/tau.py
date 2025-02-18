@@ -55,7 +55,7 @@ class Tau:
             self._components = components.freeze()
         else:
             self._components = Blocks.from_blocks(components)
-        self.G = LinGroup([len(c) for c in components])
+        #self.G = LinGroup([len(c) for c in components])
         
     @staticmethod
     def from_flatten(s: Iterable[int], G: LinGroup) -> "Tau":
@@ -66,6 +66,10 @@ class Tau:
 
         # Tau will be always immutable
         return Tau(Blocks.from_flatten(tuple(all_components), G))
+    
+    @cached_property
+    def G(self) -> LinGroup:
+        return LinGroup([len(c) for c in self.components])
 
     @staticmethod
     def from_zero_weights(weights: Sequence[Weight], V: Representation) -> "Tau":

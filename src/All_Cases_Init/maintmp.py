@@ -1,11 +1,11 @@
 
 
-#G = LinGroup([3,3,3,1])
-#V = Representation(G,'kron')
+G = LinGroup([3,3,3,1])
+V = Representation(G,'kron')
 #G = LinGroup([7])
 #V = Representation(G,'fermion',nb_part=3)
-G = LinGroup([4])
-V = Representation(G,'boson',nb_part=2)
+#G = LinGroup([4])
+#V = Representation(G,'boson',nb_part=2)
 
 print("We are computing the inequalities for the moment cone of",V)
 tpi_method: Method ='symbolic'
