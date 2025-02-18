@@ -19,9 +19,9 @@ class LinearGroup(tuple[int, ...]):
     13
     >>> G.dim
     45
-    >>> G.dimU # FIXME: expected 20 ?! but got 16...
+    >>> G.dimU
     16
-    >>> G.outer # FIXME: expected (1, 3) but got (2, 1, 1)
+    >>> G.outer
     (2, 1, 1)
 
     It should also be noted that this class ensure uniqueness of an instance
@@ -60,5 +60,30 @@ class LinearGroup(tuple[int, ...]):
         g = sum(i**2 for i in self)
         return (self.dim - self.rank) // 2
 
-        
+    def u_max(self, Gred: "LinearGroup") -> int:
+        """
+        Maximal value of u obtained by extending a e-1-PS to a d-1-PS
 
+        For a Linear Group d=(d_i), and a list of number of Levi blocks in each e_i,
+        computes the maximal dimension of a nil-radical.
+        
+        Maximal is relative to the various embeddings of L in self
+        
+        Warning : need d_i and e_i given ordered
+
+        Examples:
+        >>> G1 = LinGroup([5,3,2])
+        >>> G1.u_max(G1)
+        10
+        >>> G2 = LinGroup([2, 2, 1])
+        >>> G2.u_max(G2)
+        2
+        >>> G1.u_max(G2)
+        8
+        >>> G1.u_max(G1)
+        14
+        """
+        from math import floor
+        return sum(floor(d * d / 2 * (1 - 1 / e)) for d, e in zip(self, Gred))        
+
+# FIXME: complete the class
