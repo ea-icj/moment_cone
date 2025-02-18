@@ -1,5 +1,7 @@
 __all__ = (
     'Weight',
+    'WeightAsList',
+    'WeightAsListOfList',
 )
 
 from functools import cached_property
@@ -204,3 +206,55 @@ class WeightAsList(Weight):
     
     def __iter__(self) -> Iterator[int]:
         return iter(self.as_list)
+    
+
+class WeightAsListOfList(Weight):
+    """
+    Weight class for the particle representation
+
+    Weight is stored as a list of epsilon_i for each copy of GL.
+    """
+    as_list_of_list: tuple[tuple[int, ...], ...]
+
+    def __init__(self, G: LinearGroup, as_list_of_list: Iterable[Iterable[int]], **kwargs):
+        super().__init__(G, **kwargs)
+        self.as_list_of_list = tuple(tuple(w) for w in as_list_of_list)
+        assert(
+            len(self.as_list_of_list) == len(self.G)
+            and all(all(0 <= wi < g for wi in w) for w, g in zip(self.as_list_of_list, self.G))
+        ), "Invalid weight"
+    
+    @cached_property
+    def as_vector(self) -> "Vector":
+        from .rings import ZZ, vector
+        v = vector(ZZ, self.G.rank)
+        shift=0
+        for shift, x in zip(itertools.accumulate(self.G, initial=0), self.as_list_of_list):
+            for xi in x:
+                v[shift + xi] += 1
+        return v
+    
+    def __le__(self, other: Weight) -> bool:
+        if not isinstance(other, WeightAsListOfList):
+            return NotImplemented
+
+        return all(
+            all(ws >= wo for ws, wo in zip(ls, lo))
+            for ls, lo in zip(self.as_list_of_list, other.as_list_of_list)
+        )
+
+    def leq(self,
+            other: "Weight",
+            symmetries: Optional[Iterable[int]] = None) -> bool:
+        if symmetries is None:
+            return self <= other
+        else:
+            return super().leq(other, symmetries)
+
+    def __eq__ (self, other: object) -> bool:
+        if not isinstance(other, WeightAsListOfList):
+            return NotImplemented
+        return self.G == other.G and self.as_list_of_list == other.as_list_of_list
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.as_list_of_list}" + (f", idx: {self.index}" if self.index is not None else "") + ")"
