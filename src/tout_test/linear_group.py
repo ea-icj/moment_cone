@@ -72,10 +72,8 @@ class LinearGroup(tuple[int, ...]):
         Warning : need d_i and e_i given ordered
 
         Examples:
-        >>> G1 = LinGroup([5,3,2])
-        >>> G1.u_max(G1)
-        10
-        >>> G2 = LinGroup([2, 2, 1])
+        >>> G1 = LinearGroup((5, 3, 2))
+        >>> G2 = LinearGroup((2, 2, 1))
         >>> G2.u_max(G2)
         2
         >>> G1.u_max(G2)

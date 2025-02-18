@@ -3,6 +3,7 @@ __all__ = (
 )
 
 from functools import cached_property
+import itertools
 
 from .typing import *
 from .linear_group import LinearGroup
@@ -135,3 +136,71 @@ class Weight:
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(as_vector={self.as_vector}" + (f", idx: {self.index}" if self.index is not None else "") + ")"
+
+
+class WeightAsList(Weight):
+    """
+    Weight class for the Kronecker representation
+
+    Weight is stored as a list of one epsilon_i by copy of GL.
+    """
+    as_list: tuple[int, ...]
+
+    def __init__(self, G: LinearGroup, as_list: Iterable[int], **kwargs):
+        super().__init__(G, **kwargs)
+        self.as_list = tuple(as_list)
+        assert (
+            len(self.as_list) == len(self.G)
+            and all(0 <= w < g for w, g in zip(self.as_list, self.G))
+        ), "Invalid weight"
+
+    @cached_property
+    def as_vector(self) -> "Vector":
+        from .rings import ZZ, vector
+        v = vector(ZZ, self.G.rank)
+        for shift, x in zip(itertools.accumulate(self.G, initial=0), self.as_list):
+            v[shift + x] = 1
+        return v
+
+    def __le__(self, other: Weight) -> bool:
+        """
+        Implementation of self <= other (partial ordering)
+        
+        Example:
+        >>> from .representation import KroneckerRepresentation
+        >>> G = LinearGroup((3, 2))
+        >>> K = KroneckerRepresentation(G)
+        >>> chi1 = K.weight((2, 1))
+        >>> chi2 = K.weight((2, 0))
+        >>> chi1 <= chi2
+        True
+
+        >>> from .weight import Weight
+        >>> Weight(G, as_vector=chi1.as_vector) <= Weight(G, as_vector=chi2.as_vector)
+        True
+        """
+        if not isinstance(other, WeightAsList):
+            return NotImplemented
+        return all(ws >= wo for ws, wo in zip(self, other))
+    
+    def leq(self,
+            other: Weight,
+            symmetries: Optional[Iterable[int]] = None) -> bool:
+        if symmetries is None:
+            return self <= other
+        else:
+            return super().leq(other, symmetries)
+        
+    def __eq__ (self, other: object) -> bool:
+        if not isinstance(other, WeightAsList):
+            return NotImplemented
+        return self.G == other.G and self.as_list == other.as_list
+
+    def __repr__(self) -> str:
+        return f"WeightAsList({self.as_list}" + (f", idx: {self.index}" if self.index is not None else "") + ")"
+
+    def __len__(self) -> int:
+        return len(self.as_list)
+    
+    def __iter__(self) -> Iterator[int]:
+        return iter(self.as_list)
