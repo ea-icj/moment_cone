@@ -1,3 +1,9 @@
+
+from .ineq_Python_4_4_4_1_kron_Vergne_Walter import *
+from .ineq_Python_7_fermion_3_Klyachko import *
+from .ineq_Python_8_fermion_3_Klyachko import *
+from .ineq_Python_8_fermion_4_Klyachko import *
+
 from .Klyachko import Klyachko_3_7, Klyachko_3_8, Klyachko_4_8
 from .Vergne_Walter import Vergne_Walter_444
 from ..tau import *

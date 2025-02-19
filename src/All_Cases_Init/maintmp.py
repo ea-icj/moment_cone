@@ -1,9 +1,9 @@
 
 
-#G = LinGroup([3,3,3,1])
-#V = Representation(G,'kron')
-G = LinGroup([7])
-V = Representation(G,'fermion',nb_part=3)
+G = LinGroup([4,4,4,1])
+V = Representation(G,'kron')
+#G = LinGroup([7])
+#V = Representation(G,'fermion',nb_part=3)
 #G = LinGroup([4])
 #V = Representation(G,'boson',nb_part=2)
 
