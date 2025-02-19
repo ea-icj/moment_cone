@@ -13,10 +13,10 @@ from .export import *
 
 #G = LinearGroup([3, 3, 3, 1])
 #V = KroneckerRepresentation(G)
-G = LinearGroup([7])
-V = FermionRepresentation(G, particle_cnt=3)
-#G = LinearGroup([4])
-#V = Representation(G,'boson',nb_part=2)
+#G = LinearGroup([7])
+#V = FermionRepresentation(G, particle_cnt=3)
+G = LinearGroup([4])
+V = BosonRepresentation(G, particle_cnt=2)
 
 print("We are computing the inequalities for the moment cone of",V)
 tpi_method: Method ='symbolic'

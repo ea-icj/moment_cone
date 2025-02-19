@@ -78,7 +78,7 @@ def Normalization_Factorized_Polynomial(Jb) :
         d[new_key]=Jb[P]
     return(d)
 
-def Compute_JA(ineq : Inequality,V: Representation) : # Return a dictionnary polynom :  int
+def Compute_JA(ineq: Inequality, V: Representation) : # Return a dictionnary polynom :  int
     tau=ineq.tau
     ring = V.QV
     # a generic vector in VV^tau
