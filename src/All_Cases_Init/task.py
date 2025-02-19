@@ -221,7 +221,7 @@ def timeout(t: int, no_raise: bool = True):
     ```Python
     a, b, c = 1, 2, 3
     try:
-        with timeout(10, no_raise=False)
+        with timeout(10, no_raise=False):
             print(a, b, c)
             ... # do some stuff
             result = a * b + c
