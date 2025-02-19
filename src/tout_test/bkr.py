@@ -5,8 +5,6 @@ from collections import defaultdict
 from sage.all import SymmetricFunctions,ZZ,QQ,vector,matrix,Polyhedron # type: ignore
 import sage.libs.lrcalc.lrcalc as lr # type: ignore
 
-import numpy as np
-
 from .typing import *
 from .utils import *
 from .partition import *
@@ -141,12 +139,12 @@ def all_lambda_matrix(delta: Sequence[int], max_length: Array2D[int], kro: Krone
     import numpy as np
 
     row_product = itertools.product(*(
-        all_partitions_of_max_length(n, cast(Array1D[int], l).tolist(), kro)
+        all_partitions_of_max_length(n, l.tolist(), kro)
         for n, l in zip(delta, max_length)
     ))
 
     for rows_and_coeff in row_product:
-        lambda_matrix = EmptyArray2D((N, s), dtype=Partition)
+        lambda_matrix = empty_array((N, s), dtype=Partition)
         lambda_matrix[:, :], coeffs = zip(*rows_and_coeff)
         yield lambda_matrix, prod(coeffs)
      
@@ -219,7 +217,8 @@ def chi2Numat(chi: Vector, mult_tau: Blocks[int]) -> Array2D[Partition]:
     Nu is a list of columns that are lists of partitions. Each partition is a list itself. 
     chi is a sage vector - mult_tau est un tau.reduced.mult
     """
-    Nu = EmptyArray2D((max([len(x) for x in mult_tau]), len(mult_tau)), dtype=Partition)
+    # Not using optional_array since we should never access to not initialized elements
+    Nu = empty_array((max([len(x) for x in mult_tau]), len(mult_tau)), dtype=Partition)
     shift = 0
     for k,col in enumerate(mult_tau.blocks):
         for i,mult in enumerate(col):
@@ -231,6 +230,7 @@ def chi2Numat(chi: Vector, mult_tau: Blocks[int]) -> Array2D[Partition]:
     if shift!=len(chi):
        print(shift,len(chi), chi,mult_tau)
     assert shift == len(chi)
+
     return Nu
 
 def ineqs_in_Nl(l:int) : # the output is a list of inequalities for a Sagemath polytope in Z^l
@@ -285,12 +285,14 @@ def Enumerate_delta(ListP : list[list[int]],sizenu,V : Representation,delta : in
 
 
 #TODO : déplacer dans utils
-def Product_of_Tables(table_of_lists: Array2D[Optional[list[EnhancedPartitionList]]]) -> list[Array2D[Optional[EnhancedPartitionList]]]:
+def Product_of_Tables(
+        table_of_lists: OptionalArray2D[list[EnhancedPartitionList]]
+        ) -> list[OptionalArray2D[EnhancedPartitionList]]:
     """
-    The entry is a bi-dimesional table of ListPartPlus. Produce the list of Tables obtained by picking (a product) one element in each list.
+    The entry is a bi-dimesional table of EnhancedPartitionList. Produce the list of Tables obtained by picking (a product) one element in each list.
     Let entries None in place. 
     """
-    List_of_Tables: list[Array2D[Optional[EnhancedPartitionList]]] = []
+    List_of_Tables: list[OptionalArray2D[EnhancedPartitionList]] = []
     a, b = table_of_lists.shape
 
     # FIXME: set instead of int?
@@ -298,13 +300,14 @@ def Product_of_Tables(table_of_lists: Array2D[Optional[list[EnhancedPartitionLis
     for i in range(a):
         for j in range(b):
             if table_of_lists[i, j] is None:
-                table_of_lists[i,j] = [0]
+                # FIXME: this default value [0] is incompatible with a EnhancedPartitionList
+                table_of_lists[i,j] = [0] # type: ignore
                 Inone.append((i, j))
 
     clean_table_of_lists = cast(Array2D[list[EnhancedPartitionList]], table_of_lists)
     
     for p in itertools.product(*clean_table_of_lists.ravel()):
-        T: Array2D[Optional[int]] = EmptyArray2D(table_of_lists.shape, dtype=object)
+        T = optional_array(table_of_lists.shape, dtype=EnhancedPartitionList)
         for i in range(a):
             for j in range(b):
                 T[i,j] = p[i*b+j]
@@ -314,7 +317,20 @@ def Product_of_Tables(table_of_lists: Array2D[Optional[list[EnhancedPartitionLis
 
     return List_of_Tables
 
-def Multiplicity_SV_tau(tau : Tau, chi: Vector, V: Representation, checkGreatEq2: bool = False) -> int:
+def Multiplicity_SV_tau(tau: Tau, chi: Vector, V: Representation, checkGreatEq2: bool = False) -> bool | int:
+    """
+    Compute the multiplicity of G^tau-irreducible representation of highest weight chi in C[V^tau].
+    Using the description of this multiplicity as sum of products of LR, Kron and Plethysm coefficients.
+    """
+    if isinstance(V, KroneckerRepresentation):
+        return multiplicity_SV_tau_kronecker(tau, chi, V, checkGreatEq2)
+    elif isinstance(V, ParticleRepresentation):
+        return multiplicity_SV_tau_particle(tau, chi, V, checkGreatEq2)
+    else:
+        raise NotImplementedError()
+    
+
+def multiplicity_SV_tau_particle(tau : Tau, chi: Vector, V: ParticleRepresentation, checkGreatEq2: bool = False) -> bool | int:
     """
     Compute the multiplicity of G^tau-irreducible representation of highest weight chi in C[V^tau].
     Using the description of this multiplicity as sum of products of LR, Kron and Plethysm coefficients.
@@ -322,155 +338,176 @@ def Multiplicity_SV_tau(tau : Tau, chi: Vector, V: Representation, checkGreatEq2
     from math import comb # equivalent to sage.binomial
 
     ListP=tau.summands_Vtau(V)
-    #print('tau',tau)
-    #print('ListP',ListP)
-    #print('chi,tauredmult',chi,tau.reduced.mult)
     Nu=chi2Numat(chi,tau.reduced.mult)  # Nu is a dominant weight for G^\tau as a table of partitions
     w_Nu=fct_weights_of_Nu(Nu)
-    #print('Nu',Nu)
-    #print('sizeNu',Nu.shape)
-    #print('w_Nu',w_Nu)
+    mult=0
+    Delta=Enumerate_delta(ListP,w_Nu,V)
+    if checkGreatEq2 and tau.is_dom_reg : # In this case we only need to check the dimension of the polyhedron of delta's
+        return Delta[0]==0
+
+    for delta in Delta[1]: # Run over the dela satisfying Condition 2
+        s=len(tau.reduced.mult[0]) #[0] for the first (and unique) bloc
+        table_Mu = optional_array((s, 1), dtype=list[EnhancedPartitionList]) # table_Mu[i] will be the list of possible columns i for Mu
+        for j in range(s):
+            max_length = tau.reduced.mult[0][j]
+            table_Mu[j,0]=ListNonZeroLR(Nu[j,0],[ListP[i][j]*delta[i] for i in range(len(ListP))],max_length)
+        
+        List_of_Mus=Product_of_Tables(table_Mu)
+        List_of_Mus_plugged: list[tuple[OptionalArray2D[Partition], int]] = []
+        for Mu_tilde in List_of_Mus :
+            LR=1
+            Mu = optional_array((len(ListP),s), dtype=Partition) # FIXME: Can M have non-initialized elements?
+            for j in range(s):
+                lt = Mu_tilde[j,0]
+                assert lt is not None
+                LR*=lt.mult
+                for i,la in enumerate(lt.partitions):
+                        Mu[i,j]=la
+                    
+            List_of_Mus_plugged.append((Mu,LR))
+
+        # Create the list of possible Lambda
+        max_lengths = empty_array((len(ListP), s), dtype=int)
+        assert len(ListP) == 0 or all(len(ListPi) == len(ListP[0]) for ListPi in ListP)
+        for i in range(len(ListP)):
+            for j,nb in enumerate(ListP[i]):
+                max_lengths[i,j] = type(V)(LinearGroup([tau.reduced.mult[0][j]]),particle_cnt=nb).dim
+        #List_of_Lambdas,K=all_lambda_matrix(delta, max_length,1)
+        
+        # Runnig over the pairs Mu, Lambda #TODO : appelées mutilde et lambdatilde jeudi matin    
+        Vanishing_a: set[tuple[Optional[Partition], int, Partition]] = set() # To remember the computed a that are zeros
+        
+        for Mu, lr in List_of_Mus_plugged: # lr is the multiplicity assocated to Mu
+            #print('Next Mu',delta, max_length)
+            
+            for [Lambda, K] in all_lambda_matrix(delta, max_lengths, Kron_multi): # K is the multiplicity assocated to Mu
+                #print('Next Lambda',Lambda)
+                if Search_Zero_a(Mu,ListP,Lambda,Vanishing_a): # Check if (Mu,Lambda) contains an already computer zero plethysm coefficient. In this case, we skip this pair.
+                    break
+                A=1
+                for i,j in itertools.product(range(len(ListP)),range(s)):                                
+                    if isinstance(V, FermionRepresentation):
+                        theta=Partition(ListP[i][j]*[1])
+                    else :
+                        theta=Partition([ListP[i][j]])
+                    #print('data plethysm',list(Lambda[i,j]),list(theta))
+                    Muij = Mu[i, j]
+                    assert Muij is not None # To ensure proper type. TODO: check if Mu can be empty_array instead?
+                    if len(Lambda[i,j])==max_lengths[i,j] :
+                        #print('lambda can be reduced',Lambda[i,j],max_length[i,j])
+                        la=Lambda[i,j].lambda_red(max_lengths[i,j])
+                        if len(Lambda[i,j])==0:
+                            shift=0
+                        else :    
+                            shift=theta[0]*Lambda[i,j][-1]
+                        #print('La,theta,Mu',Lambda[i,j],theta,Mu[i,j])
+                        if len(Muij)==0 or Muij[-1]<shift :
+                            a=0
+                        else :
+                            mu=Partition([x-shift for x in Muij])
+                            a = plethysm_cache(la, theta, mu)
+                                                        
+                    else :
+                        a = plethysm_cache(Lambda[i, j], theta, Muij)
+                        #print('generic case',Lambda[i,j],theta,tau.reduced.mult[0][j])
+                    
+                    #print('a',a)
+                    if a != 0 :
+                        A*=a
+                    else :
+                        A=0
+                        Vanishing_a.add((Mu[i,j],ListP[i][j],Lambda[i,j]))
+                        break
+                mult+=lr*A*K             
+                if checkGreatEq2 and mult>1:
+                    return(False)
+                
+    if checkGreatEq2:
+        return True
+    else :
+        return mult     
+
+
+def multiplicity_SV_tau_kronecker(tau : Tau, chi: Vector, V: KroneckerRepresentation, checkGreatEq2: bool = False) -> bool | int:
+    """
+    Compute the multiplicity of G^tau-irreducible representation of highest weight chi in C[V^tau].
+    Using the description of this multiplicity as sum of products of LR, Kron and Plethysm coefficients.
+    """
+
+    from math import comb # equivalent to sage.binomial
+
+    ListP=tau.summands_Vtau(V)
+    Nu=chi2Numat(chi,tau.reduced.mult)  # Nu is a dominant weight for G^\tau as a table of partitions
+    w_Nu=fct_weights_of_Nu(Nu)
     mult=0
     Delta=Enumerate_delta(ListP,w_Nu,V)
     if checkGreatEq2 and tau.is_dom_reg : # In this case we only need to check the dimension of the polyhedron of delta's
         return Delta[0]==0
    
     for delta in Delta[1]: # Run over the dela satisfying Condition 2
-        if isinstance(V, KroneckerRepresentation):
-            # Run over entries of Nu
-            p,s = Nu.shape
-            table_Lambda: Array2D[list[EnhancedPartitionList]] = EmptyArray2D((p, s), dtype=list)
-            for k in range(s): # Two loops to run over the entries of Nu
-                i=0
-                while i < p and Nu[i,k] is not None:
-                    Indices=[j for j,I in enumerate(ListP) if ListP[j][k]==i]
-                    max_length = tau.reduced.mult[k][i]
-                    LNZ = ListNonZeroLR(Nu[i,k],[delta[j] for j in Indices],max_length) # A list of ListPartPlus with Indices=None
-                    ## Add indices
-                    for l in LNZ:
-                        l.indices = Indices
-                    table_Lambda[i,k] = LNZ
-                    i+=1
-
-            List_of_Lambdas = Product_of_Tables(table_Lambda)
-            List_of_Lambdas_plugged: list[tuple[NDArray, int]] = []
-            for Lambda_tilde in List_of_Lambdas :
-                LR=1
-                Lambda=np.empty((len(ListP),s), dtype=object)
-                
-                for k in range(s):
-                    i=0
-                    while i < p and Lambda_tilde[i,k] is not None:
-                        l = Lambda_tilde[i,k]
-                        assert(l.indices is not None)
-                        LR*=l.mult
-                        for j,la in zip(l.indices, l.partitions):
-                            Lambda[j,k]=la
-                        i+=1
-                List_of_Lambdas_plugged.append((Lambda,LR))
-                
+        # Run over entries of Nu
+        p,s = Nu.shape
+        table_Lambda = optional_array((p, s), dtype=list[EnhancedPartitionList])
+        for k in range(s): # Two loops to run over the entries of Nu
             i=0
-            while i<len(List_of_Lambdas_plugged):
-                Lambda_tilde_plugged = List_of_Lambdas_plugged[i]
-                K_coeff=1
-                for j in range(len(ListP)) :
-                    L = Lambda_tilde_plugged[0][j,:]
-                    K=Kron_multi(L.tolist())
-                    if K !=0 :
-                        K_coeff*=K                                                
-                    else:
-                        ## Cancel the Lambda's having this row and hence giving K=0
-                        #TODO : peut-on faire mieux que ça ?
-                        to_be_deleted=[]
-                        for i2, Lambda_tilde2_plugged in  enumerate(reversed(List_of_Lambdas_plugged[i+1:])):
-                            for j2 in range(len(ListP)) :
-                                L2=Lambda_tilde2_plugged[0][j2,:]
-                                if all(x ==y for x,y in zip(L2,L)) :
-                                    to_be_deleted.append(i2)
-                                    break
-                        leng=len(List_of_Lambdas_plugged)
-                        # TODO : ici on enregistre les effacements à faire puis on les fait. On peut sans doute effacer à mesure mais j'avais des erreurs. Sans doute pour des mauvaises raisons. 
-                        for idx in to_be_deleted:
-                            del List_of_Lambdas_plugged[leng-idx-1]
-                        K_coeff=0
-                        break # Unuseful to consider the other rows of Lambda_tilde
-                mult+=Lambda_tilde_plugged[1]*K_coeff    
-                if checkGreatEq2 and mult>1:
-                    return(False)        
-                i+=1    
-        else :
-            assert(isinstance(V, ParticleRepresentation))
-            s=len(tau.reduced.mult[0]) #[0] for the first (and unique) bloc
-            table_Mu = np.empty((s,1), dtype=object) # table_Mu[i] will be the list of possible columns i for Mu
-            for j in range(s):
-                max_length = tau.reduced.mult[0][j]
-                table_Mu[j,0]=ListNonZeroLR(Nu[j,0],[ListP[i][j]*delta[i] for i in range(len(ListP))],max_length)
-            
-            List_of_Mus=Product_of_Tables(table_Mu)
-            List_of_Mus_plugged: list[tuple[NDArray, int]] = []
-            for Mu_tilde in List_of_Mus :
-                LR=1
-                Mu=np.empty((len(ListP),s), dtype=object)
-                for j in range(s):
-                    l=Mu_tilde[j,0]
-                    LR*=l.mult
-                    for i,la in enumerate(l.partitions):
-                            Mu[i,j]=la
-                        
-                List_of_Mus_plugged.append((Mu,LR))
+            while i < p and Nu[i,k] is not None:
+                Indices=[j for j,I in enumerate(ListP) if ListP[j][k]==i]
+                max_length = tau.reduced.mult[k][i]
+                LNZ = ListNonZeroLR(Nu[i,k],[delta[j] for j in Indices],max_length) # A list of ListPartPlus with Indices=None
+                ## Add indices
+                for l in LNZ:
+                    l.indices = Indices
+                table_Lambda[i,k] = LNZ
+                i+=1
 
-            # Create the list of possible Lambda
-            max_lengths=np.empty((len(ListP), s), dtype=int)
-            for i in range(len(ListP)):
-                for j,nb in enumerate(ListP[i]):
-                   max_lengths[i,j] = type(V)(LinearGroup([tau.reduced.mult[0][j]]),particle_cnt=nb).dim
-            #List_of_Lambdas,K=all_lambda_matrix(delta, max_length,1)
+        List_of_Lambdas = Product_of_Tables(table_Lambda)
+        List_of_Lambdas_plugged: list[tuple[OptionalArray2D[Partition], int]] = []
+        for Lambda_tilde in List_of_Lambdas :
+            LR=1
+            Lambda = optional_array((len(ListP), s), dtype=Partition)
             
-            # Runnig over the pairs Mu, Lambda #TODO : appelées mutilde et lambdatilde jeudi matin    
-            Vanishing_a=set() # To remember the computed a that are zeros
+            for k in range(s):
+                i=0
+                while i < p and Lambda_tilde[i, k] is not None:
+                    lt = Lambda_tilde[i, k]
+                    assert lt is not None and lt.indices is not None
+                    LR *= lt.mult
+                    for j,la in zip(lt.indices, lt.partitions):
+                        Lambda[j,k]=la
+                    i+=1
+            List_of_Lambdas_plugged.append((Lambda,LR))
             
-            for Mu, lr in List_of_Mus_plugged: # lr is the multiplicity assocated to Mu
-                #print('Next Mu',delta, max_length)
-                
-                for [Lambda,K] in  all_lambda_matrix(delta, max_lengths, Kron_multi): # K is the multiplicity assocated to Mu
-                    #print('Next Lambda',Lambda)
-                    if Search_Zero_a(Mu,ListP,Lambda,Vanishing_a): # Check if (Mu,Lambda) contains an already computer zero plethysm coefficient. In this case, we skip this pair.
-                        break
-                    A=1
-                    for i,j in itertools.product(range(len(ListP)),range(s)):                                
-                        if isinstance(V, FermionRepresentation):
-                            theta=Partition(ListP[i][j]*[1])
-                        else :
-                            theta=Partition([ListP[i][j]])
-                        #print('data plethysm',list(Lambda[i,j]),list(theta))
-                        if len(Lambda[i,j])==max_lengths[i,j] :
-                            #print('lambda can be reduced',Lambda[i,j],max_length[i,j])
-                            la=Lambda[i,j].lambda_red(max_lengths[i,j])
-                            if len(Lambda[i,j])==0:
-                                shift=0
-                            else :    
-                                shift=theta[0]*Lambda[i,j][-1]
-                            #print('La,theta,Mu',Lambda[i,j],theta,Mu[i,j])
-                            if len(Mu[i,j])==0 or Mu[i,j][-1]<shift :
-                                a=0
-                            else :
-                                mu=Partition([x-shift for x in Mu[i,j]])
-                                a = plethysm_cache(la, theta, mu)
-                                                            
-                        else :
-                            a = plethysm_cache(Lambda[i, j], theta, Mu[i, j])
-                            #print('generic case',Lambda[i,j],theta,tau.reduced.mult[0][j])
-                        
-                        #print('a',a)
-                        if a != 0 :
-                            A*=a
-                        else :
-                            A=0
-                            Vanishing_a.add((Mu[i,j],ListP[i][j],Lambda[i,j]))
-                            break
-                    mult+=lr*A*K             
-                    if checkGreatEq2 and mult>1:
-                        return(False)
+        i=0
+        while i<len(List_of_Lambdas_plugged):
+            Lambda_tilde_plugged = List_of_Lambdas_plugged[i]
+            K_coeff=1
+            for j in range(len(ListP)) :
+                L = Lambda_tilde_plugged[0][j,:]
+                assert all(Li is not None for Li in L)
+                K = Kron_multi(cast(Array1D[Partition], L).tolist())
+
+                if K !=0 :
+                    K_coeff*=K                                                
+                else:
+                    ## Cancel the Lambda's having this row and hence giving K=0
+                    #TODO : peut-on faire mieux que ça ?
+                    to_be_deleted=[]
+                    for i2, Lambda_tilde2_plugged in  enumerate(reversed(List_of_Lambdas_plugged[i+1:])):
+                        for j2 in range(len(ListP)) :
+                            L2=Lambda_tilde2_plugged[0][j2,:]
+                            if all(x ==y for x,y in zip(L2,L)) :
+                                to_be_deleted.append(i2)
+                                break
+                    leng=len(List_of_Lambdas_plugged)
+                    # TODO : ici on enregistre les effacements à faire puis on les fait. On peut sans doute effacer à mesure mais j'avais des erreurs. Sans doute pour des mauvaises raisons. 
+                    for idx in to_be_deleted:
+                        del List_of_Lambdas_plugged[leng-idx-1]
+                    K_coeff=0
+                    break # Unuseful to consider the other rows of Lambda_tilde
+            mult+=Lambda_tilde_plugged[1]*K_coeff    
+            if checkGreatEq2 and mult>1:
+                return(False)        
+            i+=1    
                 
     if checkGreatEq2:
         return True

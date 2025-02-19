@@ -48,7 +48,8 @@ def variable_name(name_or_weight: VariableName, seed: str = "v") -> str:
         return seed + "_" + "_".join(map(str, name_or_weight.as_list_of_list[0]))
         #TODO : ceci ne marche que si len(G)==0. Sinon plusieurs variables ont le même nom.
         # FIXME: how to generate variable name for every weight
-
+    else:
+        raise NotImplementedError()
 
 def variable(ring_or_gens: Ring | RingGens, name_or_weight: VariableName, seed: str = "v") -> Variable:
     """ Get variable of a ring from it's name or weight """

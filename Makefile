@@ -22,5 +22,5 @@ doc:
 	pdoc3 --html --force src/cone
 
 tout_test:
-	python -m pytest --doctest-modules --verbose --ignore=src/cone/main_to_be_inserted.py src/tout_test
+	python -m pytest --doctest-modules --verbose --ignore=src/tout_test/reference_datas src/tout_test
 	python -m mypy --check-untyped-defs src/tout_test
