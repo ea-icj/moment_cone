@@ -8,15 +8,6 @@ from .Klyachko import Klyachko_3_7, Klyachko_3_8, Klyachko_4_8
 from .Vergne_Walter import Vergne_Walter_444
 from ..tau import *
 
-#TODO: remove if not used
-def Klyachkoineqs_to_ineqs(lK):
-    """ converts a list of flattened inequalities (like the ones in Klyachko.py) to our format Inequality
-    """
-    n=len(lK[0])
-    list_ineq=[]
-    for v in lK:
-        list_ineq.append(Inequality.from_tau( Tau((v,))))
-    return list_ineq
 
 #TODO check unitary tests
 def compare(list1,list2, comment0="elements", comment1="1", comment2="2"):
@@ -39,9 +30,43 @@ def compare(list1,list2, comment0="elements", comment1="1", comment2="2"):
     inter=set1.intersection(set2)
     print(len(list(inter)),"elements in both lists")
     only=[set1-set2, set2-set1]
-    print(len(only[0]), comment0, "appearing only in list",comment1, only[0])
-    print(len(only[1]), comment0, "appearing only in list",comment2, only[1])
+    print(len(only[0]), comment0, "appearing only in list",comment1)
+    print(len(only[1]), comment0, "appearing only in list",comment2)
     return only
+
+
+def compare_to_reference(list_ineq,V):
+    """
+    list_ineq is a list of Inequalities computed for a certain representation V.
+    If exists, it will be compared to a reference list of inequalities (currently only the cases of Klyachko.py for fermions and Vergne_Walter.py for kronecker)
+    Other references can be added later
+    """
+    if isinstance(V,FermionRepresentation):
+        n=V.G[0]
+        k=V.particle_cnt
+        if (k,n)==(3,7):
+            reference=inequalities_K37
+        elif (k,n)==(3,8):
+            reference=inequalities_K38
+        elif (k,n)==(4,8):
+            reference=inequalities_K48
+        else:
+            print("no reference for", V,"included")
+            return None
+        return compare(list_ineq,reference, "inequalities", " computed","of reference (Klyachko)")
+    elif isinstance(V,KroneckerRepresentation):
+        reference_sym=[Inequality.from_tau(ineq.wtau.sort_mod_sym_dim) for ineq in inequalities_VW444]
+        list_ineq_sym= [Inequality.from_tau(ineq.wtau.sl_representative.sort_mod_sym_dim) for ineq in list_ineq]
+        if tuple(V.G)==(4,4,4,1):
+            return compare(list_ineq_sym, reference_sym,"inequalities (up to S3-sym)"," computed","of reference (Vergne-Walter)")
+        else:
+            print("no reference for", V,"included")
+            return None
+    else:
+        print("no reference for", V,"included")
+        return None
+
+################################################
 
 def compareK_ineq(Klyach,list_ineq):
     """
@@ -63,33 +88,5 @@ def compareVW_ineq(VW,list_ineq):
     opp_VW=[tau.sort_mod_sym_dim.flattened for tau in opp_VW_tau]
     list2=[ineq.wtau.sl_representative.sort_mod_sym_dim.flattened for ineq in list_ineq]
     return compare(opp_VW,list2,"inequalities", "of reference (Vergne Walter)"," computed")
-    
-def compare_to_reference(list_ineq,V):
-    """
-    list_ineq is a list of Inequalities computed for a certain representation V.
-    If exists, it will be compared to a reference list of inequalities (currently only the cases of Klyachko.py for fermions and Vergne_Walter.py for kronecker)
-    Other references can be added later
-    """
-    if V.type=="fermion":
-        n=V.G[0]
-        k=V.nb_part
-        if (k,n)==(3,7):
-            reference=Klyachko_3_7
-        elif (k,n)==(3,8):
-            reference=Klyachko_3_8
-        elif (k,n)==(4,8):
-            reference=Klyachko_4_8
-        else:
-            print("no reference for", V,"included")
-            return None
-        return compareK_ineq(reference,list_ineq)
-    elif V.type=="kron":
-        if tuple(V.G)==(4,4,4,1):
-            return compareVW_ineq(Vergne_Walter_444,list_ineq)
-        else:
-            print("no reference for", V,"included")
-            return None
-    else:
-        print("no reference for", V,"included")
-        return None
+
 

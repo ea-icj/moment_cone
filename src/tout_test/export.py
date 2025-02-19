@@ -1,5 +1,4 @@
 #Python to normaliz and Python to latex
-#TODO: integrate in the project
 
 from .tau import Tau
 from .inequality import Inequality
@@ -183,8 +182,8 @@ def export_python(V, inequations, extra_info=""):
     file0.write("#Inequalities selected for V of " + type(V).__name__ + " type with dimensions "+str(list(V.G)))
     if isinstance(V, ParticleRepresentation):
        file0.write("with number of particules = "+str(V.particle_cnt))
-    file0.write("\n \nG=LinGroup("+str(list(V.G))+") \n")
-    chain = f"V = {type(V).__name__}(G,"
+    file0.write("\n \nG=LinearGroup("+str(list(V.G))+") \n")
+    chain = f"V = {type(V).__name__}(G"
     if isinstance(V, ParticleRepresentation):
        chain+=", "+str(V.particle_cnt)
     file0.write(chain+" )")
