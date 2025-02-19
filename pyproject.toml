@@ -36,3 +36,6 @@ requires-python = ">=3.10"
 
 [project.scripts]
 kron_cone = "cone.main:main_from_cmd"
+
+[tool.mypy]
+plugins = "numpy.typing.mypy_plugin"

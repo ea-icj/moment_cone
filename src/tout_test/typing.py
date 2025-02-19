@@ -1,5 +1,5 @@
 __all__ = (
-    "NewType", "TypeVar", "TypeGuard", "Generic", "Optional",
+    "Type", "NewType", "TypeVar", "TypeGuard", "Generic", "Optional",
     "cast", "overload",
     "Any", "Self", "Literal", "TYPE_CHECKING", "Concatenate",
     "ClassVar",
@@ -9,7 +9,7 @@ __all__ = (
     "Method",
 )
 
-from typing import NewType, TypeVar, TypeGuard, Generic, Optional
+from typing import Type, NewType, TypeVar, TypeGuard, Generic, Optional
 from typing import cast, overload
 from typing import Any, Self, Literal, TYPE_CHECKING, Concatenate
 from typing import ClassVar

@@ -123,6 +123,7 @@ class Weight:
                 return False
         return True
     
+        # FIXME: choisir une implémentation
         # Ou sinon, en prenant le cas partial_sum == 0 en compte
         from .blocks import Blocks
         from itertools import accumulate

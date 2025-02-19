@@ -42,7 +42,7 @@ def export_normaliz(V, inequations, r=None, equations=[], extra_info="", add_dom
     equations is an optional list of equations
     extra_info is a string that one may add to the standard name of the output file, e.g. to indicate the origin of our list of inequations 
     add_dominance can take 2 non-trivial arguments: "all" and "sym". "all" argument adds all the inequalities expressing dominance. "sym" arguments adds the same inequalities
-    add_equations can take 2 non-trivial arguments: "all" and "sym". if V.type=kron, it adds the equations determining the subspace in which lie the equations
+    add_equations can take 2 non-trivial arguments: "all" and "sym". if V is KronerckerRepresentation, it adds the equations determining the subspace in which lie the equations
     """
     if r==None:
         r=V.G.rank

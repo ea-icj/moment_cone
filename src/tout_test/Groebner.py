@@ -44,7 +44,7 @@ def classif_roots(V,list_roots):
       [Root(k=2, i=0, j=3), Root(k=2, i=1, j=3), Root(k=2, i=2, j=3)]]]
     """
     Res=[[[] for j in range(V.G[k])] for k in range(len(V.G))]
-    if V.type=="kron":
+    if isinstance(V, KroneckerRepresentation):
         Res=Res[:-1]
     for root in list_roots:
         Res[root.k][root.j].append(root)

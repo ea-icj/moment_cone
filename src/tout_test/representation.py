@@ -10,8 +10,6 @@ from abc import ABC, abstractmethod
 from functools import cached_property
 import itertools
 
-from tout_test.weight import Weight as WeightBase
-
 from .typing import *
 from .linear_group import LinearGroup
 from .weight import Weight as WeightBase, WeightAsList, WeightAsListOfList
