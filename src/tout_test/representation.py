@@ -10,11 +10,6 @@ from abc import ABC, abstractmethod
 from functools import cached_property
 import itertools
 
-<<<<<<< HEAD
-from .weight import Weight as WeightBase
-
-=======
->>>>>>> e797185ef7f71561a53b5cd08be67fa99bd98d99
 from .typing import *
 from .linear_group import LinearGroup
 from .weight import Weight as WeightBase, WeightAsList, WeightAsListOfList
@@ -553,9 +548,6 @@ class BosonRepresentation(ParticleRepresentation):
                 index=i
             ))
         return L
-<<<<<<< HEAD
-            
-=======
 
     def index_of_weight(self, chi: WeightBase, use_internal_index: bool = True) -> int:
         if not isinstance(chi, WeightAsListOfList):
@@ -566,5 +558,6 @@ class BosonRepresentation(ParticleRepresentation):
                 if chi2.as_vector == chi.as_vector :
                     chi.index = i
                     break
+            assert chi.index is not None
+            
         return chi.index
->>>>>>> e797185ef7f71561a53b5cd08be67fa99bd98d99
