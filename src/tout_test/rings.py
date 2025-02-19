@@ -20,7 +20,7 @@ from sage.all import vector as sage_vector, matrix as sage_matrix # type: ignore
 from sage.all import ZZ, QQ, I # type: ignore
 
 from .typing import *
-from .weight import Weight
+from .weight import *
 
 __all__ = (
     'VariableName',
@@ -42,9 +42,13 @@ def variable_name(name_or_weight: VariableName, seed: str = "v") -> str:
     """ Accepts a variable name or a sequence of integer (typically a weight) and returns the corresponding variable name """
     if isinstance(name_or_weight, str):
         return name_or_weight
-    else:
+    elif isinstance(name_or_weight, WeightAsList):
+        return seed + "_" + "_".join(map(str, name_or_weight.as_list))
+    elif isinstance(name_or_weight, WeightAsListOfList):
+        return seed + "_" + "_".join(map(str, name_or_weight.as_list_of_list[0]))
+        #TODO : ceci ne marche que si len(G)==0. Sinon plusieurs variables ont le même nom.
         # FIXME: how to generate variable name for every weight
-        return seed + "_" + "_".join(map(str, name_or_weight)) # type: ignore
+
 
 def variable(ring_or_gens: Ring | RingGens, name_or_weight: VariableName, seed: str = "v") -> Variable:
     """ Get variable of a ring from it's name or weight """

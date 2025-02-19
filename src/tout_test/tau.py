@@ -179,16 +179,17 @@ class Tau:
         return hash(self._components)
 
     # TODO: or same dot method with @singledispatch ?
-    def dot_weight(self, chi ) -> int: # chi can be a Weight or a Weight_as_list or  a Weight_as_list_of_list 
+    def dot_weight(self, chi: Weight) -> int: # chi can be a Weight or a Weight_as_list or  a Weight_as_list_of_list 
         """ Scalar product of tau with a weight of V """
-        if chi.as_list is not None : 
+        if isinstance(chi, WeightAsList): 
             return sum(c[eps] for c, eps in zip(self.components, chi.as_list))
-        if chi.as_list_of_list is not None :
+        elif isinstance(chi, WeightAsListOfList):
             tot=0
             for c,eps in zip(self.components,chi.as_list_of_list):
                 tot+=sum([c[i] for i in eps])
             return tot
-        return sum([x*y for x,y in zip(self.flattened,chi.as_vector)])
+        else:
+            return sum([x*y for x,y in zip(self.flattened,chi.as_vector)])
     
     def dot_root(self, root: Root) -> int:
         """ 

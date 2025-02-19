@@ -11,11 +11,11 @@ from .ramification import *
 from .Groebner import *
 from .export import *
 
-G = LinearGroup([3, 3, 3, 1])
-V = KroneckerRepresentation(G)
-#G = LinGroup([7])
-#V = Representation(G,'fermion',nb_part=3)
-#G = LinGroup([4])
+#G = LinearGroup([3, 3, 3, 1])
+#V = KroneckerRepresentation(G)
+G = LinearGroup([7])
+V = FermionRepresentation(G, particle_cnt=3)
+#G = LinearGroup([4])
 #V = Representation(G,'boson',nb_part=2)
 
 print("We are computing the inequalities for the moment cone of",V)
