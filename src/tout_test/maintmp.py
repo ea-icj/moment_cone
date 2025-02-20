@@ -13,10 +13,10 @@ from .export import *
 from .task import *
 
 
-#G = LinearGroup([4, 4, 4, 1])
-#V = KroneckerRepresentation(G)
-G = LinearGroup([8])
-V = FermionRepresentation(G, particle_cnt=3)
+G = LinearGroup([3, 3, 3, 1])
+V = KroneckerRepresentation(G)
+#G = LinearGroup([8])
+#V = FermionRepresentation(G, particle_cnt=3)
 #G = LinearGroup([4])
 #V = BosonRepresentation(G, particle_cnt=2)
 
@@ -165,13 +165,13 @@ print(len(Birational_Ineq), ' inequalities selected in Step 9 in','seconds')
 
 #TODO adapt PolynomialRingForWeights (especially variable_name) to roots in order to allow Grobner computations
 ############################ possible structure for a timeout for Groebner. Not working yet
-#print('alternative 8-9 Step, checking birationality via Grobner')
-#for ineq in List_BKR:
-#     try:
-#        with timeout(1, no_raise=False):
-#             print(is_fiber_singleton(V,ineq,"probabilistic"))
-#     except TimeOutException:
-#         print("False?")
+print('alternative 8-9 Step, checking birationality via Grobner')
+for ineq in List_BKR:
+     try:
+        with timeout(1, no_raise=False):
+             print(is_fiber_singleton(V,ineq,"probabilistic"))
+     except TimeOutException:
+         print("False?")
 ########################### or its alternative
 #print('alternative 8-9 Step, checking birationality via Grobner')
 #Grobner_output=Grobner_List_Test(Dominant_Ineq_filteredLT,grobner_lim,V,grobner_method)

@@ -24,7 +24,7 @@ from .weight import *
 from .root import *
 
 __all__ = (
-    'VariableName',
+    'VariableId',
     'Polynomial',
     'PolynomialRingForWeights',
     'PolynomialRing', 'Ring',
@@ -37,32 +37,31 @@ __all__ = (
 # TODO: independant type alias for Vector, Matrix et co. from Sage (to avoid Unknown)
 
 Variable = Any
-VariableName = str | Weight 
+VariableId = str | Weight | Root # Variable identified by it's name, weight or root
 RingGens = dict[str, Variable]
 
-def variable_name(name_or_weight: VariableName, seed: str = "v") -> str:
+def variable_name(id: VariableId, seed: str = "v") -> str:
     """ Accepts a variable name or a sequence of integer (typically a weight) and returns the corresponding variable name """
-    if isinstance(name_or_weight, str):
-        return name_or_weight
-    elif isinstance(name_or_weight, WeightAsList):
-        return seed + "_" + "_".join(map(str, name_or_weight.as_list))
-    elif isinstance(name_or_weight, WeightAsListOfList):
-        return seed + "_" + "_".join(map(str, name_or_weight.as_list_of_list[0]))
-        #TODO : ceci ne marche que si len(G)==0. Sinon plusieurs variables ont le même nom.
-        # FIXME: how to generate variable name for every weight
-        #TODO : adapt types so that is also works for Roots instead of weights 
+    if isinstance(id, str):
+        return id
+    elif isinstance(id, WeightAsList):
+        return seed + "_" + "_".join(map(str, id.as_list))
+    elif isinstance(id, WeightAsListOfList):
+        return seed + "_" + "__".join("_".join(map(str, inner_list)) for inner_list in id.as_list_of_list)
+    elif isinstance(id, Root):
+        return seed + "_" + "_".join(map(str, (id.i, id.j, id.k)))
     else:
         raise NotImplementedError()
 
-def variable(ring_or_gens: Ring | RingGens, name_or_weight: VariableName, seed: str = "v") -> Variable:
+def variable(ring_or_gens: Ring | RingGens, id: VariableId, seed: str = "v") -> Variable:
     """ Get variable of a ring from it's name or weight """
-    return variables(ring_or_gens, (name_or_weight,), seed)[0]
+    return variables(ring_or_gens, (id,), seed)[0]
     
-def variables(ring_or_gens: Ring | RingGens, name_or_weight: Iterable[VariableName], seed: str = "v") -> tuple[Variable, ...]:
+def variables(ring_or_gens: Ring | RingGens, id: Iterable[VariableId], seed: str = "v") -> tuple[Variable, ...]:
     """ Get multiple variables of a ring from it's name or weight """
     if not isinstance(ring_or_gens, dict):
         ring_or_gens = ring_or_gens.gens_dict()
-    return tuple(ring_or_gens[variable_name(nc, seed)] for nc in name_or_weight)
+    return tuple(ring_or_gens[variable_name(nc, seed)] for nc in id)
 
 def real_part(value):
     """
@@ -156,13 +155,13 @@ class PolynomialRingForWeights:
         self.ring_gens = self.sage_ring.gens_dict() # Faster if we don't regenerate the dictionary at each variable access
         self.seed = seed
 
-    def variable(self, name_or_weight: VariableName) -> Variable:
+    def variable(self, id: VariableId) -> Variable:
         """ Get variable of this polynomial ring from it's name or weight """
-        if isinstance(name_or_weight, str):
-            return variable(self.ring_gens, name_or_weight)
+        if isinstance(id, str):
+            return variable(self.ring_gens, id)
         else:
             variables = tuple(
-                variable(self.ring_gens, name_or_weight, seed=s)
+                variable(self.ring_gens, id, seed=s)
                 for s in self.seed
             )
             if len(variables) == 1:
