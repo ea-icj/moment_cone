@@ -14,8 +14,8 @@ from .export import *
 
 #G = LinearGroup([4, 4, 4, 1])
 #V = KroneckerRepresentation(G)
-G = LinearGroup([7])
-V = FermionRepresentation(G, particle_cnt=3)
+G = LinearGroup([8])
+V = FermionRepresentation(G, particle_cnt=4)
 #G = LinearGroup([4])
 #V = BosonRepresentation(G, particle_cnt=2)
 

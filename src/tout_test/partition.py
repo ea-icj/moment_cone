@@ -161,6 +161,8 @@ class Partition:
         """
         l for GL(l). Tensor with det to reduce la. The output can be thought as a representation of SL(l)
         """
+        if l == 0:
+            return(self)
         x = self[l - 1]
         return Partition([self[i] - x for i in range(l - 1)])
 

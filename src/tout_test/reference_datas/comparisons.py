@@ -66,27 +66,6 @@ def compare_to_reference(list_ineq,V):
         print("no reference for", V,"included")
         return None
 
-################################################
 
-def compareK_ineq(Klyach,list_ineq):
-    """
-    Klyach is a list of flattened inequalities (like the ones in Klyachko.py)
-    list_ineq is a list of computed object of type Inequalities.
-    the function compares the underlying inequalities (fermionic case) 
-    """
-    opp_Klyach=[tuple([-x for x in v]) for v in Klyach]
-    list2=[ineq.wtau.components[0] for ineq in list_ineq]
-    return compare(opp_Klyach,list2,"inequalities", "of reference (Klyachko)"," computed")
-    
-def compareVW_ineq(VW,list_ineq):
-    """
-    VW is a list of flattened inequalities (like the ones in Vergne_Walter.py)
-    list_ineq is a list of computed object of type Inequalities.
-    the function compares the underlying inequalities (kron case)"""
-    G=list_ineq[0].tau.G
-    opp_VW_tau=[Tau.from_flatten(tuple([-x for x in v]),G) for v in VW]
-    opp_VW=[tau.sort_mod_sym_dim.flattened for tau in opp_VW_tau]
-    list2=[ineq.wtau.sl_representative.sort_mod_sym_dim.flattened for ineq in list_ineq]
-    return compare(opp_VW,list2,"inequalities", "of reference (Vergne Walter)"," computed")
 
 
