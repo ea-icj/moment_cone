@@ -92,7 +92,7 @@ class Inequality:
     def __repr__(self) -> str:
         return \
             f"Inequality(tau  = {self.tau},\n" + \
-             "           w    =     " + " | ".join(" ".join(map(str, wk)) for wk in self.w) + ",\n" + \
+             "           w    = " + " | ".join(" ".join(map(str, wk)) for wk in self.w) + ",\n" + \
             f"           wtau = {self.wtau})"
     
     def __eq__(self, other: Any) -> bool:
