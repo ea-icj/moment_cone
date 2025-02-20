@@ -21,6 +21,7 @@ from sage.all import ZZ, QQ, I # type: ignore
 
 from .typing import *
 from .weight import *
+from .root import *
 
 __all__ = (
     'VariableName',
@@ -35,7 +36,7 @@ __all__ = (
 # TODO: independant type alias for Vector, Matrix et co. from Sage (to avoid Unknown)
 
 Variable = Any
-VariableName = str | Weight
+VariableName = str | Weight 
 RingGens = dict[str, Variable]
 
 def variable_name(name_or_weight: VariableName, seed: str = "v") -> str:
@@ -48,6 +49,7 @@ def variable_name(name_or_weight: VariableName, seed: str = "v") -> str:
         return seed + "_" + "_".join(map(str, name_or_weight.as_list_of_list[0]))
         #TODO : ceci ne marche que si len(G)==0. Sinon plusieurs variables ont le même nom.
         # FIXME: how to generate variable name for every weight
+        #TODO : adapt types so that is also works for Roots instead of weights 
     else:
         raise NotImplementedError()
 

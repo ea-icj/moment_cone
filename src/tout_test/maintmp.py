@@ -10,12 +10,13 @@ from .bkr import *
 from .ramification import *
 from .Groebner import *
 from .export import *
+from .task import *
 
 
 #G = LinearGroup([4, 4, 4, 1])
 #V = KroneckerRepresentation(G)
 G = LinearGroup([8])
-V = FermionRepresentation(G, particle_cnt=4)
+V = FermionRepresentation(G, particle_cnt=3)
 #G = LinearGroup([4])
 #V = BosonRepresentation(G, particle_cnt=2)
 
@@ -28,7 +29,7 @@ ram0_method: Method = 'probabilistic'
 #grobner_method: Method = 'symbolic'
 #grobner_lim=3 #limit of time for each Grobner computation
 grobner_method: Method = 'probabilistic'
-grobner_lim=1
+grobner_lim=2
 
 ## Checking if the cone has the expected dimension
 
@@ -112,18 +113,46 @@ for ineq in Dominant_Ineq:
     else:
         Dominant_Ineq_filteredLT.append(ineq)
 print('There are',len(Ineq_Triang),'Linear Triangular inequalities')
+
+############################ possible structure for a timeout for BKR. Not working yet
+#print('alternative 8 Step, introducing timeouts for BKR')
+#List_BKR=[]
+#List_BKR_inc=[]
+#for ineq in Dominant_Ineq_filteredLT:
+#     try:
+#        with timeout(1, no_raise=False):
+#            chi=ineq.weight_det(V)
+#            if list(ineq.inversions)==[] or Multiplicity_SV_tau(ineq.tau,chi,V,True):    
+#                List_BKR.append(ineq)
+#                print(ineq, "selected in List_BKR (True)")
+#            else:
+#                print(ineq,"not selected in List_BKR (False)")
+#     except TimeOutException:
+#         List_BKR_inc.append(ineq)
+#         print(ineq, "inconclusive computation")
+#
+#print('There are',len(List_BKR), 'selected inequalities in List_BKR and ',len(List_BKR_inc), 'inconclusive inequalities')
+ 
+############################
+       
+## Filter 3: BKR condition
+if isinstance(V,ParticleRepresentation) and V.G[0]>=8:
+    print('Step 8 skipped (condition BKR) for particle representation in rank >=8')
+    List_BKR=Dominant_Ineq_filteredLT
+else:
+    print('Step 8, checking if BKR condition is fullfilled')
+    List_BKR=[]
+    for ineq in Dominant_Ineq_filteredLT :
+        chi=ineq.weight_det(V)
+        if list(ineq.inversions)==[] or Multiplicity_SV_tau(ineq.tau,chi,V,True):    
+            List_BKR.append(ineq)
+    print('The BKR filter has eliminated',len(Dominant_Ineq_filteredLT)-len(List_BKR),'inequalities')
+    print("Final state of the Kronecker cache:", Kron_multi)
+    print("Final state of the Plethysm cache: ", plethysm_cache)
+
         
-# Filter 3: BKR condition
-print('Step 8, checking if BKR condition is fullfilled')
-List_BKR=[]
-#List_BKR=Dominant_Ineq_filteredLT
-for ineq in Dominant_Ineq_filteredLT :
-    chi=ineq.weight_det(V)
-    if list(ineq.inversions)==[] or Multiplicity_SV_tau(ineq.tau,chi,V,True):    
-        List_BKR.append(ineq)
-        
-print('The BKR filter had eleminated',len(Dominant_Ineq)-len(List_BKR),'inequalities')
-print("Final state of the Kronecker cache:", Kron_multi)
+#print('The BKR filter has eliminated',len(Dominant_Ineq_filteredLT)-len(List_BKR),'inequalities')
+#print("Final state of the Kronecker cache:", Kron_multi)
 #print("Final state of the Plethysm cache: ", plethysm_cache)
 
 # Filter 4: pi is birational (ramification divisor contracted)
@@ -133,11 +162,26 @@ Birational_Ineq=[ineq for ineq in List_BKR if Is_Ram_contracted(ineq,V,ram_schub
 #Birational_Ineq=[ineq for ineq in Dominant_Ineq_filteredLT if Is_Ram_contracted(ineq,V,ram_schub_method,ram0_method)]
 print(len(Birational_Ineq), ' inequalities selected in Step 9 in','seconds')
 
-print('alternative 8-9 Step, checking birationality via Grobner')
-Grobner_output=Grobner_List_Test(Dominant_Ineq_filteredLT,grobner_lim,V,grobner_method)
-True_Ineq=Grobner_output[0]+Ineq_Triang
-Dominant_Ineq_filteredGrobner=Grobner_output[1]
-print(len(True_Ineq), 'true inequalities after Grobner; presumably the only ones but', len(Dominant_Ineq_filteredGrobner), 'inequalities where Grobner was inconclusive')
+
+#TODO adapt PolynomialRingForWeights (especially variable_name) to roots in order to allow Grobner computations
+############################ possible structure for a timeout for Groebner. Not working yet
+#print('alternative 8-9 Step, checking birationality via Grobner')
+#for ineq in List_BKR:
+#     try:
+#        with timeout(1, no_raise=False):
+#             print(is_fiber_singleton(V,ineq,"probabilistic"))
+#     except TimeOutException:
+#         print("False?")
+########################### or its alternative
+#print('alternative 8-9 Step, checking birationality via Grobner')
+#Grobner_output=Grobner_List_Test(Dominant_Ineq_filteredLT,grobner_lim,V,grobner_method)
+#True_Ineq=Grobner_output[0]+Ineq_Triang
+#Dominant_Ineq_filteredGrobner=Grobner_output[1]
+#print(len(True_Ineq), 'true inequalities after Grobner; presumably the only ones but', len(Dominant_Ineq_filteredGrobner), 'inequalities where Grobner was inconclusive')
+###########################
+
+         
+
 
 #for ineq in Ineq_Triang :
 #    if ineq not in Birational_Ineq:
