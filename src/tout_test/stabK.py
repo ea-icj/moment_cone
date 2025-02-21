@@ -67,15 +67,17 @@ def dim_gen_stab_of_K(matrices: Sequence[Matrix]) -> int:
     M = matrix(QQ, n, dk, lambda i, k: sum([matrices[k][i,j] * v[j] for j in range(n)]))
     
     if M.is_zero(): # If M==0, we change v one for which M is not sero. Almost never used.
+        k: Optional[int] = None
         for A in matrices:
             if not A.is_zero():
                 for k,C in enumerate(A.columns()):
                     if not C.is_zero():
                         break
                 break
+
+        assert k is not None
         v = vector(QQ,n)
-        # FIXME: k is unbound !
-        v[k]=1 # type: ignore
+        v[k] = 1
         M = matrix(QQ, n, dk, lambda i, k: sum([matrices[k][i,j] * v[j] for j in range(n)]))
 
     # Echelon form of M.transpose() to computation modulo the image F of M
