@@ -361,7 +361,7 @@ class Tau:
         """
         Basis of the eigen space for positive eigen values for the action of tau on U.
 
-        >>> tau = Tau(((3, 2, 2), (4, 2, 1), (3, 2),(-7,)))
+        >>> tau = Tau(((3, 2, 2), (4, 2, 1), (3, 2), (-7,)))
         >>> tau
         3 2 2 | 4 2 1 | 3 2 | -7
         >>> gr = tau.positive_rootsU
@@ -417,6 +417,7 @@ class Tau:
         Root(k=1, i=2, j=2)
         Root(k=2, i=0, j=0)
         Root(k=2, i=1, j=1)
+        Root(k=3, i=0, j=0)
         """
         res=[]
         for alpha in Root.all_of_K(self.G):
@@ -448,12 +449,12 @@ class Tau:
         """
         Sort tau by block of the dimensions
         
-        >>> G = LinearGroup([2, 2, 2, 1, 1, 1, 1])
-        >>> tau = Tau.from_flatten([6, 2, 1, 4, 1, 4, 5, 3, 1, 1], G)
+        >>> G = LinearGroup([2, 2, 2, 1, 1, 1])
+        >>> tau = Tau.from_flatten([6, 2, 1, 4, 1, 4, 5, 3, 1], G)
         >>> tau
-        6 2 | 1 4 | 1 4 | 5 | 3 | 1 | 1
+        6 2 | 1 4 | 1 4 | 5 | 3 | 1
         >>> tau.sort_mod_sym_dim
-        1 4 | 1 4 | 6 2 | 1 | 3 | 5 | 1
+        1 4 | 1 4 | 6 2 | 1 | 3 | 5
 
         """
         blocks = (sorted(b) for b in Blocks(self.components, self.G.outer))
@@ -464,18 +465,18 @@ class Tau:
         Lists the orbit of tau under symmetries of dimensions of its components
 
         Example:
-        >>> G = LinearGroup([2, 2, 2, 1, 1, 1])
-        >>> tau = Tau.from_flatten([6, 2, 1, 4, 1, 4, 5, 3, 1], G)
+        >>> G = LinearGroup([2, 2, 2, 1, 1])
+        >>> tau = Tau.from_flatten([6, 2, 1, 4, 1, 4, 5, 3], G)
         >>> tau
-        6 2 | 1 4 | 1 4 | 5 | 3 | 1
+        6 2 | 1 4 | 1 4 | 5 | 3
         >>> for t in tau.orbit_symmetries():
         ...     print(t)
-        1 | 1 4 | 1 4 | 6 2 | 3 | 5
-        1 | 1 4 | 1 4 | 6 2 | 5 | 3
-        1 | 1 4 | 6 2 | 1 4 | 3 | 5
-        1 | 1 4 | 6 2 | 1 4 | 5 | 3
-        1 | 6 2 | 1 4 | 1 4 | 3 | 5
-        1 | 6 2 | 1 4 | 1 4 | 5 | 3
+        1 4 | 1 4 | 6 2 | 3 | 5
+        1 4 | 1 4 | 6 2 | 5 | 3
+        1 4 | 6 2 | 1 4 | 3 | 5
+        1 4 | 6 2 | 1 4 | 5 | 3
+        6 2 | 1 4 | 1 4 | 3 | 5
+        6 2 | 1 4 | 1 4 | 5 | 3
         """
         from .utils import orbit_symmetries
         for sym_comp in orbit_symmetries(self._components, self.G.outer):
@@ -526,12 +527,17 @@ class Tau:
         Since Z is trivial when len(G)==1 return self.
 
         Examples:
-        >>> tau = Tau(((3, 3, 2, 2), (2, 2, 1), (2, 2, 1),(1,)))
+        >>> tau = Tau(((3, 3, 2, 2), (2, 2, 1), (2, 2, 1), (1,)))
         >>> tau.end0_representative
         1 1 0 0 | 1 1 0 | 1 1 0 | 5
+
         >>> tau = Tau(((3, 3, 2, 2),))
         >>> tau.end0_representative
         3 3 2 2
+
+        >>> tau = Tau(((1, 6, 2), (1, 5, 1), (4, 5, 3)))
+        >>> tau.end0_representative
+        -1 4 0 | 0 4 0 | 7 8 6
         """
 
         # Return self if not kron
@@ -542,10 +548,9 @@ class Tau:
         total_shift = 0
         columns: list[int] = []
         for cj in self.components[:-1]: # Components excepted that of the last GL(1)
-            columns+=[cji - cj[-1] for cji in cj]
+            columns += [cji - cj[-1] for cji in cj]
             total_shift += cj[-1]
-        last_component = self.flattened[-1] + total_shift
-        columns.append(last_component)
+        columns += [ci + total_shift for ci in self.components[-1]]
         res_gcd = gcd(*columns)
         
         return Tau.from_flatten([x // res_gcd for x in columns], self.G)
@@ -678,7 +683,7 @@ def unique_modulo_symmetry_list_of_tau(seq_tau: Iterable[Tau]) -> set[Tau]:
     Unique sequence of tau modulo the it's symmetries
 
     Example:
-    >>> G = LinearGroup([2, 2, 2, 1, 1,1])
+    >>> G = LinearGroup([2, 2, 2, 1, 1, 1])
     >>> t1 = Tau.from_flatten([1, 6, 2, 1, 5, 1, 4, 5, 3], G)
     >>> t2 = t1.end0_representative
     >>> t3 = t2.sort_mod_sym_dim
