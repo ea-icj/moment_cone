@@ -21,6 +21,7 @@ __all__ = (
     "quotient_C_Mod",
     "dictionary_list_lengths",
     "unique_combinations",
+    "to_literal",
 )
 
 def is_decreasing(l: Iterable[int]) -> bool:
@@ -306,3 +307,18 @@ def unique_combinations(mylist: Sequence[int], k: int) -> list[tuple[int, ...]]:
     result: list[tuple[int, ...]] = []
     backtrack(0, [])
     return result
+
+
+def to_literal(literals: Any, arg: str) -> str:
+    """ Convert a given string to the corresponding literal
+    
+    Returns first literal that begins with given string.
+    """
+    from typing import get_args, get_origin
+    assert get_origin(literals) == Literal
+    for s in get_args(literals):
+        assert isinstance(s, str)
+        if s.lower().startswith(arg.lower()):
+            return s
+
+    raise ValueError(f"No literal matches {arg}")

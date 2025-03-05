@@ -2,9 +2,10 @@ __all__ = (
     "Type", "NewType", "TypeVar", "TypeGuard", "Generic", "Optional", "TypeAlias",
     "cast", "overload",
     "Any", "Self", "Literal", "TYPE_CHECKING", "Concatenate",
-    "ClassVar",
+    "ClassVar", "Final", "TypedDict",
     "Iterable", "Iterator", "Generator", "Mapping",
     "Sequence", "MutableSequence", "Sized", "Callable",
+    "ABC", "abstractmethod",
     "T", "T_co", "U",
     "Method",
 )
@@ -12,9 +13,10 @@ __all__ = (
 from typing import Type, NewType, TypeVar, TypeGuard, Generic, Optional, TypeAlias
 from typing import cast, overload
 from typing import Any, Self, Literal, TYPE_CHECKING, Concatenate
-from typing import ClassVar
+from typing import ClassVar, Final, TypedDict
 from collections.abc import Iterable, Iterator, Generator, Mapping
 from collections.abc import Sequence, MutableSequence, Sized, Callable
+from abc import ABC, abstractmethod
 
 T = TypeVar('T') # Template parameter for generic classes or functions
 #T_co = TypeVar('T_co', covariant=True)

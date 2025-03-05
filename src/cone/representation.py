@@ -23,7 +23,9 @@ class Representation(ABC):
     Weight: ClassVar[type[WeightBase]] = WeightBase # Weight class
     G: LinearGroup
 
-    def __init__(self, G: LinearGroup):
+    def __init__(self, G: LinearGroup | Iterable[int]):
+        if not isinstance(G, LinearGroup):
+            G = LinearGroup(G)
         self.G = G
 
     def weight(self, *args: Any, **kwargs: Any) -> WeightBase:
@@ -314,10 +316,10 @@ class ParticleRepresentation(Representation):
     """ Representation specific to physical particles """
     particle_cnt: int
 
-    def __init__(self, G: LinearGroup, particle_cnt: int):
+    def __init__(self, G: LinearGroup | Iterable[int], particle_cnt: int):
         super().__init__(G)
         self.particle_cnt = particle_cnt
-        if len(G) != 1:
+        if len(self.G) != 1:
             raise NotImplementedError("Product of GL not supported for particle representation")
 
     @cached_property

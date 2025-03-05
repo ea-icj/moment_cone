@@ -141,10 +141,12 @@ if isinstance(V,ParticleRepresentation) and V.G[0]>=8:
     List_BKR=Dominant_Ineq_filteredLT
 else:
     print('Step 8, checking if BKR condition is fullfilled')
+    Kron_multi = KroneckerCoefficientMLCache()
+    plethysm_cache = PlethysmCache()
     List_BKR=[]
-    for ineq in Dominant_Ineq_filteredLT :
+    for ineq in Dominant_Ineq_filteredLT:
         chi=ineq.weight_det(V)
-        if list(ineq.inversions)==[] or Multiplicity_SV_tau(ineq.tau,chi,V,True):    
+        if list(ineq.inversions)==[] or Multiplicity_SV_tau(ineq.tau,chi,V,True,Kron_multi, plethysm_cache):    
             List_BKR.append(ineq)
     print('The BKR filter has eliminated',len(Dominant_Ineq_filteredLT)-len(List_BKR),'inequalities')
     print("Final state of the Kronecker cache:", Kron_multi)

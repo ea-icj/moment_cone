@@ -540,14 +540,14 @@ class Tau:
         -1 4 0 | 0 4 0 | 7 8 6
         """
 
-        # Return self if not kron
-        if len(self.G)==1:
+        # Return self if not Kronecker
+        if len(self.G) == 1:
             return self
 
         from math import gcd
         total_shift = 0
         columns: list[int] = []
-        for cj in self.components[:-1]: # Components excepted that of the last GL(1)
+        for cj in self.components[:-1]:
             columns += [cji - cj[-1] for cji in cj]
             total_shift += cj[-1]
         columns += [ci + total_shift for ci in self.components[-1]]
@@ -702,7 +702,7 @@ def full_under_symmetry_list_of_tau(seq_tau: Iterable[Tau]) -> Iterable[Tau]:
     return itertools.chain.from_iterable(tau.orbit_symmetries() for tau in seq_tau)
 
 
-def find_1PS(V: Representation, quiet: bool = False) -> Sequence["Tau"]:
+def find_1PS(V: Representation, quiet: bool = False) -> list["Tau"]:
     """
     Same as find_1PS_reg_mod_sym_dim without regularity condition
     Computed by 

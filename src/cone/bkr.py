@@ -100,9 +100,6 @@ def ListNonZeroLR(nu : Partition, delta: list[int], l: int) -> list[EnhancedPart
     # Création de la nouvelle liste d'objets
     return [EnhancedPartitionList(list(p),m) for p,m in zipped_dic.items()]
     
-# Kronecker coefficient of n-uplet of partitions using a multi-level cache
-Kron_multi = KroneckerCoefficientMLCache()  
-
 
 def all_partitions_of_max_length(n: int, l: Sequence[int], kro: KroneckerCoefficient) -> Iterable[tuple[tuple[Partition, ...], int]]:
     """
@@ -194,9 +191,6 @@ class PlethysmCache:
 
     def __repr__(self) -> str:
         return f"PlethysmCache(#cache={len(self._cache)}, #hit={self._hit}, #miss={self._miss})"
-
-
-plethysm_cache = PlethysmCache()
 
             
 def fct_weights_of_Nu(Nu: Array2D[Partition]) -> Matrix: # Nu is a partial matrix with Partitions as entries
@@ -332,20 +326,34 @@ def Product_of_Tables(
 
     return List_of_Tables
 
-def Multiplicity_SV_tau(tau: Tau, chi: Vector, V: Representation, checkGreatEq2: bool = False) -> bool | int:
+def Multiplicity_SV_tau(
+        tau: Tau,
+        chi: Vector,
+        V: Representation,
+        checkGreatEq2: bool = False,
+        kronecker: KroneckerCoefficient = KroneckerCoefficientMLCache(),
+        plethysm: PlethysmCache = PlethysmCache(),
+    ) -> bool | int:
     """
     Compute the multiplicity of G^tau-irreducible representation of highest weight chi in C[V^tau].
     Using the description of this multiplicity as sum of products of LR, Kron and Plethysm coefficients.
     """
     if isinstance(V, KroneckerRepresentation):
-        return multiplicity_SV_tau_kronecker(tau, chi, V, checkGreatEq2)
+        return multiplicity_SV_tau_kronecker(tau, chi, V, checkGreatEq2, kronecker)
     elif isinstance(V, ParticleRepresentation):
-        return multiplicity_SV_tau_particle(tau, chi, V, checkGreatEq2)
+        return multiplicity_SV_tau_particle(tau, chi, V, checkGreatEq2, kronecker, plethysm)
     else:
         raise NotImplementedError()
     
 
-def multiplicity_SV_tau_particle(tau : Tau, chi: Vector, V: ParticleRepresentation, checkGreatEq2: bool = False) -> bool | int:
+def multiplicity_SV_tau_particle(
+        tau: Tau,
+        chi: Vector,
+        V: ParticleRepresentation,
+        checkGreatEq2: bool = False,
+        kronecker: KroneckerCoefficient = KroneckerCoefficientMLCache(),
+        plethysm: PlethysmCache = PlethysmCache(),
+    ) -> bool | int:
     """
     Compute the multiplicity of G^tau-irreducible representation of highest weight chi in C[V^tau].
     Using the description of this multiplicity as sum of products of LR, Kron and Plethysm coefficients.
@@ -395,7 +403,7 @@ def multiplicity_SV_tau_particle(tau : Tau, chi: Vector, V: ParticleRepresentati
         for Mu, lr in List_of_Mus_plugged: # lr is the multiplicity assocated to Mu
             #print('Next Mu',delta, max_length)
             
-            for [Lambda, K] in all_lambda_matrix(delta, max_lengths, Kron_multi): # K is the multiplicity assocated to Mu
+            for [Lambda, K] in all_lambda_matrix(delta, max_lengths, kronecker): # K is the multiplicity assocated to Mu
                 #print('Next Lambda',Lambda)
                 if Search_Zero_a(Mu,ListP,Lambda,Vanishing_a): # Check if (Mu,Lambda) contains an already computer zero plethysm coefficient. In this case, we skip this pair.
                     break
@@ -420,10 +428,10 @@ def multiplicity_SV_tau_particle(tau : Tau, chi: Vector, V: ParticleRepresentati
                             a=0
                         else :
                             mu=Partition([x-shift for x in Muij])
-                            a = plethysm_cache(la, theta, mu)
+                            a = plethysm(la, theta, mu)
                                                         
                     else :
-                        a = plethysm_cache(Lambda[i, j], theta, Muij)
+                        a = plethysm(Lambda[i, j], theta, Muij)
                         #print('generic case',Lambda[i,j],theta,tau.reduced.mult[0][j])
                     
                     #print('a',a)
@@ -443,7 +451,13 @@ def multiplicity_SV_tau_particle(tau : Tau, chi: Vector, V: ParticleRepresentati
         return mult     
 
 
-def multiplicity_SV_tau_kronecker(tau : Tau, chi: Vector, V: KroneckerRepresentation, checkGreatEq2: bool = False) -> bool | int:
+def multiplicity_SV_tau_kronecker(
+        tau: Tau,
+        chi: Vector,
+        V: KroneckerRepresentation,
+        checkGreatEq2: bool = False,
+        kronecker: KroneckerCoefficient = KroneckerCoefficientMLCache(),
+    ) -> bool | int:
     """
     Compute the multiplicity of G^tau-irreducible representation of highest weight chi in C[V^tau].
     Using the description of this multiplicity as sum of products of LR, Kron and Plethysm coefficients.
@@ -499,7 +513,7 @@ def multiplicity_SV_tau_kronecker(tau : Tau, chi: Vector, V: KroneckerRepresenta
             for j in range(len(ListP)) :
                 L = Lambda_tilde_plugged[0][j,:]
                 assert all(Li is not None for Li in L)
-                K = Kron_multi(cast(Array1D[Partition], L).tolist())
+                K = kronecker(cast(Array1D[Partition], L).tolist())
 
                 if K !=0 :
                     K_coeff*=K                                                
