@@ -129,7 +129,16 @@ class TransformerStep(Step, Generic[T, U]):
 ###############################################################################
 class GeneralStabilizerDimensionCheck(Step):
     """ Checking the dimension of the general stabilizer """
+    no_dim_check: bool
+
+    def __init__(self, V: Representation, no_dim_check: bool = False, **kwargs: Any):
+        super().__init__(V, **kwargs)
+        self.no_dim_check = no_dim_check
+
     def __call__(self) -> None:
+        if self.no_dim_check:
+            return
+        
         from .stabK import mat_C_to_R, dim_gen_stab_of_K
         Ms = self.V.actionK
         MsR = [mat_C_to_R(M) for M in Ms.values()]
@@ -140,6 +149,26 @@ class GeneralStabilizerDimensionCheck(Step):
                 f"Namely of dimension {dim}."
                 f"The program does not work in this case."
             )
+
+    @staticmethod
+    def add_arguments(parent_parser: ArgumentParser, defaults: Mapping[str, Any] = {}) -> None:
+        """ Add command-line arguments specific to this step """
+        group = parent_parser.add_argument_group(
+            "Checking the dimension of the general stabilizer "
+        )
+        group.add_argument(
+            "--no_dim_check",
+            action="store_true",
+            help="Don't check the dimension of the general stabilizer",
+        )
+
+    @classmethod
+    def from_config(cls: type["Step"], V: Representation, config: Namespace) -> "GeneralStabilizerDimensionCheck":
+        """ Build a step from the representation and the command-line arguments """
+        return GeneralStabilizerDimensionCheck(
+            V=V,
+            no_dim_check=config.no_dim_check,
+        )
 
 
 ###############################################################################
