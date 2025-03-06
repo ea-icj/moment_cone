@@ -525,7 +525,7 @@ class ConeStep(GeneratorStep[Inequality]):
         )
         group.add_argument(
             "--filters",
-            type=str,
+            type=lambda s: to_literal(InequalityFilterStr, s),
             nargs='*',
             choices=typing.get_args(InequalityFilterStr),
             default=typing.get_args(InequalityFilterStr),
@@ -546,7 +546,7 @@ class ConeStep(GeneratorStep[Inequality]):
         """ Build a step from the representation and the command-line arguments """
         return ConeStep(
             V,
-            filter=config.filters,
+            filters=config.filters,
             quiet=config.quiet,
             config=config,
         )

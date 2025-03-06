@@ -18,7 +18,7 @@ def main_from_cmd() -> None:
     parser = argparse.ArgumentParser(
         "Redundant list of inequalities for the cone",
         description="""
-This software compute a redundant list of inequalities for a cone""",
+This software compute a irredundant list of inequalities for a cone""",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,    
     )
     parser.add_argument(
