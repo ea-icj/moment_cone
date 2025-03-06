@@ -534,18 +534,16 @@ class ConeStep(GeneratorStep[Inequality]):
         self,
         V: Representation,
         filters: Iterable[str | InequalityFilterStr] = typing.get_args(InequalityFilterStr),
-        quiet: bool = False,
         config: Optional[Namespace] = None,
         **kwargs: Any,
     ):
-        super().__init__(V)
+        super().__init__(V, **kwargs)
         self.filters = [
             cast(InequalityFilterStr, to_literal(InequalityFilterStr, name))
             for name in filters
         ]
         self.config = config
         self.options = kwargs
-        self.quiet = quiet
 
     def __create_step(self, step_type: type[TStep]) -> TStep:
         if self.config is None:
