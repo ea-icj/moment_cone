@@ -1,24 +1,33 @@
 __all__ = (
-
+    'cone',
+    'cone_from_cmd',
 )
 
+import typing
+
 from .typing import *
+from .representation import Representation
+from .main_steps import Dataset, InequalityFilterStr
 
-"""
-def main(V: Representation,
-         filters: Sequence[inequality_filters],
-         **kwargs: Any,
-        ) -> list[Inequality]:
-    return NotImplemented
-"""
 
-def main_from_cmd() -> None:
+def cone(V: Representation,
+         filters: Sequence[InequalityFilterStr] = typing.get_args(InequalityFilterStr),
+         **options: Any) -> Dataset:
+    """ Main entrance from Python prompt
+
+    For the options, see the description of each step in main_steps
+    """
+    from .main_steps import ConeStep
+    cone_step = ConeStep(V, filters=filters, **options)
+    return cone_step()
+
+
+def cone_from_cmd() -> None:
     """ Main entrance from command-line """
     import argparse
     parser = argparse.ArgumentParser(
         "Redundant list of inequalities for the cone",
-        description="""
-This software compute a irredundant list of inequalities for a cone""",
+        description="""This software compute a irredundant list of inequalities for a cone""",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,    
     )
     parser.add_argument(
