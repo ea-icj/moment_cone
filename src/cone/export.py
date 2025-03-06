@@ -42,14 +42,11 @@ def Liste_to_Normaliz_string(liste: list[list[int]], sgn: int = 1) -> str: #sgn=
 
 def info_from_GV(V: Representation) -> str:
     """ V a representation of a LinGroup G. It returns a nomalized string encoding the main information on G and V. To be used in the names of the input files given to Normaliz"""
-    G=V.G
-    info=''
-    for i in G[:-1]:
-       info+=str(i)+'-'
-    info+=str(G[-1])+' '
-    info+=type(V).__name__ + ' '
+    G = V.G
+    info = '-'.join(str(d) for d in G)
+    info += "_" + type(V).__name__
     if isinstance(V, ParticleRepresentation):
-        info+=str(V.particle_cnt)+' '
+        info += "_" + str(V.particle_cnt)
     return info
 
 def export_normaliz(
