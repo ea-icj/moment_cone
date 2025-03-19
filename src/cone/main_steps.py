@@ -298,6 +298,8 @@ class PiDominancyStep(FilterStep[Inequality]):
     Checking dominancy of the map pi
     
     It only reject pending inequalities and doesn't modified the validated ones.
+
+    With the probabilistic method, valid inequalities may be rejected (with a low probability).
     """
     tpi_method: Method
 
@@ -345,7 +347,7 @@ class LinearTriangularStep(FilterStep[Inequality]):
     """
     Checking Linear Triangular inequalities
     
-    This filter can reject inequalities and also definitively validate some of them.
+    This filter can only definitively validate some of the inequalities (this inequalities are then not redondant).
     """
     def __call__(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
         from .linear_triangular import is_linear_triangular
