@@ -454,7 +454,8 @@ class BirationalityStep(FilterStep[Inequality]):
     """
     Checking birationality (ramification divisor contracted) of the map pi
     
-    It only reject pending inequalities and doesn't modified the validated ones.
+    It only outputs validated inequalities (non redondant) and reject all other inequalities
+    (no pending inequalities remaining).
     """
     ram_schub_method: Method
     ram0_method: Method
@@ -479,8 +480,8 @@ class BirationalityStep(FilterStep[Inequality]):
                                  self.ram0_method)
         ]
         return ListDataset(
-            pending=inequalities,
-            validated=list(ineq_dataset.validated()),
+            pending=[],
+            validated=list(ineq_dataset.validated()) + inequalities,
         )
     
     @staticmethod
@@ -521,8 +522,10 @@ class BirationalityStep(FilterStep[Inequality]):
 class GrobnerStep(FilterStep[Inequality]):
     """
     Checking birationality via Grobner
-    
-    It only reject pending inequalities and doesn't modified the validated ones.
+        
+    It only outputs validated inequalities (non redondant) and reject all other inequalities
+    unless timeout is reached. In that case, the inequalities whose validation takes too much time
+    are set as pending.
     """
     method: Method
     timeout: int
@@ -656,6 +659,9 @@ inequalities_filter_dict: Final[dict[InequalityFilterStr, type[Step]]] = {
     "Grobner": GrobnerStep,
 }
 
+# All filters by default except Grobner (the last one)
+default_inequalities_filters: tuple[InequalityFilterStr, ...] = typing.get_args(InequalityFilterStr)[:-1]
+
 TStep = TypeVar("TStep", bound=Step)
 
 class ConeStep(GeneratorStep[Inequality]):
@@ -672,7 +678,7 @@ class ConeStep(GeneratorStep[Inequality]):
     def __init__(
         self,
         V: Representation,
-        filters: Iterable[str | InequalityFilterStr] = typing.get_args(InequalityFilterStr),
+        filters: Iterable[str | InequalityFilterStr] = default_inequalities_filters,
         config: Optional[Namespace] = None,
         **kwargs: Any,
     ):
@@ -750,7 +756,7 @@ class ConeStep(GeneratorStep[Inequality]):
             type=lambda s: to_literal(InequalityFilterStr, s),
             nargs='*',
             choices=typing.get_args(InequalityFilterStr),
-            default=typing.get_args(InequalityFilterStr),
+            default=default_inequalities_filters,
             help="Sequence of filters applied to the inequalities",
         )
 
