@@ -51,6 +51,13 @@ def cone_from_cmd() -> None:
         default=None,
         help="Number of particles in Fermion and Boson representation",
     )
+    parser.add_argument(
+        "--line_profiler",
+        type=str,
+        nargs="*",
+        default=[],
+        help="Profile given function by line",
+    )
 
     from .main_steps import ConeStep
     ConeStep.add_arguments(parser)
@@ -93,4 +100,12 @@ def cone_from_cmd() -> None:
     Task.reset_all()
 
     # Computing the cone
-    inequalities = list(step())
+    if len(config.line_profiler) > 0:
+        from .utils import line_profiler
+        inequalities, lp = line_profiler(
+            config.line_profiler,
+            lambda: list(step())
+        )
+        lp.print_stats()
+    else:
+        inequalities = list(step())
