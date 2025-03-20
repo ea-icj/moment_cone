@@ -104,7 +104,7 @@ def Compute_JA_square_free(ineq: Inequality, V: Representation) -> Polynomial:
         from sage.all import gcd as sage_gcd # type: ignore
         Jbred_denom: Polynomial = sage_gcd([Jb] + partial_derivatives)
         Jbred: Polynomial
-        remainder: Polytnomial
+        remainder: Polynomial
         Jbred, remainder = Jb.quo_rem(Jbred_denom)
         assert remainder == 0
 
