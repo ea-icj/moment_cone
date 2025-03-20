@@ -106,6 +106,8 @@ def cone_from_cmd() -> None:
             config.line_profiler,
             lambda: list(step())
         )
+
+        print("\nLine profiling results:")
         lp.print_stats()
     else:
         inequalities = list(step())
