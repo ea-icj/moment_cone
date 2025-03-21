@@ -58,6 +58,12 @@ def cone_from_cmd() -> None:
         default=[],
         help="Profile given function by line",
     )
+    parser.add_argument(
+        "--cprofile",
+        type=str,
+        default=None,
+        help="Profile function calls and output results in given file name (pstats and kcachegrind format)",
+    )
 
     from .main_steps import ConeStep
     ConeStep.add_arguments(parser)
@@ -100,14 +106,21 @@ def cone_from_cmd() -> None:
     Task.reset_all()
 
     # Computing the cone
-    if len(config.line_profiler) > 0:
-        from .utils import line_profiler
-        inequalities, lp = line_profiler(
-            config.line_profiler,
-            lambda: list(step())
-        )
+    def compute() -> None:
+        if len(config.line_profiler) > 0:
+            from .utils import line_profiler
+            inequalities, lp = line_profiler(
+                config.line_profiler,
+                lambda: list(step())
+            )
 
-        print("\nLine profiling results:")
-        lp.print_stats()
+            print("\nLine profiling results:")
+            lp.print_stats()
+        else:
+            inequalities = list(step())
+
+    if config.cprofile is None:
+        compute()
     else:
-        inequalities = list(step())
+        from .utils import cprofile
+        cprofile(compute, file_name=config.cprofile)

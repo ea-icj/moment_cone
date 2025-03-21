@@ -24,10 +24,12 @@ __all__ = (
     "to_literal",
     "get_function_by_name",
     "line_profiler",
+    "CachedClass",
 )
 
 if TYPE_CHECKING:
     from line_profiler import LineProfiler
+    import pstats
 
 
 def is_decreasing(l: Iterable[int]) -> bool:
@@ -338,14 +340,14 @@ def get_function_by_name(name: str) -> Callable[..., Any]:
     """
     # Trying in global scope
     try:
-        return globals()[name]
+        return cast(Callable[..., Any], globals()[name])
     except KeyError:
         pass
 
     # Trying in objects imported from cone
     import cone
     try:
-        return getattr(cone, name)
+        return cast(Callable[..., Any], getattr(cone, name))
     except AttributeError:
         pass
 
@@ -366,7 +368,7 @@ def get_function_by_name(name: str) -> Callable[..., Any]:
                 obj = getattr(mod, components[n])
                 for cname in components[n+1:]:
                     obj = getattr(obj, cname)
-                return obj
+                return cast(Callable[..., Any], obj)
             except AttributeError:
                 pass
     
@@ -398,6 +400,54 @@ def line_profiler(
             else name_or_fn
         )
 
-    result: T = lp.runcall(called_fn, *args, **kwargs)
+    result: T = lp.runcall(called_fn, *args, **kwargs) # type: ignore
     return result, lp
+
+
+def cprofile(
+        called_fn: Callable[..., T],
+        *args: Any,
+        file_name: Optional[str] = None,
+        **kwargs: Any,
+        ) -> tuple[T, "pstats.Stats"]:
+    """
+    Profile calls and hierarchy of calls of the functions executed during
+    computation of given called_fn.
+    
+    Beside the result of the the called_fn, it also returns a instance
+    of pstats.Stats and can also output to Stats and kcachegrind format
+    if a file_name is given.
+    """
+    from cProfile import Profile
+    from pstats import Stats
+    with Profile() as prof:
+        result = called_fn(*args, **kwargs)
+        stats = Stats(prof)
+
+    if file_name is not None:
+        stats.dump_stats(file_name + ".pstats")
+        from pyprof2calltree import convert # type: ignore
+        convert(stats, file_name + ".prof")
+
+    return result, stats
+
+class CachedClass:
+    """ Base class that ensure instance uniqueness relatively to the construction arguments 
+    
+    It relies on a private class dictionary that maps the construction arguments
+    to a corresponding instance. In order to work, all arguments must be hashable.
+
+    Remark that when mixing positional and keyword arguments, it may leads to
+    different instances of a same object depending on the order and the type
+    of the arguments.
+    """
+    __all_instances: ClassVar[
+        dict[tuple[tuple[Any, ...], tuple[tuple[str, Any], ...]], Self]
+    ] = {}
+
+    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+        return cls.__all_instances.setdefault(
+            (args, tuple(kwargs.items())),
+            super().__new__(cls),
+        )
 

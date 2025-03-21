@@ -6,3 +6,5 @@ build*
 html*
 src/All_Cases/
 src/All_Cases_Init/Old/
+*.prof
+*.pstats
