@@ -22,7 +22,13 @@ __all__ = (
     "dictionary_list_lengths",
     "unique_combinations",
     "to_literal",
+    "get_function_by_name",
+    "line_profiler",
 )
+
+if TYPE_CHECKING:
+    from line_profiler import LineProfiler
+
 
 def is_decreasing(l: Iterable[int]) -> bool:
     """ Check if a given sequence is not increasing """
@@ -322,3 +328,76 @@ def to_literal(literals: Any, arg: str) -> str:
             return s
 
     raise ValueError(f"No literal matches {arg}")
+
+
+def get_function_by_name(name: str) -> Callable[..., Any]:
+    """ Returns a function by it's name 
+    
+    The name may include full module or a sub-module of cone
+    and can be a method of class.
+    """
+    # Trying in global scope
+    try:
+        return globals()[name]
+    except KeyError:
+        pass
+
+    # Trying in objects imported from cone
+    import cone
+    try:
+        return getattr(cone, name)
+    except AttributeError:
+        pass
+
+    # Trying with sub-module or class name
+    from importlib import import_module
+    for full_name in (name, "cone." + name):
+        components = full_name.split(".")
+        # Splitting module name and object name
+        for n in range(1, len(components)):
+            # Loading first part as a module
+            try:
+                mod = import_module(".".join(components[:n]))
+            except ModuleNotFoundError:
+                break
+
+            # Get remaining part as multi-level objects (eg class)
+            try:
+                obj = getattr(mod, components[n])
+                for cname in components[n+1:]:
+                    obj = getattr(obj, cname)
+                return obj
+            except AttributeError:
+                pass
+    
+    raise ValueError(f"No function {name} found")
+
+
+def line_profiler(
+        profiled_fn: Iterable[str | Callable[..., Any]] | str | Callable[..., Any],
+        called_fn: Callable[..., T],
+        *args: Any,
+        **kwargs: Any,
+        ) -> tuple[T, "LineProfiler"]:
+    """
+    Profile given functions by line when launching called_fn with given arguments
+    
+    It returns the result of the called_fn and the LineProfiler instance.
+    Statistics can be printed by calling the print_stats method of the returned
+    LineProfiler.
+    """
+    if isinstance(profiled_fn, str) or callable(profiled_fn):
+        profiled_fn = [profiled_fn]
+
+    from line_profiler import LineProfiler
+    lp = LineProfiler()
+    for name_or_fn in profiled_fn:
+        lp.add_function(
+            get_function_by_name(name_or_fn)
+            if isinstance(name_or_fn, str)
+            else name_or_fn
+        )
+
+    result: T = lp.runcall(called_fn, *args, **kwargs)
+    return result, lp
+
