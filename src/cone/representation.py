@@ -16,9 +16,10 @@ from .weight import Weight as WeightBase, WeightAsList, WeightAsListOfList
 from .partition import Partition
 from .rings import Matrix, Vector, Ring, PolynomialRingForWeights
 from .root import Root
+from .utils import CachedClass
 
 
-class Representation(ABC):
+class Representation(CachedClass, ABC):
     """ Base class of a representation """
     Weight: ClassVar[type[WeightBase]] = WeightBase # Weight class
     G: LinearGroup

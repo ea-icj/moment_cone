@@ -24,6 +24,7 @@ __all__ = (
     "to_literal",
     "get_function_by_name",
     "line_profiler",
+    "CachedClass",
 )
 
 if TYPE_CHECKING:
@@ -338,14 +339,14 @@ def get_function_by_name(name: str) -> Callable[..., Any]:
     """
     # Trying in global scope
     try:
-        return globals()[name]
+        return cast(Callable[..., Any], globals()[name])
     except KeyError:
         pass
 
     # Trying in objects imported from cone
     import cone
     try:
-        return getattr(cone, name)
+        return cast(Callable[..., Any], getattr(cone, name))
     except AttributeError:
         pass
 
@@ -366,7 +367,7 @@ def get_function_by_name(name: str) -> Callable[..., Any]:
                 obj = getattr(mod, components[n])
                 for cname in components[n+1:]:
                     obj = getattr(obj, cname)
-                return obj
+                return cast(Callable[..., Any], obj)
             except AttributeError:
                 pass
     
@@ -398,6 +399,27 @@ def line_profiler(
             else name_or_fn
         )
 
-    result: T = lp.runcall(called_fn, *args, **kwargs)
+    result: T = lp.runcall(called_fn, *args, **kwargs) # type: ignore
     return result, lp
+
+
+class CachedClass:
+    """ Base class that ensure instance uniqueness relatively to the construction arguments 
+    
+    It relies on a private class dictionary that maps the construction arguments
+    to a corresponding instance. In order to work, all arguments must be hashable.
+
+    Remark that when mixing positional and keyword arguments, it may leads to
+    different instances of a same object depending on the order and the type
+    of the arguments.
+    """
+    __all_instances: ClassVar[
+        dict[tuple[tuple[Any, ...], tuple[tuple[str, Any], ...]], Self]
+    ] = {}
+
+    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+        return cls.__all_instances.setdefault(
+            (args, tuple(kwargs.items())),
+            super().__new__(cls),
+        )
 
