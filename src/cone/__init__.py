@@ -7,6 +7,7 @@ from .linear_group import *
 from .root import *
 from .tau import Tau
 from .inequality import Inequality
+from .permutation import Permutation
 from .main_steps import *
 from .main import *
 
