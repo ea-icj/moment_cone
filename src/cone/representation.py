@@ -272,10 +272,20 @@ class KroneckerRepresentation(Representation):
         from .rings import vector
         vp = vector(v.base_ring(), self.dim)
 
+        # Optimizing computation of index of the constructed weights below
+        # The idea is that index of reconstructed weight in self.G can be
+        # easily recalculated from the index of the weight in Gred using the
+        # stride that corresponds to the position alpha.k
+        from functools import reduce
+        from operator import mul
+        stride = reduce(mul, self.G[alpha.k + 1:], 1)
+
         # Generate the weights with alpha.i and alpha.j in position alpha.k
         Gred = LinearGroup(self.G[:alpha.k] + self.G[alpha.k+1:])
         Vred = KroneckerRepresentation(Gred)
         for w in Vred.all_weights:
+            # Original code before optimizing index computation
+            """
             wj = WeightAsList(
                 self.G,
                 as_list=w.as_list[:alpha.k] + (alpha.j,) + w.as_list[alpha.k:]
@@ -285,6 +295,11 @@ class KroneckerRepresentation(Representation):
                 as_list=w.as_list[:alpha.k] + (alpha.i,) + w.as_list[alpha.k:]
             )
             vp[self.index_of_weight(wi)] = v[self.index_of_weight(wj)]
+            """
+            head, tail = divmod(Vred.index_of_weight(w), stride)
+            # base_idx is the index of w in self.G with a 0 inserted at alpha.k
+            base_idx = head * self.G[alpha.k] * stride + tail
+            vp[base_idx + alpha.i * stride] = v[base_idx + alpha.j * stride]
 
         return vp
     
