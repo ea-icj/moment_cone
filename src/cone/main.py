@@ -106,7 +106,7 @@ def cone_from_cmd() -> None:
     Task.reset_all()
 
     # Computing the cone
-    def compute():
+    def compute() -> None:
         if len(config.line_profiler) > 0:
             from .utils import line_profiler
             inequalities, lp = line_profiler(
