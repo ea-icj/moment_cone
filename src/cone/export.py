@@ -3,15 +3,17 @@
 __all__ = (
     "ExportFormat",
     "export_normaliz",
+    "import_normaliz",
     "export_latex",
     "export_python",
     "export_many",
 )
 
 from .typing import *
-from .tau import Tau
+from .tau import *
 from .inequality import Inequality
 from .representation import *
+from re import split as re_split
 
 # Available export formats
 ExportFormat = Literal[
@@ -24,7 +26,7 @@ ExportFormat = Literal[
 
 
 #######################################################################
-#I. Normaliz export
+#I.a Normaliz export
 #######################################################################
 
 def Liste_to_Normaliz_string(liste: list[list[int]], sgn: int = 1) -> str: #sgn=1 ou -1 allows to change the sign, exchange >=0 and <=0
@@ -96,6 +98,50 @@ def export_normaliz(
     fileO.write(Liste_to_Normaliz_string(True_inequations,-1)) #Our conventions so far work with inequalities of the form \sum a_i\lambda_i<=0 whil Normaliz standard is ">=0"
     fileO.close()
 
+#######################################################################
+#I.b Normaliz import
+#######################################################################
+
+
+def convert_lines_from_Normaliz_output(lines: Sequence[str], V: Representation, sgn: int =-1 ) -> Sequence[Inequality]:
+    """ lines is a list of lines read from a Normaliz output file, e.g. via
+    fichier = open("/home/bm29130h/Documents/Recherche/Ressources_autres/GDT/Machine Learning/calculs Kron/2 oct/ineq_Normaliz"+st+".out","r")
+    lines = fichier.readlines()
+    fichier.close() 
+    
+    They are converted to inequalities compatible with our implementation (up to symmetries in Kronecker case)
+    """
+    full_list=[]
+    concerned_line=False
+    for l in lines[16:]:
+        if l=='\n':
+            concerned_line=False
+        if concerned_line:
+            m=re_split(r" ",l)
+            m[-1]=m[-1][:-1]
+            mp: list[int] = []
+            for mm in m:
+                if mm!='':
+                   mp.append(int(mm)*sgn)
+            tau=Tau.from_flatten(mp,V.G)
+            if isinstance(V,KroneckerRepresentation):
+                tau=tau.end0_representative
+            full_list.append(tau)
+        if l[-21:]=="support hyperplanes:\n":
+            concerned_line=True
+    res=unique_modulo_symmetry_list_of_tau(full_list)
+    return [Inequality.from_tau(tau) for tau in res]
+
+def import_normaliz(rep_path: str, V: Representation) -> Sequence[Inequality]:
+    """rep_path is the path to the repository containing a Normaliz output, e.g. path="/home/bm29130h/Documents/Recherche/Ressources_autres/GDT/Machine Learning/calculs Kron/2 oct/", V is the representation related to the inequalities (used to construct blocks for tau)
+    
+    the function then applies convert_lines_from_Normaliz_output
+    """
+    fichier = open(rep_path,"r")
+    lines = fichier.readlines()
+    fichier.close() 
+    return convert_lines_from_Normaliz_output(lines,V) 
+    
 
 #######################################################################
 #II. Latex export
@@ -285,3 +331,5 @@ def export_many(
             case "None":
                 export_none(V, inequations, extra_info=extra_info)
                 
+
+
