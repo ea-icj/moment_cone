@@ -43,6 +43,17 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
     Permutation((2, 0, 1))
     Permutation((2, 1, 0))
     """
+    # Cache of instances of Permutation
+    __all_instances: ClassVar[dict["Permutation", "Permutation"]] = {}
+
+    # Cache of permutations returned by Permutation.all_min_rep
+    __all_min_rep: ClassVar[dict[tuple[int, ...], list["Permutation"]]] = {}
+
+    def __new__(cls, indexes: Iterable[int] ) -> "Permutation":
+        """ Construction with reusing of already computed Permutation instance """
+        d = super().__new__(cls, indexes)
+        return cls.__all_instances.setdefault(d, d)
+
     @property
     def n(self) -> int:
         return len(self)
@@ -113,9 +124,9 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         """
         # More efficient way ?
         return filter(lambda p: p.length == l, Permutation.all(n))
-    
+
     @staticmethod
-    def all_min_rep(symmetries: Iterable[int]) -> Iterable["Permutation"]:
+    def all_min_rep(symmetries: Iterable[int]) -> list["Permutation"]:
         """
         Returns all permutations of S_n that are increasing along each block of given symmetries.
 
@@ -165,10 +176,20 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
                         yield head, *tail
 
         symmetries = tuple(symmetries)
-        n = sum(symmetries)
-        for parts in all_recurs(tuple(range(n)), symmetries):
-            yield Permutation(itertools.chain.from_iterable(parts))
 
+        # Trying to use the cache
+        try:
+            return Permutation.__all_min_rep[symmetries]
+        except KeyError:
+            pass
+
+        n = sum(symmetries)
+        perms: list[Permutation] = []
+        for parts in all_recurs(tuple(range(n)), symmetries):
+            perms.append(Permutation(itertools.chain.from_iterable(parts)))
+
+        Permutation.__all_min_rep[symmetries] = perms
+        return perms
         
     @staticmethod
     def from_cycles(n: int, *cycles: Sequence[int]) -> "Permutation":
