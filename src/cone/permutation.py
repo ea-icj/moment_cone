@@ -54,6 +54,47 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         d = super().__new__(cls, indexes)
         return cls.__all_instances.setdefault(d, d)
 
+    @staticmethod
+    def from_inversions(n: int, inversions: Iterable[tuple[int, int]]) -> "Permutation":
+        """
+        Reconstructs a permutation from its inversion set.
+        
+        Parameters:
+            n (int): The size of the permutation (0 to n-1).
+            inversions (set of tuples): The set of inversions, where each inversion is a tuple (i, j) with i < j.
+        
+        Returns:
+            The reconstructed permutation.
+
+        Example:
+
+        >>> from cone import Permutation
+        >>> p = Permutation((2, 3, 5, 0, 4, 1))
+        >>> p.inversions
+        ((0, 3), (0, 5), (1, 3), (1, 5), (2, 3), (2, 4), (2, 5), (4, 5))
+        >>> Permutation.from_inversions(6, p.inversions)
+        Permutation((2, 3, 5, 0, 4, 1))
+        """
+        inversions = tuple(inversions)
+
+        # Initialize the inversion count for each element
+        inv_count = [0] * n
+        for i, j in inversions:
+            inv_count[j] += 1
+        
+        # Construct the permutation by placing numbers from largest to smallest
+        w = [-1] * n
+        available_num = list(reversed(range(n)))
+        for position in range(n-1, -1, -1):
+            num = available_num.pop(inv_count[position])
+            w[position] = num
+        perm = Permutation(w)
+        
+        # Storing used inversions in the corresponding cache
+        perm.inversions = inversions
+
+        return perm
+    
     @property
     def n(self) -> int:
         return len(self)
