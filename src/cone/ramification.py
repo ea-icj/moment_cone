@@ -82,7 +82,7 @@ def Normalization_Factorized_Polynomial(Jb: dict[Polynomial, int]) -> dict[Polyn
         d[new_key]=Jb[P]
     return d
 
-def Compute_JA_square_free(ineq: Inequality, V: Representation) -> Polynomial:
+def Compute_JA_square_free(ineq: Inequality, V: Representation) -> (Polynomial,Polynomial,Iterable[Polynomial]):
     tau = ineq.tau
     ring = V.QV
     # a generic vector in VV^tau
@@ -92,6 +92,7 @@ def Compute_JA_square_free(ineq: Inequality, V: Representation) -> Polynomial:
     gr = tau.grading_roots_in(ineq.inversions)
     Jred: Polynomial = 1
     J: Polynomial = 1
+    factors_Jred=[]
     for x in sorted(gr.keys(),reverse=True): # Choose a diagonal block of Tpi that is a weight of tau        
         M=matrix(ring,len(gr[x]))
         for col,root in enumerate(gr[x]): # List of roots such that tau.scalar(root)=x
@@ -111,38 +112,16 @@ def Compute_JA_square_free(ineq: Inequality, V: Representation) -> Polynomial:
         remainder: Polynomial
         Jbred, remainder = Jb.quo_rem(Jbred_denom)
         assert remainder == 0
-
-        #print("Jbred = ", Jbred)
-        #print("Jb factors =", dict(M.det().factor()))
-
-        Jred, remainder = (Jred * Jbred).quo_rem(sage_gcd(Jred, Jbred))
+        
+        Jred_new, remainder = (Jred * Jbred).quo_rem(sage_gcd(Jred, Jbred)) #computing the square free version of Jred*Jbred
+        factor_Jred,remainder2=Jred_new.quo_rem(Jred)
+        if factor_Jred.degree()!=0:
+            factors_Jred.append(factor_Jred) #new factor in Jred at this level
         J *= Jb
-        assert remainder == 0
+        Jred=Jred_new
+        assert (remainder == 0) and (remainder2==0)
 
-    return J,Jred
-
-def Smith_n_1(A: Matrix) -> Any:
-    "Compute the gcd of the minors of A of size n-1"
-    combinaisons = list(itertools.combinations(range(A.nrows()),A.nrows()-1))
-    ring=A.base_ring()
-    pgcd = ring(0)
-    
-    # Run over the n-1 x n-1 minors
-    for lignes in combinaisons:
-        for colonnes in combinaisons:
-            # Extract submatrices
-            sous_matrice = A.matrix_from_rows_and_columns(lignes, colonnes)
-            
-            # Det            
-            det_Smith = sous_matrice.det()
-            
-            # Upgrade GCD
-            pgcd = pgcd.gcd(det_Smith)
-            
-            #If the gcd is 1 stop
-            if pgcd == 1:
-                return pgcd    
-    return pgcd
+    return J,Jred,factors_Jred
 
 def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, method_R0: Method) -> bool :
     ws=ineq.w
@@ -184,7 +163,7 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
                     return(False)
 
     ### Divisor R_0
-    J,J_square_free = Compute_JA_square_free(ineq, V) # The Jacobian and it's reduced form
+    J,J_square_free, factors_J_sqf= Compute_JA_square_free(ineq, V) # The Jacobian and it's reduced form
     
     # Generic point v of V(tau<=0) and matrix of Tpi at (e,v)
     v = point_vect(Neg0_Weights_sorted,V,V.QV)
@@ -222,8 +201,11 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
     B0z=B0.subs(subs_dict)
     L0z=L0.subs(subs_dict)
     Jz=J.subs(subs_dict)
-    J_sqf_z=J_square_free.subs(subs_dict)
-    factors_J_sqf_z = list(dict(J_sqf_z.factor()).keys())
+    factors_J_sqf_z = sum([list(dict(Poly.subs(subs_dict).factor()).keys()) for Poly in factors_J_sqf],[])
+    #print(factors_J_sqf_z)
+    #print(list(dict(J_sqf_z.factor()).keys()))
+    #J_sqf_z=J_square_free.subs(subs_dict)
+    #factors_J_sqf_z=list(dict(J_sqf_z.factor()).keys())
     Ldelta=[]
     for delta1 in factors_J_sqf_z:
         quo, rem = Jz.quo_rem(delta1**2)
@@ -238,16 +220,6 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
         delta=1
     else: 
         delta = prod(Ldelta)            
-    # Computation of reduced delta as factorized polynomial
-    #Smith_n_un=Smith_n_1(Az)
-    # FIXME: type ignore
-    #s: int = J_sqf_z.degree() - Smith_n_un.degree()
-    #exponent=max(s-1,1)
-    #pgcd=Jz.gcd(Smith_n_un**exponent)
-    
-    #delta1 = Jz // pgcd 
-    #delta = delta1 // delta1.gcd(delta1.derivative()) 
-    #Ldelta=list(dict(delta.factor()).keys())
     
 
     # Computation of Bezout inverse
