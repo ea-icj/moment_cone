@@ -463,6 +463,7 @@ class Tau:
     @cached_property
     def outer(self) -> tuple[int, ...]:
         """ Returns length of the symmetries in tau """
+        from .utils import symmetries
         return tuple(symmetries(self.components))
         
     def orbit_symmetries(self) -> Iterable["Tau"]:
