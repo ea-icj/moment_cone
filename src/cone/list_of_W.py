@@ -20,7 +20,7 @@ from .tau import Tau
 from .representation import *
 from .inequality import Inequality
 from .utils import *
-from sage.all import Partition,Partitions
+from sage.all import Partition, Partitions
 from copy import copy, deepcopy
 
 def List_Inv_Ws_Mod(tau : Tau,V: Representation) -> Iterable[dict[int,list[Root]]]:
@@ -38,25 +38,26 @@ def List_Inv_Ws_Mod(tau : Tau,V: Representation) -> Iterable[dict[int,list[Root]
     max_nb_blocks = max(nbs_blocks) # max number of blocks on the first row (or equivalently last column)
     
     weights_grid = np.empty((s,max_nb_blocks, max_nb_blocks), dtype=int)
-    size_grid = np.empty((s,max_nb_blocks, max_nb_blocks), dtype=object)
+    sizes_blocks = np.empty((s,max_nb_blocks+1), dtype=int)
     #size_grid = np.empty((s,max_nb_blocks, max_nb_blocks), dtype=[('x', int), ('y', int)])
     inner_grid = np.empty((s,max_nb_blocks, max_nb_blocks), dtype=object)
     outer_grid = np.empty((s,max_nb_blocks, max_nb_blocks), dtype=object)
     init_inv = np.empty((s,max_nb_blocks, max_nb_blocks), dtype=object)
     # List of blocks that will still contribute to the weight p
-    List_redroots_next,Dic_tau_redroots = Init_pos_redroots(tau)
-    current_pos=List_redroots_next[0]   # copy of GL,i,j
+    List_pos,Dic_tau_redroots = Init_pos_redroots(tau)
+    current_pos=List_pos[0]   # copy of GL,i,j
     #Initialization of target_weights to len(grading_positive_weights)
     target_weights = {key: len(value) for key, value in tau.positive_weights(V).items()}
     for k in range(s):
+        sizes_blocks[k,nbs_blocks[k]]=tau.reduced.mult[k][nbs_blocks[k]]
         for i in range(nbs_blocks[k]):
+            sizes_blocks[k,i] = tau.reduced.mult[k][i]
             for j in range(i,nbs_blocks[k]):
-                size_grid[k,i,j] = [tau.reduced.mult[k][i],tau.reduced.mult[k][j+1]]
                 weights_grid[k,i,j] = tau.reduced.values[k][i]-tau.reduced.values[k][j+1]
                 inner_grid[k,i,j] = [0]*(tau.reduced.mult[k][i])
                 outer_grid[k,i,j] = [tau.reduced.mult[k][j+1]]*(tau.reduced.mult[k][i])
     #print("tttt",inner_grid,outer_grid,target_weights)
-    result= List_Inv_W_Mod_rec(nbs_blocks,init_inv,weights_grid,size_grid,inner_grid,outer_grid,target_weights,List_redroots_next,Dic_tau_redroots)
+    result= List_Inv_W_Mod_rec(nbs_blocks, sizes_blocks, init_inv, weights_grid, inner_grid, outer_grid, target_weights, List_pos, Dic_tau_redroots)
     print("result global function_List_Inv_WS_Mod",result)
     return result
 
@@ -88,20 +89,23 @@ def adjust_inner_outer_ijk(inner_ik,outer_ik,entry_ij,entry_jk):
              outer_ik_new.append(min(outer_ik[i1],entry_jk[mj-entry_ij[i1]-1]))
     return (inner_ik_new,outer_ik_new)
 
-def List_Inv_W_Mod_rec(nbs_blocks : list[int],current_inv,weights_grid,size_grid,inner_grid,outer_grid,target_weights,List_redroots_next,Dic_tau_redroots):
-    ## We first determine the possible partitions to take in position current_pos
-    # Possible lengths
-    if len(List_redroots_next)==0:
-        return [Table_part_2_inv_list(nbs_blocks,size_grid,weights_grid,current_inv)]
-    current_pos=List_redroots_next[0]
+def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_grid,inner_grid,outer_grid,target_weights,List_pos,Dic_tau_redroots):
+
+    if len(List_pos)==0:
+        print("current_inv",current_inv, weights_grid)
+        return [Table_part_2_inv_list(nbs_blocks,sizes_blocks,weights_grid,current_inv)]
+    current_pos=List_pos[0]
     k,i,j=current_pos
     result=[]
     p = weights_grid[*current_pos]
     #print("ggg", current_pos, weights_grid)
-    Dic_tau_redroots[p]=Dic_tau_redroots[p][1:]
-    List_redroots_next=List_redroots_next[1:]
+    Dic_tau_redroots_next=Dic_tau_redroots.copy()
+    Dic_tau_redroots_next[p]=Dic_tau_redroots_next[p][1:]
+    List_pos=List_pos[1:]
+    ## We first determine the possible partitions to take in position current_pos
+    # Possible lengths
     if p in target_weights.keys():
-        if len(Dic_tau_redroots[p]) == 0: # On peut améliorer en tenant compte de inner et outer
+        if len(Dic_tau_redroots_next[p]) == 0: # On peut améliorer en tenant compte de inner et outer
             target_lengths = [target_weights[p]]
         else :
             target_lengths = [l for l in range(target_weights[p]+1)]
@@ -109,7 +113,7 @@ def List_Inv_W_Mod_rec(nbs_blocks : list[int],current_inv,weights_grid,size_grid
         target_lengths=[0]
     # We run over these lengths
     if nbs_blocks[k]==0:
-        return  List_Inv_W_Mod_rec(nbs_blocks, current_inv, weights_grid, size_grid, inner_grid, outer_grid, target_weights, List_redroots_next,Dic_tau_redroots)
+        return  List_Inv_W_Mod_rec(nbs_blocks, sizes_blocks, current_inv, weights_grid, inner_grid, outer_grid, target_weights, List_pos,Dic_tau_redroots_next)
     else:
         for l in target_lengths :
         # Je crois que la ligne suivante ne marche pas car notre partition est concurrente de celle de Sage
@@ -180,15 +184,17 @@ def List_Inv_W_Mod_rec(nbs_blocks : list[int],current_inv,weights_grid,size_grid
                 # Exit if not possible : inner, outer incompatible with target_weights
                 to_continue=True
                 for p1 in target_weights_next.keys():
-                    MAX_mult=sum(sum(outer_grid_next[*free_pos]) for free_pos in Dic_tau_redroots[p1])
-                    MIN_mult=sum(sum(inner_grid_next[*free_pos]) for free_pos in Dic_tau_redroots[p1])
+                    MAX_mult=sum(sum(outer_grid_next[*free_pos]) for free_pos in Dic_tau_redroots_next[p1])
+                    MIN_mult=sum(sum(inner_grid_next[*free_pos]) for free_pos in Dic_tau_redroots_next[p1])
+                    if current_pos==(1,0,0):
+                        print("MAX_mult,MIN_mult,target_weights_next,p1,Dic_tau_redroots_next", MAX_mult,MIN_mult,target_weights_next,p1,Dic_tau_redroots_next)
                     if MAX_mult < target_weights_next[p1] or MIN_mult > target_weights_next[p1] :
                         to_continue=False
-                        print("stop this branch")
-                    # Recursive call
+                        print("stop this branch, next_inv, inner, outer, current_pos",inner_grid_next, outer_grid_next, next_inv,current_pos)
+                # Recursive call
                 if to_continue:
-                    result+= List_Inv_W_Mod_rec(nbs_blocks, next_inv, weights_grid, size_grid, inner_grid_next, outer_grid_next, target_weights_next, List_redroots_next, Dic_tau_redroots)
-    print("partial function result, inner_grid,outer_grid,next_inv,",result)
+                    result+= List_Inv_W_Mod_rec(nbs_blocks, sizes_blocks, next_inv, weights_grid, inner_grid_next, outer_grid_next, target_weights_next, List_pos, Dic_tau_redroots_next)
+    print("partial function result, inner_grid,outer_grid,next_inv,current_pos",result, inner_grid_next, outer_grid_next, next_inv,current_pos)
     return result
         
 """        
@@ -207,7 +213,7 @@ def Next_pos(current_pos : Tuple[int],nbs_blocks : list[int]) -> Tuple[int]:
 """
 
 
-def Table_part_2_inv_list(nbs_blocks : list[int],size_grid,weights_grid,T) -> dict[int, list[Root]]:
+def Table_part_2_inv_list(nbs_blocks : list[int],sizes_blocks,weights_grid,T) -> dict[int, list[Root]]:
     """
     T is a 3-dimensional table of partitions encoding a set of inversions. 
     T[pos,i,j] (with j>=i) row i column j
@@ -221,14 +227,14 @@ def Table_part_2_inv_list(nbs_blocks : list[int],size_grid,weights_grid,T) -> di
     for pos,a in enumerate(nbs_blocks):
         shift_i=0
         for i in range(a):
-            shift_j=size_grid[pos,0,0][0]
+            shift_j=sum([sizes_blocks[pos,l] for l in range(i+1)])
             for j in range(i,a):
                 for i1,l in enumerate(T[pos,i,j][::-1]):
                     for j1 in range(l):
                         result[weights_grid[pos,i,j]].append(Root(pos,shift_i+i1,shift_j+j1)) 
-                shift_j+=size_grid[pos,j,j][1]
-            shift_i+=size_grid[pos,i,i][0]
-    return result    
+                shift_j+=sizes_blocks[pos,j+1]
+            shift_i+=sizes_blocks[pos,i]
+    return result
 
 def inversion_set_to_permutation(n, inversions):
     """

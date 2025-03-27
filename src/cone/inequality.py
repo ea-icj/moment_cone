@@ -92,7 +92,7 @@ class Inequality:
         """
         if self._gr_inversions is None :
             self._inversions = self.tau.grading_roots_in(self.inversions) 
-        return self._inversions    
+        return self._gr_inversions    
 
     def _compute_w(self) -> list[Permutation]:
         """
@@ -219,7 +219,9 @@ class Inequality:
             tau = Tau(tau_components)
             return Inequality(tau, inversions=invs)
         else :
+            print("aaa",self.tau.components,self.gr_inversions)
             pairs = tuple(zip(self.tau.components, self.gr_inversions))
+            print(pairs, self.tau.G.outer)
             blocks = (sorted(b) for b in Blocks(pairs, self.tau.G.outer))
             tau_components, gr_invs = zip(*itertools.chain.from_iterable(blocks))
             tau = Tau(tau_components)
