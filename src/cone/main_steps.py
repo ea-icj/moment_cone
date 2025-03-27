@@ -262,12 +262,15 @@ class InequalityCandidatesStep(TransformerStep[Tau, Inequality]):
     It generates only pending inequalities.
     """
     def __call__(self, tau_dataset: Dataset[Tau]) -> ListDataset[Inequality]:
-        from .list_of_W import ListWs_Mod
+        from .list_of_W import List_Inv_Ws_Mod
         ineqalities: list[Inequality] = []
         for tau in tau_dataset.pending():
-            Lw = ListWs_Mod(tau, self.V)
+            Lw = List_Inv_Ws_Mod(tau, self.V)
+            print("(tau,Lw)=",tau,Lw) 
             # TODO : Fait-on un dictionnaire tau -> liste de w ?
-            ineqalities += [Inequality(tau,w) for w in Lw]
+            for gr_inv in Lw:
+                print(gr_inv)
+            ineqalities += [Inequality(tau,gr_inversions=gr_inv) for gr_inv in Lw]
 
         return ListDataset(
             pending=ineqalities,

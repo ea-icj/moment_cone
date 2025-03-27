@@ -11,6 +11,6 @@ from .permutation import Permutation
 from .main_steps import *
 from .main import *
 from .export import *
-from .reference_datas.comparisons import *
+#from .reference_datas.comparisons import *
 
 # FIXME: remaining default imports

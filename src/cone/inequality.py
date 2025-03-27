@@ -41,8 +41,8 @@ class Inequality:
         self, 
         tau: Tau, 
         w: Optional[Iterable[Permutation]] = None,
-        inversions: Optional[List[Root]] = None 
-        gr_inversions: Optional[Dict[int, List[Root]]] = None
+        inversions: Optional[list[Root]] = None,
+        gr_inversions: Optional[dict[int, list[Root]]] = None
     ):
         if w is None and inversions is None and gr_inversions is None :
             raise ValueError("At least one of w, inversions or gr_inversions, should be defined")
@@ -63,7 +63,7 @@ class Inequality:
         return Tau(tuple(wk.inverse(ck) for wk, ck in zip(self.w, self.tau.components)))
     
     @cached_property
-    def w(self) -> List[Permutation]:
+    def w(self) -> list[Permutation]:
         """
         Property w computed from inversions if not given at the initialisation.
         """
@@ -86,7 +86,7 @@ class Inequality:
         return self._inversions
     
     @cached_property
-    def gr_inversions(self) -> Dict[int, List[Root]]:
+    def gr_inversions(self) -> dict[int, list[Root]]:
         """
         Property gr_inversions computed from inversions if not given at the initialisation.
         """
@@ -94,15 +94,15 @@ class Inequality:
             self._inversions = self.tau.grading_roots_in(self.inversions) 
         return self._inversions    
 
-    def _compute_w(self) -> List[Permutation]:
+    def _compute_w(self) -> list[Permutation]:
         """
         Compute w from the inversions.
         """
-        TODO avec perm_from_inversions
+        #TODO avec perm_from_inversions
         
         return 
 
-    def _compute_inversions_from_w(self) -> Dict[int, List[Root]]:
+    def _compute_inversions_from_w(self) -> dict[int, list[Root]]:
         """
         Compute the inversions from w.
         
@@ -244,5 +244,4 @@ class Inequality:
 def full_under_symmetry_list_of_ineq(seq_ineq: Iterable[Inequality]) -> Iterable[Inequality] :
     seq_tau=full_under_symmetry_list_of_tau([ineq.wtau for ineq in seq_ineq])
     return([Inequality.from_tau(tau) for tau in seq_tau])
-
 
