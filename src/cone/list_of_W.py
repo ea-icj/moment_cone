@@ -59,7 +59,7 @@ def List_Inv_Ws_Mod(tau : Tau,V: Representation) -> Iterable[dict[int,list[Root]
     #print("tttt",inner_grid,outer_grid,target_weights)
     sym = tau.outer
     sum_sym=[sum(sym[:i]) for i in range(len(sym)+1)]
-    test_inc= not(1 in sum_sym)
+    test_inc= True #not(1 in sum_sym)
     result= List_Inv_W_Mod_rec(nbs_blocks, sizes_blocks, init_inv, weights_grid, inner_grid, outer_grid, target_weights, List_pos, Dic_tau_redroots,sum_sym,test_inc)
     #print("result global function_List_Inv_WS_Mod",result)
     return result
@@ -95,8 +95,14 @@ def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_
     if len(List_pos)==0: #last position already hit
         return [Table_part_2_inv_list(nbs_blocks,sizes_blocks,weights_grid,current_inv)]
     current_pos=List_pos[0]
-    List_pos_next=List_pos[1:]  
+    List_pos_next=List_pos[1:]
     k,i,j=current_pos
+    test_inc_next=test_inc
+    if len(List_pos_next)!=0 and List_pos_next[0][0]>k: #Reinit test_inc when a new bloc appears 
+        test_inc_next=True 
+    #if current_pos[0] in sum_sym : #Reinit test_inc when a new bloc (with respect to symmetries of tau); argument passed to future inductive call
+    #    test_inc=True
+    test_eff=(current_pos[0] not in sum_sym) #In the current instance of List_Inv_W_Mod_rec, we will consider comparisons with the previous bloc only when it satisfies tau.components[k-1] = tau.components[k] (until test_inc=False) 
     result=[]
     p = weights_grid[*current_pos]
     Dic_tau_redroots_next=Dic_tau_redroots.copy()
@@ -111,8 +117,9 @@ def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_
     else:
         target_lengths=[0]
     # We run over these lengths
-    if nbs_blocks[k]==0:
-        return  List_Inv_W_Mod_rec(nbs_blocks, sizes_blocks, current_inv, weights_grid, inner_grid, outer_grid, target_weights, List_pos_next,Dic_tau_redroots_next,sum_sym,test_inc)
+    if nbs_blocks[k]==0: 
+        print("fffffffffffffffffffffff")
+        return  List_Inv_W_Mod_rec(nbs_blocks, sizes_blocks, current_inv, weights_grid, inner_grid, outer_grid, target_weights, List_pos_next,Dic_tau_redroots_next,sum_sym,test_inc_next)
     else:
         for l in target_lengths :
             partit=[list(part) for part in Partitions(l, inner=inner_grid[*current_pos], outer=outer_grid[*current_pos])]
@@ -121,12 +128,12 @@ def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_
             s= len(weights_grid) 
             for mu in current_part_list :
                 # If test_inc keep only mu that are bigger or equal
-                if test_inc and current_pos[0] not in sum_sym :
-                     mu_ref=current_inv[current_pos[0]-1,current_pos[1],current_pos[2]]
-                     if mu < mu_ref :
+                if test_inc and test_eff:
+                     mu_ref=current_inv[k-1,i,j]
+                     if mu < mu_ref:
                          continue # skip this mu
-                     if mu > mu_ref :
-                         test_inc = False # We will not consider the order relation next
+                     if mu > mu_ref:
+                         test_inc = False # for some lexicographic order, we have ensured that w[k]>w[k-1]
                 next_inv = current_inv.copy() # copy to avoid confusion
                 next_inv[*current_pos]=mu
                 #print("mu, current_pos, next_inv, target_weights,p,l",mu, current_pos, next_inv,target_weights,p,l)
@@ -157,7 +164,7 @@ def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_
                         #print("stop this branch, next_inv, inner, outer, current_pos",inner_grid_next, outer_grid_next, next_inv,current_pos)
                 # Recursive call
                 if to_continue:
-                    result+= List_Inv_W_Mod_rec(nbs_blocks, sizes_blocks, next_inv, weights_grid, inner_grid_next, outer_grid_next, target_weights_next, List_pos_next, Dic_tau_redroots_next,sum_sym,test_inc)
+                    result+= List_Inv_W_Mod_rec(nbs_blocks, sizes_blocks, next_inv, weights_grid, inner_grid_next, outer_grid_next, target_weights_next, List_pos_next, Dic_tau_redroots_next,sum_sym,test_inc_next)
     #print("partial function result,next_inv,current_pos",result, next_inv,current_pos)
     return result
         

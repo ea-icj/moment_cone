@@ -247,7 +247,7 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
             p[cycle[-1]] = cycle[0]
         return Permutation(p)
         
-    def from_inversions(n:int, inversions: Sequence([int]))
+    """def from_inversions(n:int, inversions: Sequence([int,])):
         # Initialize the inversion count for each element
         inv_count = [0] * n
         for i, j in inversions:
@@ -258,7 +258,7 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         for position in range(n-1, -1, -1):
             num = available_num.pop(inv_count[position])
             w[position] = num
-        return Permutation(w)
+        return Permutation(w)"""
     
     @staticmethod
     def embeddings_mod_sym(G: LinearGroup, Gred: LinearGroup)-> Iterable["Permutation"]:
