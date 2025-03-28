@@ -139,8 +139,13 @@ def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_
                 inner_grid_next=inner_grid.copy()    #deepcopy?
                 outer_grid_next=outer_grid.copy()
                 ## above current_pos
-                for a in range(i):
-                    inner_grid_next[k,a,j],outer_grid_next[k,a,j] = adjust_inner_outer_ijk(inner_grid[k,a,j],outer_grid[k,a,j], next_inv[k,a,j-i+a], next_inv[k,i,j], sizes_blocks[k][a], sizes_blocks[k][i])
+                bound_a=max(2*i-j-1,0)
+                for a in range(bound_a,i):
+                    inner_grid_next[k,a,j],outer_grid_next[k,a,j] = adjust_inner_outer_ijk(inner_grid[k,a,j],outer_grid[k,a,j], next_inv[k,a,i-1], next_inv[k,i,j], sizes_blocks[k][a], sizes_blocks[k][i])
+                bound_b=min(2*j-i+1, nbs_blocks[k])
+                for b in range(j+1,bound_b):
+                    inner_grid_next[k,i,b],outer_grid_next[k,i,b] = adjust_inner_outer_ijk(inner_grid[k,i,b],outer_grid[k,i,b], next_inv[k,i,j], next_inv[k,j+1,b], sizes_blocks[k][i], sizes_blocks[k][j+1])
+
                     #for j in 
                     #print("next_inv,inner_grid, outer_grid,k,a,i,j,current_pos,mu", next_inv,inner_grid_next,outer_grid_next,k,a,i,j,current_pos,mu)
                 # Exit if not possible : inner, outer incompatible with target_weights
