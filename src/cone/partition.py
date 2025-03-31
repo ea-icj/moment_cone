@@ -151,19 +151,19 @@ class Partition:
                 yield Partition((x + 1, *tail_sp), check=False)
 
     def find_max_index(L: "Partition", Out: "Partition"): # output not typed because int or None
-    """
-    Biggest index i that can be increased in L to stay a subpartition of Out by keepping the first values of L unchanged.
-    Return None if such an index does not exist.
-    Example
-    > find_max_index([2,1,1],[3,2,1])
-    1
-    """
-    for i in reversed(range(1, len(Out))):  # Parcours à l'envers
-        if L[i - 1] > L[i] and Out[i] > L[i]:
-            return i
-    if Out[0] > L[0] :
-        return 0
-    return None
+        """
+        Biggest index i that can be increased in L to stay a subpartition of Out by keepping the first values of L unchanged.
+        Return None if such an index does not exist.
+        Example
+        > find_max_index([2,1,1],[3,2,1])
+        1
+        """
+        for i in reversed(range(1, len(Out))):  # Parcours à l'envers
+            if L[i - 1] > L[i] and Out[i] > L[i]:
+                return i
+        if Out[0] > L[0] :
+            return 0
+        return None
 
 def gen_partitions(min: int,max: int,In: "Partition",Out: "Partition") -> Iterable["Partition"]:
     """

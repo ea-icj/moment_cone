@@ -24,7 +24,7 @@ from .utils import prod
 
     
 # FIXME: we get d from tau but in the current code, it will leads to recreate the rings for each tau.
-def is_not_contracted(inversions_v: Iterable[Root], tau: Tau, V: Representation, method: Method,non_positive_weights:List[Weights],positive_weights:List[Weights]) -> bool:
+def is_not_contracted(inversions_v: Iterable[Root], tau: Tau, V: Representation, method: Method,non_positive_weights:list[Weights],positive_weights:list[Weights]) -> bool:
     """
     ???
 
