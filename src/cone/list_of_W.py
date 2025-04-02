@@ -29,8 +29,6 @@ def List_Inv_Ws_Mod(tau : Tau,V: Representation) -> list[dict[int,list[Root]]]:
     The output is an iterable of dictionnaries int -> list(Root)
     This function initializes the contraints and start the recursive part.
     """
-    with open("mon_fichier.txt", "a") as f:
-        f.write('\n tau'+ str(tau)+'\n')
 
     lG=list(tau.G)
     while lG and lG[-1] == 1:
@@ -57,10 +55,11 @@ def List_Inv_Ws_Mod(tau : Tau,V: Representation) -> list[dict[int,list[Root]]]:
                 inner_grid[k,i,j] = Partition([]) #[0]*(tau.reduced.mult[k][i])
                 outer_grid[k,i,j] = Partition([tau.reduced.mult[k][j+1]]*(tau.reduced.mult[k][i]))
     
-    sym = tau.outer 
-    sum_sym=[sum(sym[:i]) for i in range(len(sym)+1)] 
+    prev_eq_block=[False]
+    for k in range(1,s):
+        prev_eq_block.append(tau.components[k]==tau.components[k-1]) 
     test_inc= True #in recursive part, when True, we make checks in order to explore modulo symmetries of tau. When turned to false in some recursive instance, check is no longer needed for some component of tau since monotony requirements modulo symmetries of tau are already met. 
-    result= List_Inv_W_Mod_rec(nbs_blocks, sizes_blocks, init_inv, weights_grid, inner_grid, outer_grid, target_weights, List_pos, Dic_tau_redroots,sum_sym,test_inc)
+    result= List_Inv_W_Mod_rec(nbs_blocks, sizes_blocks, init_inv, weights_grid, inner_grid, outer_grid, target_weights, List_pos, Dic_tau_redroots,prev_eq_block,test_inc)
     return result
 
 def Init_pos_redroots(tau:Tau)->(list[Tuple[int]],dict[int,list[Tuple[int]]]):
@@ -95,7 +94,7 @@ def adjust_inner_outer_ijk(inner_ik,outer_ik,entry_ij,entry_jk, mi: int, mj: int
              outer_ik_new.append(min(outer_ik[i1],entry_jk[mj-entry_ij[i1]-1]))
     return (Partition(inner_ik_new),Partition(outer_ik_new))
 
-def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_grid,inner_grid,outer_grid,target_weights,List_pos,Dic_tau_redroots,sum_sym : tuple[int],test_inc : bool)-> list[dict[int,list[Root]]]:
+def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_grid,inner_grid,outer_grid,target_weights,List_pos,Dic_tau_redroots,prev_eq_block : list[bool],test_inc : bool)-> list[dict[int,list[Root]]]:
     """
     recursive part for computing the list of inversion sets compatible with W^{P(tau) and with the C^*-module V^{tau>0}.
     
@@ -106,8 +105,7 @@ def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_
         return [Table_part_2_inv_dic(nbs_blocks,sizes_blocks,weights_grid,current_inv)]
     current_pos=List_pos[0]
     List_pos_next=List_pos[1:]
-    k,i,j=current_pos
-    test_prev=(current_pos[0] not in sum_sym) #In the current instance of List_Inv_W_Mod_rec, we will consider comparisons with the previous bloc only when it satisfies tau.components[k-1] = tau.components[k] (until test_inc=False) in order to work modulo symmetries of tau.
+    k,i,j=current_pos 
     result=[]
     p = weights_grid[*current_pos] 
     Dic_tau_redroots_next=Dic_tau_redroots.copy()
@@ -123,11 +121,8 @@ def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_
         MIN_length=0
         MAX_length=0
     for mu in gen_partitions(MIN_length,MAX_length,inner_grid[*current_pos],outer_grid[*current_pos]):
-        #partit=[list(part) for part in Partitions(l, inner=inner_grid[*current_pos], outer=outer_grid[*current_pos])]
-        #current_part_list=[part+[0]*(len(inner_grid[*current_pos])-len(part)) for part in partit] #padding the partitions (still useful?)
-        #for mu in current_part_list :
-            # If test_inc keep only mu that are bigger or equal
-            if test_inc and test_prev:
+            # If test_inc and tau.components[k-1] = tau.components[k] keep only mu that are bigger or equal
+            if test_inc and prev_eq_block[current_pos[0]]: 
                 mu_ref=current_inv[k-1,i,j]
                 #print('k,mu_ref,mu',k,mu_ref,mu)
                 if mu_ref < mu:
@@ -163,7 +158,7 @@ def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_
             if to_continue:
                 if len(List_pos_next)!=0 and List_pos_next[0][0]>k: #Reinit test_inc when a new bloc appears 
                     test_inc=True 
-                result+= List_Inv_W_Mod_rec(nbs_blocks, sizes_blocks, next_inv, weights_grid, inner_grid_next, outer_grid_next, target_weights_next, List_pos_next, Dic_tau_redroots_next,sum_sym,test_inc)
+                result+= List_Inv_W_Mod_rec(nbs_blocks, sizes_blocks, next_inv, weights_grid, inner_grid_next, outer_grid_next, target_weights_next, List_pos_next, Dic_tau_redroots_next,prev_eq_block,test_inc)
     
     return result
 
