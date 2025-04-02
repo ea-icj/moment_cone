@@ -266,10 +266,6 @@ class InequalityCandidatesStep(TransformerStep[Tau, Inequality]):
         ineqalities: list[Inequality] = []
         for tau in tau_dataset.pending():
             Lw = List_Inv_Ws_Mod(tau, self.V)
-            #print("(tau,Lw)=",tau,Lw) 
-            # TODO : Fait-on un dictionnaire tau -> liste de w ?
-            #for gr_inv in Lw:
-                #print(gr_inv)
             ineqalities += [Inequality(tau,gr_inversions=gr_inv) for gr_inv in Lw]
 
         return ListDataset(

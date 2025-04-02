@@ -11,7 +11,7 @@ from functools import cached_property
 
 from .typing import *
 from .utils import *
-from .permutation import Permutation
+from .permutation import OurPermutation
 from .partition import *
 from .linear_group import *
 from .weight import *
@@ -747,7 +747,7 @@ def find_1PS(V: Representation, quiet: bool = False) -> list["Tau"]:
 
             #List_1PS_smalld_reg=sum([list(tau.orbit_symmetries()) for tau in List_1PS_smalld_reg_mod_sym]  ,[])
             List_1PS_Vred_extended=[]
-            for permut in Permutation.embeddings_mod_sym(V.G, Vred.G):
+            for permut in OurPermutation.embeddings_mod_sym(V.G, Vred.G):
                 for tau in List_1PS_Vred_reg:
                     tau_twist=Tau([tau.components[i] for i in permut])
                     list_tau_extended=tau_twist.m_extend_with_repetitions(V.G)

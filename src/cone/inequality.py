@@ -8,7 +8,7 @@ import itertools
 
 from .typing import *
 from .tau import *
-from .permutation import Permutation
+from .permutation import OurPermutation
 from .blocks import Blocks
 from .root import Root
 from .representation import *
@@ -34,13 +34,13 @@ class Inequality:
                wtau = 2 6 4 1 | 1 5 2 | 3 1 | 1)
     """
     tau: Tau
-    w: tuple[Permutation, ...]
+    w: tuple[OurPermutation, ...]
     wtau: Tau # each w_k applied to each column of tau
 
     def __init__(
         self, 
         tau: Tau, 
-        w: Optional[Iterable[Permutation]] = None,
+        w: Optional[tuple[OurPermutation]] = None,
         inversions: Optional[list[Root]] = None,
         gr_inversions: Optional[dict[int, list[Root]]] = None
     ):
@@ -63,7 +63,7 @@ class Inequality:
         return Tau(tuple(wk.inverse(ck) for wk, ck in zip(self.w, self.tau.components)))
     
     @cached_property
-    def w(self) -> list[Permutation]:
+    def w(self) -> list[OurPermutation]:
         """
         Property w computed from inversions if not given at the initialisation.
         """
@@ -79,7 +79,7 @@ class Inequality:
         """
         if self._inversions is None and self._gr_inversions is not None :
             # Compute from gr_inversions
-            self._inversions = itertools.chain.from_iterable(self._gr_inversions.values())
+            self._inversions = list(itertools.chain.from_iterable(self._gr_inversions.values()))
         elif self._inversions is None :
             # Compute from w
             self._inversions = self._compute_inversions_from_w()
@@ -91,10 +91,10 @@ class Inequality:
         Property gr_inversions computed from inversions if not given at the initialisation.
         """
         if self._gr_inversions is None :
-            self._inversions = self.tau.grading_roots_in(self.inversions) 
+            self._gr_inversions = self.tau.grading_roots_in(self.inversions) 
         return self._gr_inversions    
 
-    def _compute_w(self) -> list[Permutation]:
+    def _compute_w(self) -> tuple[OurPermutation]:
         """
         Compute w from the inversions.
         """
@@ -104,12 +104,13 @@ class Inequality:
         classified_inversions=[[] for _ in range(len(dims))]
         for inv in inversions:
             classified_inversions[inv.k].append(inv)
-        for i,d in enumerate(dims):
-            i_inversions=[(inv.i,inv.j) for inv in classified_inversions[i]]
-            w.append(Permutation.from_inversions(d,i_inversions))
+        #print(classified_inversions)
+        for l,d in enumerate(dims):
+            i_inversions=[(inv.i,inv.j) for inv in classified_inversions[l]]
+            w.append(OurPermutation.from_inversions(d,i_inversions))
         return tuple(w)
 
-    def _compute_inversions_from_w(self) -> dict[int, list[Root]]:
+    def _compute_inversions_from_w(self) -> tuple[Root]:
         """
         Compute the inversions from w.
         
@@ -124,9 +125,10 @@ class Inequality:
         Root(k=3, i=0, j=1)
         Root(k=3, i=0, j=2)
         """
+        result=[]
         for k, p in enumerate(self.w):
-            for i, j in p.inversions:
-                yield Root(k, i, j)
+            result+=[Root(k,i,j) for i,j in p.inversions]
+        return(tuple(result))    
         
     
 
@@ -154,7 +156,7 @@ class Inequality:
         taup = Tau(
             Blocks.from_blocks([[t for t, i in taub] for taub in tau_pairs])
         )
-        w = tuple((Permutation([i for t, i in taub]) for taub in tau_pairs))
+        w = tuple((OurPermutation([i for t, i in taub]) for taub in tau_pairs))
         return Inequality(taup, w=w)
     
     @staticmethod

@@ -13,16 +13,6 @@ from .weight import *
 from .permutation import *
 from .representation import *
 
-#from .utils import dictionary_list_lengths
-
-#dict_Vtau_neg_ou_nul(tau0)=filter_dict_by_key(tau.grading_weights, lambda x: x <= 0)
-
-#Dict_wUw(ineq)=ineq.tau.grading_roots_in(ineq.inversions) (flattened)
-
-
-    
-    
-
  
 def classif_roots(V: Representation, roots: Iterable[Root]) -> list[list[list[Root]]]:
     """
@@ -111,7 +101,7 @@ def map_pi(V: Representation, weights_domain: Sequence[Weight], roots_domain: Se
             target_weight: Weight
             if isinstance(V, ParticleRepresentation):
                 if isinstance(V, FermionRepresentation):
-                    coef=(-1)**(Permutation(target_weight_coeffs).length)#taking into account -1 sign in reordering wedge product
+                    coef=(-1)**(OurPermutation(target_weight_coeffs).length)#taking into account -1 sign in reordering wedge product
                 target_weight_coeffs.sort()
 
                 if isinstance(V, FermionRepresentation):
@@ -200,21 +190,21 @@ def long_calculation(Liste: Sequence[T], function: Callable[..., U], lim: int, e
        succ = True
        resl = None
        try:
-           print('starting calculation ', i,' over',len(Liste)) 
+           #print('starting calculation ', i,' over',len(Liste)) 
            resl=function(l,*extra_arguments)
        except:
-           print('did not complete! in ', lim, ' seconds')
+           #print('did not complete! in ', lim, ' seconds')
            succ=False
        # if the computation finished early, though, the alarm is still ticking!
        # so let's turn it off..
        signal.alarm(0)
        #cancel_alarm()
        if succ:
-          print(i, "success. Result is", resl)
+          #print(i, "success. Result is", resl)
           assert resl is not None
           Res.append((i, l, resl))
-       else: 
-          print(i, "fail")
+       #else: 
+          #print(i, "fail")
     print(len(Res), " over ", len(Liste), " computations finished")
     if len(Res)>0 and type(Res[0][-1])==bool:
        print(len([m for m in Res if m[-1]]), "results with output True")
