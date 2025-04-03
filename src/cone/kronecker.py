@@ -309,7 +309,7 @@ class KroneckerCoefficientMLCache(KroneckerCoefficientCache):
             # Converting decomposition to the Partition -> coeff dictionary
             result = dict()
             for monomial, coeff in product.monomial_coefficients().items():
-                result[Partition(map(int, monomial))] = int(coeff)
+                result[Partition(tuple(map(int, monomial)))] = int(coeff)
 
             self._cache[tuple(partitions)] = result
             return result

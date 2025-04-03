@@ -52,8 +52,8 @@ def List_Inv_Ws_Mod(tau : Tau,V: Representation) -> list[dict[int,list[Root]]]:
             sizes_blocks[k,i] = tau.reduced.mult[k][i]
             for j in range(i,nbs_blocks[k]):
                 weights_grid[k,i,j] = tau.reduced.values[k][i]-tau.reduced.values[k][j+1]
-                inner_grid[k,i,j] = Partition([]) #[0]*(tau.reduced.mult[k][i])
-                outer_grid[k,i,j] = Partition([tau.reduced.mult[k][j+1]]*(tau.reduced.mult[k][i]))
+                inner_grid[k,i,j] = Partition(()) #[0]*(tau.reduced.mult[k][i])
+                outer_grid[k,i,j] = Partition((tau.reduced.mult[k][j+1],)*(tau.reduced.mult[k][i]))
     
     prev_eq_block=[False]
     for k in range(1,s):

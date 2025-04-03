@@ -448,7 +448,7 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
 
     # Substitutions
     Az=A.subs(subs_dict)
-   
+    
     B0z=B0.subs(subs_dict)
     L0z=L0.subs(subs_dict)
     Jz=J.subs(subs_dict)
@@ -481,6 +481,8 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
     #    print('kernel',noyau)
     # Check divisibility
     check=L0z*B0z*noyau
+    #L0B0z=(L0*B0).subs(subs_dict)
+    #check=L0B0z*noyau
     check=ring_R0(check[0])
     quo, rem = check.quo_rem(delta)
     #if Inequality.from_tau(ineq.wtau.end0_representative.sort_mod_sym_dim)  == Inequality.from_tau(Tau(((-1, 0, 1, 0), (0, 1, -1, 0), (1, 0, -1, 0), (-1,))).end0_representative.sort_mod_sym_dim):

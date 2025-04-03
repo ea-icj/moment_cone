@@ -724,7 +724,7 @@ def find_1PS(V: Representation, quiet: bool = False) -> list["Tau"]:
         # List of representations corresponding to various tori S
         sub_rep = [
             KroneckerRepresentation(LinearGroup(p)) 
-            for p in Partition(list(V.G)).all_subpartitions()
+            for p in Partition(tuple(V.G)).all_subpartitions()
         ][1:] #[1:] excludes 1... 1
 
         for Vred in sub_rep:

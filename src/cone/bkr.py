@@ -223,7 +223,7 @@ def chi2Numat(chi: Vector, mult_tau: Blocks[int]) -> Array2D[Partition]:
         for i,mult in enumerate(col):
             p=chi[shift:shift + mult]
             # Add in nu[-1] after removing tailing 0's
-            Nu[i,k]=Partition(list(p))
+            Nu[i,k]=Partition(tuple(p))
             shift += mult
             
     if shift!=len(chi):
