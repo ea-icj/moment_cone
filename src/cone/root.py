@@ -19,6 +19,11 @@ class Root:
 
     def __hash__(self) -> int:
         return hash((self.k, self.i, self.j))
+    
+    def __lt__(self, other):
+        """Lexicographic order on (i, j, k)."""
+        return (self.i, self.j, self.k) < (other.i, other.j, other.k)
+
 
     @property
     def is_in_U(self) -> bool:

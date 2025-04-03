@@ -23,8 +23,8 @@ from .rings import PolynomialRing, Polynomial, Variable
 from .utils import prod
 
     
-# FIXME: we get d from tau but in the current code, it will leads to recreate the rings for each tau.
-def is_not_contracted(inversions_v: Iterable[Root], tau: Tau, V: Representation, method: Method) -> bool:
+def is_not_contracted(inversions_v: tuple[Root], tau: Tau, V: Representation, method: Method,non_positive_weights: list[Weight],positive_weights: list[Weight]) -> bool:
+
     """
     ???
 
@@ -56,23 +56,20 @@ def is_not_contracted(inversions_v: Iterable[Root], tau: Tau, V: Representation,
     
     # FIXME: do we stay we list conversion at each call?
     # Maybe grading root and weight should be implemented using a more convenient class?
-    from itertools import chain
-    non_positive_weights = list(chain.from_iterable(tau.non_positive_weights(V).values())) # todo : Cela est aussi fait avant l'appel à la fonction.
-    positive_weights = list(chain.from_iterable(tau.positive_weights(V).values())) # todo : Cela est aussi fait avant l'appel à la fonction.
 
-    v = point_vect(non_positive_weights, V, ring, bounds=(-1000, 1000))
-    list_inversions_v = list(inversions_v)
-    A = matrix(ring, len(positive_weights), len(list_inversions_v))
-    for j, root in enumerate(list_inversions_v):
+    v = point_vect(non_positive_weights, V, ring, bounds=(-10, 10))
+    #list_inversions_v = list(inversions_v)
+    A = matrix(ring, len(positive_weights), len(inversions_v))
+    for j, root in enumerate(inversions_v):
         uv = V.action_op_el(root, v)
         for i, chi in enumerate(positive_weights):
-            A[i, j] = uv[V.index_of_weight(chi)]
-    #print('inv',list_inversions_v)
-    #print('pos weights', positive_weights)
-    #print('A',A)        
+            A[i, j] = uv[V.index_of_weight(chi)]   
+
+    #print(A)        
 
     rank_A: int = A.change_ring(ring.fraction_field()).rank()
-    return rank_A == len(list_inversions_v)
+    #print(rank_A)
+    return rank_A == len(inversions_v)
 
 def Normalization_Factorized_Polynomial(Jb: dict[Polynomial, int]) -> dict[Polynomial, int]:
     d: dict[Polynomial, int] = {}
@@ -87,9 +84,8 @@ def Compute_JA_square_free(ineq: Inequality, V: Representation) -> tuple[Polynom
     ring = V.QV
     # a generic vector in VV^tau
     zero_weights = tau.orthogonal_weights(V)
-    v = point_vect(zero_weights, V, ring, bounds=(-100, 100)) # bounds unuseful here
-    #gr = grading_dictionary(ineq.inversions, tau.dot_root)
-    gr = tau.grading_roots_in(ineq.inversions)
+    v = point_vect(zero_weights, V, ring, bounds=(-10, 10)) # bounds unuseful here
+    gr = ineq.gr_inversions
     Jred: Polynomial = 1
     J: Polynomial = 1
     factors_Jred: list[Polynomial] = []
@@ -99,7 +95,6 @@ def Compute_JA_square_free(ineq: Inequality, V: Representation) -> tuple[Polynom
             uv=V.action_op_el(root, v)
             for row, chi in enumerate(tau.positive_weights(V)[x]): # List of weights such that tau.scalar(chi)=x 
                 M[row,col]=uv[V.index_of_weight(chi)]
-        #print('M',M)
         
         Jb: Polynomial = M.det()
         partial_derivatives: list[Polynomial] = [
@@ -124,6 +119,10 @@ def Compute_JA_square_free(ineq: Inequality, V: Representation) -> tuple[Polynom
     return J, Jred, factors_Jred
 
 def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, method_R0: Method) -> bool :
+    ineq_check=Inequality.from_tau(Tau(((0, -1, 0, 1),(0, 1, -1, 0),(1, 0, -1, 0),(-1,))))
+    #if Inequality.from_tau(ineq.wtau.end0_representative.sort_mod_sym_dim)  == Inequality.from_tau(Tau(((-1, 0, 1, 0), (0, 1, -1, 0), (1, 0, -1, 0), (-1,))).end0_representative.sort_mod_sym_dim):
+    #    print('coucou Ram',ineq, ineq.inversions, ineq.gr_inversions)
+    #print('Tau',ineq.tau)    
     ws=ineq.w
     Inv_w=list(root for root in ineq.inversions)
     dU=len(Inv_w)
@@ -140,28 +139,33 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
 
     tau=ineq.tau
     
-    # Creation of sorted lists of weights todo: modifier en utilisant mieux la classe tau
-    # TODO : ici on ordonne les clés et crée une liste. Peut-être on peut faire plus simple et dans utils
-    Neg0_Weights_dic=tau.non_positive_weights(V) 
-    Neg0_Weights_sorted=[]
-    for x in sorted(Neg0_Weights_dic.keys(),reverse=True):
-        Neg0_Weights_sorted+=Neg0_Weights_dic[x]
-    Pos_Weights_dic=tau.positive_weights(V)
-    Pos_Weights_sorted=[]
-    for x in sorted(Pos_Weights_dic.keys(),reverse=True):
-        Pos_Weights_sorted+=Pos_Weights_dic[x]
+    # Creation of sorted lists of weights 
+    #Neg0_Weights_dic=tau.non_positive_weights(V) 
+    Neg0_Weights_sorted=list(itertools.chain.from_iterable(tau.non_positive_weights(V)[k] for k in sorted(tau.non_positive_weights(V))))
+    Pos_Weights_sorted=list(itertools.chain.from_iterable(tau.positive_weights(V)[k] for k in sorted(tau.positive_weights(V))))
     
-
+    #print('entry in boundary')
     ### Divisors of the boudary
     for k,w in enumerate(ws):
         for v in w.covering_relations_strong_Bruhat:
             if v.is_min_rep(tau.reduced.mult[k]): 
                 vs = list(ws[:k]) + [v] + list(ws[k+1:])
                 #print('Schub Div',vs)
-                ineqv = Inequality(tau,vs)
-                if is_not_contracted(ineqv.inversions,tau,V,method_S) :
+                #print('v',vs[0])
+                #print(vs[0].inversions)
+                #print(type(vs[0]))
+                ineqv = Inequality(tau,w=tuple(vs))
+                #print(ineq)
+                #print(ineqv)
+                #print(ineqv.inversions)
+                #print(len(Neg0_Weights_sorted))
+                #print(len(Pos_Weights_sorted))
+                if is_not_contracted(ineqv.inversions,tau,V,method_S,Neg0_Weights_sorted,Pos_Weights_sorted) :
                     return(False)
-
+                
+    #if Inequality.from_tau(ineq.wtau.end0_representative.sort_mod_sym_dim)  == Inequality.from_tau(Tau(((-1, 0, 1, 0), (0, 1, -1, 0), (1, 0, -1, 0), (-1,))).end0_representative.sort_mod_sym_dim):
+    #    print('Schub passed')            
+    #print('boundary passed')
     ### Divisor R_0
     J,J_square_free, factors_J_sqf= Compute_JA_square_free(ineq, V) # The Jacobian and it's reduced form
     
@@ -169,7 +173,7 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
     v = point_vect(Neg0_Weights_sorted,V,V.QV)
     A=matrix(V.QV,len(Pos_Weights_sorted),dU)
     B0=matrix(V.QV,len(tau.orthogonal_weights(V)),dU)
-    gr = tau.grading_roots_in(ineq.inversions)
+    gr = ineq.gr_inversions
     col=0
     for x in sorted(gr.keys(),reverse=True): # Choose a diagonal block of Tpi that is a weight of tau
         if x > 0 :   
@@ -197,15 +201,11 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
 
     # Substitutions
     Az=A.subs(subs_dict)
-   
+    
     B0z=B0.subs(subs_dict)
     L0z=L0.subs(subs_dict)
     Jz=J.subs(subs_dict)
     factors_J_sqf_z = sum([list(dict(Poly.subs(subs_dict).factor()).keys()) for Poly in factors_J_sqf],[])
-    #print(factors_J_sqf_z)
-    #print(list(dict(J_sqf_z.factor()).keys()))
-    #J_sqf_z=J_square_free.subs(subs_dict)
-    #factors_J_sqf_z=list(dict(J_sqf_z.factor()).keys())
     Ldelta=[]
     for delta1 in factors_J_sqf_z:
         quo, rem = Jz.quo_rem(delta1**2)
@@ -221,6 +221,8 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
     else: 
         delta = prod(Ldelta)            
     
+    #if Inequality.from_tau(ineq.wtau.end0_representative.sort_mod_sym_dim)  == Inequality.from_tau(Tau(((-1, 0, 1, 0), (0, 1, -1, 0), (1, 0, -1, 0), (-1,))).end0_representative.sort_mod_sym_dim):
+    #    print('delta',delta)
 
     # Computation of Bezout inverse
     LIB=Bezout_Inverse(Ldelta,ring_R0)
@@ -228,10 +230,17 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
     # Kernel of Az modulo delta
     noyau=Kernel_modulo_P(ring_R0,Az,Ldelta,LIB)
 
+    #if Inequality.from_tau(ineq.wtau.end0_representative.sort_mod_sym_dim)  == Inequality.from_tau(Tau(((-1, 0, 1, 0), (0, 1, -1, 0), (1, 0, -1, 0), (-1,))).end0_representative.sort_mod_sym_dim):
+    #    print('kernel',noyau)
     # Check divisibility
     check=L0z*B0z*noyau
+    #L0B0z=(L0*B0).subs(subs_dict)
+    #check=L0B0z*noyau
     check=ring_R0(check[0])
     quo, rem = check.quo_rem(delta)
+    #if Inequality.from_tau(ineq.wtau.end0_representative.sort_mod_sym_dim)  == Inequality.from_tau(Tau(((-1, 0, 1, 0), (0, 1, -1, 0), (1, 0, -1, 0), (-1,))).end0_representative.sort_mod_sym_dim):
+    #    print('Ram0',rem)
+    #    print(ineq)
     return cast(bool, rem == 0)
    
 

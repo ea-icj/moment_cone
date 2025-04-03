@@ -64,7 +64,7 @@ def sign_assignment(chi: Weight,
     idx = 0
     while idx < len(S_input): # Loop on S_input with while since S_input changes
         chi2 = S_input[idx]
-        if chi2.leq(chi,sym) : #chi2<=chi : #if : #if chi<=chi2:# TODO : switch leq
+        if chi2.leq(chi,sym) : #chi2<=chi : 
             S_negative.append(chi2)
             smart_remove(S_input, idx)
         elif chi.leq(chi2,sym) : #chi.leq(chi2,sym):
@@ -188,7 +188,7 @@ def find_hyperplanes_reg_impl(St: WeightSieve, G: LinearGroup, u: int, exp_dim: 
         # 1. We explore the branch where it is excluded from the possible zero elements
         
         St.excluded.append(chi)
-        yield from find_hyperplanes_reg_impl(St, G, u,exp_dim,sym) # TODO : St n'est pas modifié par cet appel ?
+        yield from find_hyperplanes_reg_impl(St, G, u,exp_dim,sym)
         St.excluded.pop()
 
         # 2. We explore the branch where it is defined as a zero element (on the hyperplane)

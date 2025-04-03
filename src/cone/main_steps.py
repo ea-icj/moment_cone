@@ -262,12 +262,11 @@ class InequalityCandidatesStep(TransformerStep[Tau, Inequality]):
     It generates only pending inequalities.
     """
     def __call__(self, tau_dataset: Dataset[Tau]) -> ListDataset[Inequality]:
-        from .list_of_W import ListWs_Mod
+        from .list_of_W import List_Inv_Ws_Mod
         ineqalities: list[Inequality] = []
         for tau in tau_dataset.pending():
-            Lw = ListWs_Mod(tau, self.V)
-            # TODO : Fait-on un dictionnaire tau -> liste de w ?
-            ineqalities += [Inequality(tau,w) for w in Lw]
+            Lw = List_Inv_Ws_Mod(tau, self.V)
+            ineqalities += [Inequality(tau,gr_inversions=gr_inv) for gr_inv in Lw]
 
         return ListDataset(
             pending=ineqalities,
@@ -642,12 +641,11 @@ class ExportStep(FilterStep[Inequality]):
 
 ###############################################################################
 InequalityFilterStr = Literal[
-    "ModuloReduction",
     "PiDominancy",
     "LinearTriangular",
     "BKRCondition",
-    "Birationality",
     "Grobner",
+    "Birationality",   
 ]
 
 inequalities_filter_dict: Final[dict[InequalityFilterStr, type[Step]]] = {

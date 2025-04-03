@@ -7,10 +7,10 @@ from .linear_group import *
 from .root import *
 from .tau import Tau
 from .inequality import Inequality
-from .permutation import Permutation
+from .permutation import OurPermutation
 from .main_steps import *
 from .main import *
 from .export import *
-from .reference_datas.comparisons import *
+#from .reference_datas.comparisons import *
 
 # FIXME: remaining default imports

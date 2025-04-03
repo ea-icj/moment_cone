@@ -1,6 +1,7 @@
 __all__ = (
     "Partition",
     "EnhancedPartitionList",
+    "gen_partitions"
 )
 
 import itertools
@@ -149,6 +150,7 @@ class Partition:
             tail = Partition([min(x + 1, y) for y in self._data[1:]])
             for tail_sp in tail.all_subpartitions():
                 yield Partition((x + 1, *tail_sp), check=False)
+        
 
     def lambda_check(self, l: int) -> "Partition":
         """
@@ -190,6 +192,58 @@ class Partition:
             map(max, itertools.zip_longest(*partitions, fillvalue=0))
         )
 
+def find_max_index(L: Partition, Out: Partition): # output not typed because int or None
+    """
+    Biggest index i that can be increased in L to stay a subpartition of Out by keepping the first values of L unchanged.
+    Return None if such an index does not exist.
+    Example
+    > find_max_index([2,1,1],[3,2,1])
+    1
+    """
+    for i in reversed(range(1, len(Out))):  # Parcours à l'envers
+        if L[i - 1] > L[i] and Out[i] > L[i]:
+            return i
+    if Out[0] > L[0] :
+        return 0
+    return None
+
+def gen_partitions(min: int,max: int,In: Partition,Out: Partition) -> list[Partition]:
+    """
+    Generate all the partitions containing In contained in Out and of weight in [min;max]
+    > [l for l in gen_partitions(4,6,[2,1,0],[4,3,1])]
+    [[2, 1, 1],
+     [2, 2, 0],
+     [2, 2, 1],
+     [3, 1, 0],
+     [3, 1, 1],
+     [3, 2, 0],
+     [3, 2, 1],
+     [3, 3, 0],
+     [4, 1, 0],
+     [4, 1, 1],
+     [4, 2, 0]]
+    """
+    if len(Out)==0:
+        if min == 0 :
+            #print('là',Partition((0))==None)
+            return([Partition([0])])
+        else :
+            return([]) 
+    result = []    
+    current=[x for x in In]+[0]*(len(Out)-len(In)) # copy
+    S=sum(current)
+    if S<=max and S>=min :
+        result.append(Partition([x for x in current]))
+    i=find_max_index(current, Out)
+    while i is not None:
+        current[i]+=1
+        for j in range(i+1,len(Out)):
+            current[j]=In[j]
+        i=find_max_index(current, Out)
+        S=sum(current)
+        if S<=max and S>=min :
+            result.append(Partition([x for x in current]))
+    return result    
 
 class EnhancedPartitionList:
     """

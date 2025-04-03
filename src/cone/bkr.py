@@ -13,7 +13,7 @@ from .weight import *
 from .tau import *
 from .representation import *
 from .inequality import *
-from .permutation import Permutation
+from .permutation import OurPermutation
 from .kronecker import *
 from .permutation import *
 from .array import *
@@ -116,7 +116,7 @@ def all_partitions_of_max_length(n: int, l: Sequence[int], kro: KroneckerCoeffic
     else :        
         # Sort by increasing maximal length (faster) and keep order
         permutation, sorted_l = zip(*sorted(enumerate(l), key=lambda l: l[1]))
-        p_inverse = Permutation(permutation).inverse
+        p_inverse = OurPermutation(permutation).inverse
 
         # All nuplets of partitions without the last length constraint
         head_product = itertools.product(*(Partition.all_for_integer(n, li) for li in sorted_l[:-1]))
@@ -223,7 +223,7 @@ def chi2Numat(chi: Vector, mult_tau: Blocks[int]) -> Array2D[Partition]:
         for i,mult in enumerate(col):
             p=chi[shift:shift + mult]
             # Add in nu[-1] after removing tailing 0's
-            Nu[i,k]=Partition(list(p))
+            Nu[i,k]=Partition(tuple(p))
             shift += mult
             
     if shift!=len(chi):

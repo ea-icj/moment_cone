@@ -38,7 +38,6 @@ def is_linear_triangular(V: Representation, tau: Tau, Invs: list[Root]) -> bool:
             nb_lin_eq+=1
             for j in Indices_neg_weights:
                 if MG[id_chi,j] !=0 :
-                    # TODO : ce qui suit n'est pas très efficace. A améliorer ?
                     chi2 = V.all_weights[j]
                     alpha=chi2.as_vector-chi.as_vector
                     i,j=[k for k in range(len(alpha)) if alpha[k] != 0][:2]

@@ -11,7 +11,7 @@ from functools import cached_property
 
 from .typing import *
 from .utils import *
-from .permutation import Permutation
+from .permutation import OurPermutation
 from .partition import *
 from .linear_group import *
 from .weight import *
@@ -459,6 +459,12 @@ class Tau:
         """
         blocks = (sorted(b) for b in Blocks(self.components, self.G.outer))
         return Tau(itertools.chain.from_iterable(blocks))
+    
+    @cached_property
+    def outer(self) -> tuple[int, ...]:
+        """ Returns length of the symmetries in tau """
+        from .utils import symmetries
+        return tuple(symmetries(self.components))
         
     def orbit_symmetries(self) -> Iterable["Tau"]:
         """
@@ -718,7 +724,7 @@ def find_1PS(V: Representation, quiet: bool = False) -> list["Tau"]:
         # List of representations corresponding to various tori S
         sub_rep = [
             KroneckerRepresentation(LinearGroup(p)) 
-            for p in Partition(list(V.G)).all_subpartitions()
+            for p in Partition(tuple(V.G)).all_subpartitions()
         ][1:] #[1:] excludes 1... 1
 
         for Vred in sub_rep:
@@ -741,7 +747,7 @@ def find_1PS(V: Representation, quiet: bool = False) -> list["Tau"]:
 
             #List_1PS_smalld_reg=sum([list(tau.orbit_symmetries()) for tau in List_1PS_smalld_reg_mod_sym]  ,[])
             List_1PS_Vred_extended=[]
-            for permut in Permutation.embeddings_mod_sym(V.G, Vred.G):
+            for permut in OurPermutation.embeddings_mod_sym(V.G, Vred.G):
                 for tau in List_1PS_Vred_reg:
                     tau_twist=Tau([tau.components[i] for i in permut])
                     list_tau_extended=tau_twist.m_extend_with_repetitions(V.G)
