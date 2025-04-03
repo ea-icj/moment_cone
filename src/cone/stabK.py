@@ -47,88 +47,6 @@ def Lie_action_as_matrices_Vtau(tau : Tau, matrices: dict[Root, Matrix], V: Repr
             res[beta.opposite]=matrices[beta.opposite].matrix_from_rows_and_columns(Indices_V_tau,Indices_V_tau)
     return(res)
 
-# Rename, like dim_of_stabilizer_in_K
-def dim_gen_stab_of_K(matrices: Sequence[Matrix]) -> int:
-    """
-    Recursive function associating an integer to a list of matrices.
-
-    Arguments:
-    - matrices: list [A_0, ..., A_{k-1}] of square matrices of size nxn over Q[i]
-    - these matrices are the images of a basis of Lie(K) in End(V)
-   
-    Returns: an integer.
-    """
-    # Check if all matrices are zero that is V is the trivial representation
-    dk=len(matrices) # dimension of K
- 
-    if all(A.is_zero() for A in matrices):
-        return dk
-
-    n: int = matrices[0].nrows()  # Size of the square matrices
-    # Create the vector v in the representation
-    v = vector(QQ, [randint(-3,3) for i in range(n)])
-    # Construct the matrix M
-    M = matrix(QQ, n, dk, lambda i, k: sum([matrices[k][i,j] * v[j] for j in range(n)]))
-    
-    if M.is_zero(): # If M==0, we change v one for which M is not sero. Almost never used.
-        k: Optional[int] = None
-        for A in matrices:
-            if not A.is_zero():
-                for k,C in enumerate(A.columns()):
-                    if not C.is_zero():
-                        break
-                break
-
-        assert k is not None
-        v = vector(QQ,n)
-        v[k] = 1
-        M = matrix(QQ, n, dk, lambda i, k: sum([matrices[k][i,j] * v[j] for j in range(n)]))
-
-    # Echelon form of M.transpose() to computation modulo the image F of M
-    B_tmp = M.transpose().echelon_form().rref() # reduced echelon form
-    B: Matrix = B_tmp.matrix_from_rows(B_tmp.pivot_rows()) # Suppress zero rows
-    List_Pivots: list[int] = B.pivots()
-
-    # Dimension of V/F
-    qn = n-len(List_Pivots)
-
-    # If V/F is trivial then we can conclude
-    if qn == 0 :
-        return(dk-n)
-    
-    # The images of the elements of the canonical bases indexed by i not in List_Pivots form a basis Bc of V/F 
-    List_Not_Pivots=[i for i in range(B.ncols()) if i not in List_Pivots] # TODO : Complexité quadratique. On peut aller plus vite comme dans complement_of_coordinate avec first...    # The image of e_i for i in List_Pivots is the ith columns of N in the basis Bc
-    N: Matrix = -B.matrix_from_columns(List_Not_Pivots).transpose()
-  
-    # Compute the basis of the left kernel of M. That a bases of the stabilizer of v.
-    kernel_basis: list[Vector] = M.right_kernel().basis()
-    dk_stab=len(kernel_basis)
-    
-    # Determine the set I to form a basis of V/F ## 
-    
-    List_B=[matrix(QQ,qn,qn) for i in range(dk_stab)] 
-    for k, L in enumerate(kernel_basis) :
-        for j,nj in enumerate(List_Not_Pivots):
-            nv = cast(list[Vector], sum([L[i]*matrices[i].column(nj) for i in range(dk)]))
-            
-            #Split nv
-            nv_pivots=vector(QQ,len(List_Pivots))
-            nv_quot=vector(QQ,qn)
-            ip=0;iq=0
-            for i in range(n):
-                if i in List_Pivots:
-                   nv_pivots[ip]=nv[i]
-                   ip+=1
-                else :
-                    nv_quot[iq]=nv[i]
-                    iq+=1
-                   
-            nv_quot+=N*nv_pivots        
-            for i in range(qn):
-                List_B[k][i,j]=nv_quot[i]
-            
-    # Recursive call with the new list of matrices
-    return dim_gen_stab_of_K(List_B)
 
 
 def dim_gen_stab_of_K(T,ListK = None,ListChi = None) -> int: # New
@@ -142,7 +60,8 @@ def dim_gen_stab_of_K(T,ListK = None,ListChi = None) -> int: # New
     - ListChi is a list of elements in the basis of V encoding a subspace
     Returns: an integer.
     """
-
+    #for j in ListChi:
+    #    print(
     # Default values of ListK and ListChi correspond to the entire array T
     dk,dV,dV = T.shape
     if ListK == None:
@@ -150,10 +69,9 @@ def dim_gen_stab_of_K(T,ListK = None,ListChi = None) -> int: # New
     if ListChi == None:
         ListChi=list(range(dV))
 
-
     # Check if all matrices are zero that is V is the trivial representation
     dk = len(ListK)
-    if all(T[i,j,k]==0 for i,j,k in itertools.product(ListK,ListChi,ListChi)):
+    if all(T[k,i,j]==0 for k,i,j in itertools.product(ListK,ListChi,ListChi)):
         return dk
 
     
@@ -162,7 +80,6 @@ def dim_gen_stab_of_K(T,ListK = None,ListChi = None) -> int: # New
     v = vector(ZZ, [randint(-9,9) for i in range(n)])
     # Construct the matrix M
     M = matrix(QQ, n, dk, lambda i, k: sum([T[ListK[k],ListChi[i],ListChi[j]] * v[j] for j in range(n)]))
-
     #from sympy import Matrix as Matrix_sympy
     #Ms = Matrix_sympy(n, dk, lambda i, k: sum(T[ListK[k]][ListChi[i]][ListChi[j]] * v[j] for j in range(n)))
     #Bs_tmp, pivots = A_sympy.T.rref()
@@ -182,7 +99,7 @@ def dim_gen_stab_of_K(T,ListK = None,ListChi = None) -> int: # New
     # The images of the elements of the canonical bases indexed by i not in List_Pivots form a basis Bc of V/F 
     List_Not_Pivots=[i for i in range(B.ncols()) if i not in List_Pivots] # TODO : Complexité quadratique. On peut aller plus vite comme dans complement_of_coordinate avec first...    # The image of e_i for i in List_Pivots is the ith columns of N in the basis Bc
     N: Matrix = -B.matrix_from_columns(List_Not_Pivots).transpose()
-  
+    #print(B,B_tmp,B,N)
     # Compute the basis of the left kernel of M. That a bases of the stabilizer of v.
     kernel_basis: list[Vector] = M.right_kernel().basis()
 
@@ -197,11 +114,13 @@ def dim_gen_stab_of_K(T,ListK = None,ListChi = None) -> int: # New
     T_stab = np.empty((dk_stab,dQ,dQ),dtype=object)
     for k, L in enumerate(kernel_basis) :
         for j,nj in enumerate(List_Not_Pivots):
-            for i,ni in enumerate(ListK):
-                TK[k,i,j] = sum([L[s]*T[s,ni,nj] for s in range(dk)])
+            for i,ni in enumerate(ListChi):
+                #action of the k-th element of (K^{tau})^v: V'->V^{tau} where V' is a supplementary supspace of V^{tau}/K^{tau}v
+                TK[k,i,j] = sum([L[s]*T[ListK[s],ni,ListChi[nj]] for s in range(dk)]) 
             #Split TK
             #print(List_Pivots,type(List_Pivots),len(List_Pivots))
             #nv_pivots=vector(QQ,len(List_Pivots), lambda i: QQ(TK[k,List_Pivots[i],j]))
+            vvv=vector(QQ,n, [TK[k,i,j] for i in range(n)])
             nv_pivots=vector(QQ,len(List_Pivots))
             for i,ip in enumerate(List_Pivots):
                 nv_pivots[i]=TK[k,ip,j]
@@ -209,7 +128,6 @@ def dim_gen_stab_of_K(T,ListK = None,ListChi = None) -> int: # New
             for i,inp in enumerate(List_Not_Pivots):
                 nv_quot[i]=TK[k,inp,j]
             nv_quot+=N*nv_pivots
-            
             for i in range(dQ):
                 T_stab[k,i,j]=nv_quot[i]
             

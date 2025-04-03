@@ -27,7 +27,7 @@ from .kronecker import KroneckerCoefficient, KroneckerCoefficientMLCache
 from .bkr import PlethysmCache
 from .utils import to_literal
 from .export import ExportFormat
-
+from .root import Root
 
 class Dataset(Generic[T], ABC):
     """ Catalog of pending and validated objects of type T
