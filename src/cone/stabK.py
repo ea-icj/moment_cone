@@ -80,8 +80,8 @@ def dim_gen_stab_of_K(T,ListK = None,ListChi = None) -> int: # New
     v = vector(ZZ, [randint(-9,9) for i in range(n)])
     # Construct the matrix M
     M = matrix(QQ, n, dk, lambda i, k: sum([T[ListK[k],ListChi[i],ListChi[j]] * v[j] for j in range(n)]))
-    #from sympy import Matrix as Matrix_sympy
-    #Ms = Matrix_sympy(n, dk, lambda i, k: sum(T[ListK[k]][ListChi[i]][ListChi[j]] * v[j] for j in range(n)))
+    from sympy import Matrix as Matrix_sympy
+    Ms = Matrix_sympy(n, dk, lambda i, k: sum(T[ListK[k]][ListChi[i]][ListChi[j]] * v[j] for j in range(n)))
     #Bs_tmp, pivots = A_sympy.T.rref()
 
     # Echelon form of M.transpose() to computation modulo the image F of M
