@@ -641,11 +641,12 @@ class ExportStep(FilterStep[Inequality]):
 
 ###############################################################################
 InequalityFilterStr = Literal[
+    "ModuloReduction",
     "PiDominancy",
     "LinearTriangular",
     "BKRCondition",
-    "Grobner",
     "Birationality",   
+    "Grobner",
 ]
 
 inequalities_filter_dict: Final[dict[InequalityFilterStr, type[Step]]] = {
@@ -657,8 +658,13 @@ inequalities_filter_dict: Final[dict[InequalityFilterStr, type[Step]]] = {
     "Grobner": GrobnerStep,
 }
 
-# All filters by default except Grobner (the last one)
-default_inequalities_filters: tuple[InequalityFilterStr, ...] = typing.get_args(InequalityFilterStr)[:-1]
+# Default filters
+default_inequalities_filters: tuple[InequalityFilterStr, ...] = (
+    "PiDominancy",
+    "LinearTriangular",
+    "BKRCondition",
+    "Birationality",
+)
 
 TStep = TypeVar("TStep", bound=Step)
 

@@ -21,27 +21,28 @@ from .tau import Tau
 from .representation import *
 from .inequality import Inequality
 from .utils import *
+from .array import *
 from copy import copy, deepcopy
 
-def List_Inv_Ws_Mod(tau : Tau,V: Representation) -> list[dict[int,list[Root]]]:
+
+def List_Inv_Ws_Mod(tau: Tau, V: Representation) -> list[dict[int,list[Root]]]:
     """
     Returns the list of inversion sets compatible with W^{P(tau) and with the C^*-module V^{tau>0}.
     The output is an iterable of dictionnaries int -> list(Root)
     This function initializes the contraints and start the recursive part.
     """
-
     lG=list(tau.G)
     while lG and lG[-1] == 1:
         lG.pop()
     s = len(lG) # Number of non-trivial symmetric groups  
     nbs_blocks=[x-1 for x in tau.reduced.small_d] # for each (k in [0,s-1]), stores the number of blocks-1 of the centralizer of tau.component[k]  
     max_nb_blocks = max(nbs_blocks)
-    weights_grid = np.empty((s,max_nb_blocks, max_nb_blocks), dtype=int) #note that indices (k,i,j) in this array correspond to bloc with indices (i,j+1) in the k-th component.  
-    sizes_blocks = np.empty((s,max_nb_blocks+1), dtype=int) #sizes of the bloc with indices (i,j+1) in the k-th component can be recovered via (sizes_blocs[k,i],sizes_blocs[k,j])
+    weights_grid = empty_array((s,max_nb_blocks, max_nb_blocks), dtype=int) #note that indices (k,i,j) in this array correspond to bloc with indices (i,j+1) in the k-th component.  
+    sizes_blocks = empty_array((s, max_nb_blocks + 1), dtype=int) #sizes of the bloc with indices (i,j+1) in the k-th component can be recovered via (sizes_blocs[k,i],sizes_blocs[k,j])
     #size_grid = np.empty((s,max_nb_blocks, max_nb_blocks), dtype=[('x', int), ('y', int)])
-    init_inv = np.empty((s,max_nb_blocks, max_nb_blocks), dtype=object) #each entry of init_inv will store a partition (in fine, encoding the roots corresponding to the inversions of a w in W^P(tau) compatible with the C^*-module V^{tau>0}.)
-    inner_grid = np.empty((s,max_nb_blocks, max_nb_blocks), dtype=object) # entries of inner_grid and outer_grid are partitions bounding the possible entries of init_inv
-    outer_grid = np.empty((s,max_nb_blocks, max_nb_blocks), dtype=object)
+    init_inv = empty_array((s,max_nb_blocks, max_nb_blocks), dtype=Partition) #each entry of init_inv will store a partition (in fine, encoding the roots corresponding to the inversions of a w in W^P(tau) compatible with the C^*-module V^{tau>0}.)
+    inner_grid = empty_array((s,max_nb_blocks, max_nb_blocks), dtype=Partition) # entries of inner_grid and outer_grid are partitions bounding the possible entries of init_inv
+    outer_grid = empty_array((s,max_nb_blocks, max_nb_blocks), dtype=Partition)
     List_pos,Dic_tau_redroots = Init_pos_redroots(tau)  
     current_pos=List_pos[0]   # first position that will be explored
     #Initialization of target_weights to len(grading_positive_weights)
@@ -62,7 +63,7 @@ def List_Inv_Ws_Mod(tau : Tau,V: Representation) -> list[dict[int,list[Root]]]:
     result= List_Inv_W_Mod_rec(nbs_blocks, sizes_blocks, init_inv, weights_grid, inner_grid, outer_grid, target_weights, List_pos, Dic_tau_redroots,prev_eq_block,test_inc)
     return result
 
-def Init_pos_redroots(tau:Tau)->(list[Tuple[int]],dict[int,list[Tuple[int]]]):
+def Init_pos_redroots(tau: Tau) -> tuple[list[Tuple[int, int, int]], dict[int, list[Tuple[int, int, int]]]]:
     """
     dic_result lists, for each weight p, the indices corresponding to blocks of U with weight p. list_result is a single list of these indices, ordered in such a way that, when exploring it, inner_grid and outer_outer_grid can take into account all constraints.
     """
@@ -75,14 +76,22 @@ def Init_pos_redroots(tau:Tau)->(list[Tuple[int]],dict[int,list[Tuple[int]]]):
                 dic_result[tau1[j-i]-tau1[j+1]].append((k,j-i,j))
                 list_result.append((k,j-i,j))
                 #print(list_result)
-    return (list_result,dic_result)
+    return list_result, dic_result
 
-def adjust_inner_outer_ijk(inner_ik,outer_ik,entry_ij,entry_jk, mi: int, mj: int):
+
+def adjust_inner_outer_ijk(
+        inner_ik: Partition,
+        outer_ik: Partition,
+        entry_ij: Partition,
+        entry_jk: Partition,
+        mi: int,
+        mj: int,
+    ) -> tuple[Partition, Partition]:
     """
     encodes the constraints in bloc (i,k) (in some component) of inner_grid and outer_grid  from already fixed inversions in blocs (i,j) and (j,k).
     """
-    inner_ik_new=[]
-    outer_ik_new=[]
+    inner_ik_new: list[int] = []
+    outer_ik_new: list[int] = []
     for i1 in range(mi):
          if entry_ij[i1]==0:
              inner_ik_new.append(inner_ik[i1])
@@ -92,9 +101,22 @@ def adjust_inner_outer_ijk(inner_ik,outer_ik,entry_ij,entry_jk, mi: int, mj: int
              outer_ik_new.append(outer_ik[i1])
          else:
              outer_ik_new.append(min(outer_ik[i1],entry_jk[mj-entry_ij[i1]-1]))
-    return (Partition(inner_ik_new),Partition(outer_ik_new))
+    return Partition(inner_ik_new), Partition(outer_ik_new)
 
-def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_grid,inner_grid,outer_grid,target_weights,List_pos,Dic_tau_redroots,prev_eq_block : list[bool],test_inc : bool)-> list[dict[int,list[Root]]]:
+
+def List_Inv_W_Mod_rec(
+        nbs_blocks: list[int],
+        sizes_blocks: Array2D[int],
+        current_inv: Array3D[Partition],
+        weights_grid: Array3D[int],
+        inner_grid: Array3D[Partition],
+        outer_grid: Array3D[Partition],
+        target_weights: dict[int, int],
+        List_pos: list[tuple[int, int, int]],
+        Dic_tau_redroots: dict[int, list[tuple[int, int, int]]],
+        prev_eq_block: list[bool],
+        test_inc : bool,
+    ) -> list[dict[int,list[Root]]]:
     """
     recursive part for computing the list of inversion sets compatible with W^{P(tau) and with the C^*-module V^{tau>0}.
     
@@ -107,7 +129,7 @@ def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_
     List_pos_next=List_pos[1:]
     k,i,j=current_pos 
     result=[]
-    p = weights_grid[*current_pos] 
+    p = weights_grid[current_pos] 
     Dic_tau_redroots_next=Dic_tau_redroots.copy()
     Dic_tau_redroots_next[p]=Dic_tau_redroots_next[p][1:]  #remove current position from positions yet unsettled.
     # Possible lengths
@@ -120,7 +142,7 @@ def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_
     else:
         MIN_length=0
         MAX_length=0
-    for mu in gen_partitions(MIN_length,MAX_length,inner_grid[*current_pos],outer_grid[*current_pos]):
+    for mu in gen_partitions(MIN_length,MAX_length,inner_grid[current_pos],outer_grid[current_pos]):
             # If test_inc and tau.components[k-1] = tau.components[k] keep only mu that are bigger or equal
             if test_inc and prev_eq_block[current_pos[0]]: 
                 mu_ref=current_inv[k-1,i,j]
@@ -131,7 +153,7 @@ def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_
                     test_inc=False
 
             next_inv = current_inv.copy() # copy to avoid modifications in current_inv from the exploration of the current branch
-            next_inv[*current_pos]=mu  # setting our entry to mu
+            next_inv[current_pos]=mu  # setting our entry to mu
             # Ajust target_weights
             target_weights_next=target_weights.copy() # copy to avoid confusion
             if p in target_weights_next.keys():
@@ -149,8 +171,8 @@ def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_
                 inner_grid_next[k,i,b],outer_grid_next[k,i,b] = adjust_inner_outer_ijk(inner_grid[k,i,b],outer_grid[k,i,b], next_inv[k,i,j], next_inv[k,j+1,b], sizes_blocks[k][i], sizes_blocks[k][j+1])
             # Exit if not possible : inner, outer incompatible with target_weights
             for p1 in target_weights_next.keys():
-                MAX_mult=sum(sum(outer_grid_next[*free_pos]) for free_pos in Dic_tau_redroots_next[p1])
-                MIN_mult=sum(sum(inner_grid_next[*free_pos]) for free_pos in Dic_tau_redroots_next[p1])
+                MAX_mult=sum(sum(outer_grid_next[free_pos]) for free_pos in Dic_tau_redroots_next[p1])
+                MIN_mult=sum(sum(inner_grid_next[free_pos]) for free_pos in Dic_tau_redroots_next[p1])
                 if MAX_mult < target_weights_next[p1] or MIN_mult > target_weights_next[p1] :
                     to_continue=False
                     break
@@ -163,7 +185,12 @@ def List_Inv_W_Mod_rec(nbs_blocks : list[int],sizes_blocks, current_inv,weights_
     return result
 
 
-def Table_part_2_inv_dic(nbs_blocks : list[int],sizes_blocks,weights_grid,T) -> dict[int, list[Root]]:
+def Table_part_2_inv_dic(
+        nbs_blocks: list[int],
+        sizes_blocks: Array2D[int],
+        weights_grid: Array3D[int],
+        T: Array3D[Partition],
+    ) -> dict[int, list[Root]]:
     """
     T is a 3-dimensional table of partitions encoding a set of inversions. 
     T[pos,i,j] (with j>=i) row i column j
@@ -202,7 +229,10 @@ def Table_part_2_inv_dic(nbs_blocks : list[int],sizes_blocks,weights_grid,T) -> 
         print(result, T)"""
     return result
 
-def inversion_set_to_permutation(n, inversions):
+def inversion_set_to_permutation(
+        n: int,
+        inversions: Iterable[tuple[int, int]]
+    ) -> Permutation:
     """
     Reconstructs a permutation from its inversion set.
     
@@ -225,7 +255,7 @@ def inversion_set_to_permutation(n, inversions):
         position = available_positions.pop(inv_count[num])
         w[position] = num
     
-    return OurPermutation(w)
+    return Permutation(w)
 
 
 def Check_Rank_Tpi(ineq : Inequality, V: Representation, method: Method) -> bool :

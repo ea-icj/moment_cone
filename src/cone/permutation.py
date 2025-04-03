@@ -7,11 +7,11 @@ from functools import cached_property
 import itertools
 
 __all__ = (
-    "OurPermutation",
+    "Permutation",
     "AllPermutationsByLength",
 )
 
-class OurPermutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tuple
+class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tuple
     """
     Permutation of S_n represented using the one-line notation.
 
@@ -44,18 +44,18 @@ class OurPermutation(tuple[int, ...]): # Remark: hash of p is hash of underlying
     Permutation((2, 1, 0))
     """
     # Cache of instances of Permutation
-    __all_instances: ClassVar[dict["OurPermutation", "OurPermutation"]] = {}
+    __all_instances: ClassVar[dict["Permutation", "Permutation"]] = {}
 
     # Cache of permutations returned by Permutation.all_min_rep
-    __all_min_rep: ClassVar[dict[tuple[int, ...], list["OurPermutation"]]] = {}
+    __all_min_rep: ClassVar[dict[tuple[int, ...], list["Permutation"]]] = {}
 
-    def __new__(cls, indexes: Iterable[int] ) -> "OurPermutation":
+    def __new__(cls, indexes: Iterable[int] ) -> "Permutation":
         """ Construction with reusing of already computed Permutation instance """
         d = super().__new__(cls, indexes)
         return cls.__all_instances.setdefault(d, d)
 
     @staticmethod
-    def from_inversions(n: int, inversions: Iterable[tuple[int, int]]) -> "OurPermutation":
+    def from_inversions(n: int, inversions: Iterable[tuple[int, int]]) -> "Permutation":
         """
         Reconstructs a permutation from its inversion set.
         
@@ -88,7 +88,7 @@ class OurPermutation(tuple[int, ...]): # Remark: hash of p is hash of underlying
         for position in range(n-1, -1, -1):
             num = available_num.pop(inv_count[position])
             w[position] = num
-        perm = OurPermutation(w)
+        perm = Permutation(w)
         
         # Storing used inversions in the corresponding cache
         #perm.inversions = inversions
@@ -123,12 +123,12 @@ class OurPermutation(tuple[int, ...]): # Remark: hash of p is hash of underlying
         return count(self.inversions)
     
     @cached_property
-    def inverse(self) -> "OurPermutation":
+    def inverse(self) -> "Permutation":
         """ Inverse of the permutation """
         inv = [0] * self.n
         for i, pi in enumerate(self):
             inv[pi] = i
-        p_inv = OurPermutation(inv)
+        p_inv = Permutation(inv)
         p_inv.inverse = self
         return p_inv
 
@@ -161,23 +161,23 @@ class OurPermutation(tuple[int, ...]): # Remark: hash of p is hash of underlying
         )
     
     @staticmethod
-    def all(n: int) -> Iterable["OurPermutation"]:
+    def all(n: int) -> Iterable["Permutation"]:
         """ Returns all the possible permutation of S_n """
         for p in itertools.permutations(range(n)):
-            yield OurPermutation(p)
+            yield Permutation(p)
 
     @staticmethod
-    def all_of_length(n: int, l: int) -> Iterable["OurPermutation"]:
+    def all_of_length(n: int, l: int) -> Iterable["Permutation"]:
         """
         Returns all permutations of S_n with given length l
 
         Better use AllPermutationsByLength for a repeated call with difference lengths
         """
         # More efficient way ?
-        return filter(lambda p: p.length == l, OurPermutation.all(n))
+        return filter(lambda p: p.length == l, Permutation.all(n))
 
     @staticmethod
-    def all_min_rep(symmetries: Iterable[int]) -> list["OurPermutation"]:
+    def all_min_rep(symmetries: Iterable[int]) -> list["Permutation"]:
         """
         Returns all permutations of S_n that are increasing along each block of given symmetries.
 
@@ -230,20 +230,20 @@ class OurPermutation(tuple[int, ...]): # Remark: hash of p is hash of underlying
 
         # Trying to use the cache
         try:
-            return OurPermutation.__all_min_rep[symmetries]
+            return Permutation.__all_min_rep[symmetries]
         except KeyError:
             pass
 
         n = sum(symmetries)
-        perms: list[OurPermutation] = []
+        perms: list[Permutation] = []
         for parts in all_recurs(tuple(range(n)), symmetries):
-            perms.append(OurPermutation(itertools.chain.from_iterable(parts)))
+            perms.append(Permutation(itertools.chain.from_iterable(parts)))
 
-        OurPermutation.__all_min_rep[symmetries] = perms
+        Permutation.__all_min_rep[symmetries] = perms
         return perms
         
     @staticmethod
-    def from_cycles(n: int, *cycles: Sequence[int]) -> "OurPermutation":
+    def from_cycles(n: int, *cycles: Sequence[int]) -> "Permutation":
         """
         Returns a permutation from a list of cycles
         
@@ -255,7 +255,7 @@ class OurPermutation(tuple[int, ...]): # Remark: hash of p is hash of underlying
             for i, j in itertools.pairwise(cycle):
                 p[i] = j
             p[cycle[-1]] = cycle[0]
-        return OurPermutation(p)
+        return Permutation(p)
         
     """def from_inversions(n:int, inversions: Sequence([int,])):
         # Initialize the inversion count for each element
@@ -271,7 +271,7 @@ class OurPermutation(tuple[int, ...]): # Remark: hash of p is hash of underlying
         return Permutation(w)"""
     
     @staticmethod
-    def embeddings_mod_sym(G: LinearGroup, Gred: LinearGroup)-> Iterable["OurPermutation"]:
+    def embeddings_mod_sym(G: LinearGroup, Gred: LinearGroup)-> Iterable["Permutation"]:
         """
         List of permutations of e that are at most d
 
@@ -314,9 +314,9 @@ class OurPermutation(tuple[int, ...]): # Remark: hash of p is hash of underlying
             if all(Gred[indices_e[i]] <= G[i] for i in range(len(ep))) and all(is_increasing(indices_e[a:b]) for a,b in itertools.pairwise(partial_sum_mult_d)):
                 # The first all check that the permutted Gred is still at most G
                 # The second all check that in a block of G we took elements of Gred  from left to right                
-                yield OurPermutation(indices_e)
+                yield Permutation(indices_e)
     
-    def transpose(self, i: int, j: int) -> "OurPermutation":
+    def transpose(self, i: int, j: int) -> "Permutation":
         """
         Apply a transposition between ith and jth positions
 
@@ -326,12 +326,12 @@ class OurPermutation(tuple[int, ...]): # Remark: hash of p is hash of underlying
         """
         if i > j:
             i, j = j, i
-        return OurPermutation(
+        return Permutation(
             self[:i] + self[j:j+1] + self[i+1:j] + self[i:i+1] + self[j+1:]
         )
 
     @cached_property
-    def covering_relations_strong_Bruhat_old(self) -> tuple["OurPermutation", ...]:
+    def covering_relations_strong_Bruhat_old(self) -> tuple["Permutation", ...]:
         """
         Covering relations strong Bruhat
 
@@ -347,7 +347,7 @@ class OurPermutation(tuple[int, ...]): # Remark: hash of p is hash of underlying
         )
 
     @cached_property
-    def covering_relations_strong_Bruhat(self) -> tuple["OurPermutation", ...]:
+    def covering_relations_strong_Bruhat(self) -> tuple["Permutation", ...]:
         """
         Covering relations strong Bruhat
 
@@ -358,12 +358,12 @@ class OurPermutation(tuple[int, ...]): # Remark: hash of p is hash of underlying
         return tuple(
             p
             for i, j in itertools.combinations(range(n), 2)
-            for p in [OurPermutation(list(self[:i]) + [self[j]] + list(self[i+1:j]) + [self[i]] + list(self[j+1:]))]
+            for p in [Permutation(list(self[:i]) + [self[j]] + list(self[i+1:j]) + [self[i]] + list(self[j+1:]))]
             if (self[i] > self[j]+1) and (p.length == self.length - 1)
         )
     
     @staticmethod
-    def all_transpositions(n: int) -> Iterable["OurPermutation"]:
+    def all_transpositions(n: int) -> Iterable["Permutation"]:
         """
         Returns all transpositions
         
@@ -373,7 +373,7 @@ class OurPermutation(tuple[int, ...]): # Remark: hash of p is hash of underlying
         Permutation((2, 1, 0))
         Permutation((0, 2, 1))
         """
-        return (OurPermutation.from_cycles(n, c) for c in itertools.combinations(range(n), 2))
+        return (Permutation.from_cycles(n, c) for c in itertools.combinations(range(n), 2))
 
 
 class AllPermutationsByLength:
@@ -404,7 +404,7 @@ class AllPermutationsByLength:
     all_instances: dict[int, "AllPermutationsByLength"] = {}
 
     __slots__ = 'permutations', 'indexes'
-    permutations: tuple[OurPermutation, ...]
+    permutations: tuple[Permutation, ...]
     indexes: tuple[int, ...]
 
     def __new__(cls, n: int) -> "AllPermutationsByLength":
@@ -416,7 +416,7 @@ class AllPermutationsByLength:
 
         self = super().__new__(cls)
         self.permutations = tuple(sorted(
-            OurPermutation.all(n),
+            Permutation.all(n),
             key=lambda p: p.length
         ))
 
@@ -441,7 +441,7 @@ class AllPermutationsByLength:
         """ Returns the maximal length of a permutation """
         return len(self) - 1
     
-    def __getitem__(self, idx: int | slice) -> tuple[OurPermutation, ...]:
+    def __getitem__(self, idx: int | slice) -> tuple[Permutation, ...]:
         """ Access permutations by length or range of length """
         def fix_neg(i: int) -> int:
             return len(self) + i if i < 0 else i

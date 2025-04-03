@@ -101,7 +101,7 @@ def map_pi(V: Representation, weights_domain: Sequence[Weight], roots_domain: Se
             target_weight: Weight
             if isinstance(V, ParticleRepresentation):
                 if isinstance(V, FermionRepresentation):
-                    coef=(-1)**(OurPermutation(target_weight_coeffs).length)#taking into account -1 sign in reordering wedge product
+                    coef=(-1)**(Permutation(target_weight_coeffs).length)#taking into account -1 sign in reordering wedge product
                 target_weight_coeffs.sort()
 
                 if isinstance(V, FermionRepresentation):
@@ -210,7 +210,12 @@ def long_calculation(Liste: Sequence[T], function: Callable[..., U], lim: int, e
        print(len([m for m in Res if m[-1]]), "results with output True")
     return Res
 
-def Grobner_List_Test(Liste: Sequence[Any], lim: int, V: Representation, method: Method):
+def Grobner_List_Test(
+        Liste: Sequence[Inequality],
+        lim: int,
+        V: Representation,
+        method: Method
+    ) -> tuple[list[Inequality], list[Inequality]]:
     # FIXME: les éléments de Grobner_res sont de simples bool, et non des listes
     Grobner_Res=long_calculation(Liste,is_fiber_singleton_reorder,lim,[V,method])
     Grobner_True=[m[1] for m in Grobner_Res if m[2]]

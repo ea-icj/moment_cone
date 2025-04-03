@@ -1,6 +1,3 @@
-
-
-
 __all__ = (
     'is_not_contracted',
     'Compute_JA_square_free',
@@ -23,8 +20,13 @@ from .rings import PolynomialRing, Polynomial, Variable
 from .utils import prod
 
     
-def is_not_contracted(inversions_v: tuple[Root], tau: Tau, V: Representation, method: Method,non_positive_weights: list[Weight],positive_weights: list[Weight]) -> bool:
-
+def is_not_contracted(
+        inversions_v: Sequence[Root],
+        V: Representation,
+        method: Method,
+        non_positive_weights: Sequence[Weight],
+        positive_weights: Sequence[Weight],
+    ) -> bool:
     """
     ???
 
@@ -58,18 +60,15 @@ def is_not_contracted(inversions_v: tuple[Root], tau: Tau, V: Representation, me
     # Maybe grading root and weight should be implemented using a more convenient class?
 
     v = point_vect(non_positive_weights, V, ring, bounds=(-10, 10))
-    #list_inversions_v = list(inversions_v)
     A = matrix(ring, len(positive_weights), len(inversions_v))
     for j, root in enumerate(inversions_v):
         uv = V.action_op_el(root, v)
         for i, chi in enumerate(positive_weights):
             A[i, j] = uv[V.index_of_weight(chi)]   
 
-    #print(A)        
-
     rank_A: int = A.change_ring(ring.fraction_field()).rank()
-    #print(rank_A)
     return rank_A == len(inversions_v)
+
 
 def Normalization_Factorized_Polynomial(Jb: dict[Polynomial, int]) -> dict[Polynomial, int]:
     d: dict[Polynomial, int] = {}
@@ -150,17 +149,8 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
         for v in w.covering_relations_strong_Bruhat:
             if v.is_min_rep(tau.reduced.mult[k]): 
                 vs = list(ws[:k]) + [v] + list(ws[k+1:])
-                #print('Schub Div',vs)
-                #print('v',vs[0])
-                #print(vs[0].inversions)
-                #print(type(vs[0]))
                 ineqv = Inequality(tau,w=tuple(vs))
-                #print(ineq)
-                #print(ineqv)
-                #print(ineqv.inversions)
-                #print(len(Neg0_Weights_sorted))
-                #print(len(Pos_Weights_sorted))
-                if is_not_contracted(ineqv.inversions,tau,V,method_S,Neg0_Weights_sorted,Pos_Weights_sorted) :
+                if is_not_contracted(tuple(ineqv.inversions), V, method_S, Neg0_Weights_sorted, Pos_Weights_sorted) :
                     return(False)
                 
     #if Inequality.from_tau(ineq.wtau.end0_representative.sort_mod_sym_dim)  == Inequality.from_tau(Tau(((-1, 0, 1, 0), (0, 1, -1, 0), (1, 0, -1, 0), (-1,))).end0_representative.sort_mod_sym_dim):
@@ -197,7 +187,7 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
             subs_dict[V.QV.variable(chi)]= randint(-500,500)*V.QZ('z')+randint(-500,500)# TODO :Tester l'effet du changement de 500. Math : Doit-on mettre du I ? 
         else:
             va, vb = V.QV2.variable(chi) 
-            subs_dict[V.QV.variable(chi)]= va*ring_R0('z')+vb # type: ignore
+            subs_dict[V.QV.variable(chi)]= va*ring_R0('z') + vb # type: ignore
 
     # Substitutions
     Az=A.subs(subs_dict)
