@@ -197,37 +197,34 @@ def timeout(t: int, no_raise: bool = True) -> Generator[None]:
     
     Example of usage as a decorator:
 
-    ```Python
-    @timeout(10)
-    def compute(a, b, c):
-        print(a, b, c)
-        ... # do some stuff
-        return a * b + c
-    result = compute(1, 2, 3) # result is TimeOutException if task didn't finished
-    ```
+    >>> @timeout(10)
+    ... def compute(a, b, c):
+    ...     print(a, b, c)
+    ...     pass # Do some computations
+    ...     return a * b + c
+    ...
+    >>> result = compute(1, 2, 3) # result is TimeOutException if task didn't finished
+    1 2 3
 
     Example of usage as a context manager:
 
-    ```Python
-    a, b, c = 1, 2, 3
-    with timeout(10):
-        print(a, b, c)
-        ... # do some stuff
-        result = a * b + c
-    # result isn't defined at all if time is out
-    ```
+    >>> a, b, c = 1, 2, 3
+    >>> with timeout(10):
+    ...    print(a, b, c)
+    ...    pass # do some stuff
+    ...    result = a * b + c # result isn't defined at all if time is out
+    1 2 3
 
     Example of usage as a context manager with raised exception:
-    ```Python
-    a, b, c = 1, 2, 3
-    try:
-        with timeout(10, no_raise=False)
-            print(a, b, c)
-            ... # do some stuff
-            result = a * b + c
-    except TimeOutException:
-        # Some something when task didn't finished
-    ```
+    >>> a, b, c = 1, 2, 3
+    >>> try:
+    ...    with timeout(10, no_raise=False):
+    ...        print(a, b, c)
+    ...        pass # do some stuff
+    ...        result = a * b + c
+    ... except TimeOutException:
+    ...     pass # Some something when task didn't finished
+    1 2 3
     """
     from cysignals.alarm import alarm, AlarmInterrupt, cancel_alarm # type: ignore
     try:

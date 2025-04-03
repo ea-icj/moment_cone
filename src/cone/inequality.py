@@ -8,7 +8,7 @@ import itertools
 
 from .typing import *
 from .tau import *
-from .permutation import OurPermutation
+from .permutation import Permutation
 from .blocks import Blocks
 from .root import Root
 from .representation import *
@@ -34,83 +34,74 @@ class Inequality:
                wtau = 2 6 4 1 | 1 5 2 | 3 1 | 1)
     """
     tau: Tau
-    w: tuple[OurPermutation, ...]
-    wtau: Tau # each w_k applied to each column of tau
 
     def __init__(
         self, 
         tau: Tau, 
-        w: Optional[tuple[OurPermutation]] = None,
-        inversions: Optional[list[Root]] = None,
+        w: Optional[Sequence[Permutation]] = None,
+        inversions: Optional[Sequence[Root]] = None,
         gr_inversions: Optional[dict[int, list[Root]]] = None
     ):
         if w is None and inversions is None and gr_inversions is None :
             raise ValueError("At least one of w, inversions or gr_inversions, should be defined")
         assert w is None or len(tau.G) == len(list(w))
             
-        self._tau = tau
-        self._w = w
-        self._inversions = inversions
-        self._gr_inversions = gr_inversions
+        self.tau = tau
+        if w is not None:
+            self.w = tuple(w)
+        if inversions is not None:
+            self.inversions = tuple(inversions)
+        if gr_inversions is not None:
+            self.gr_inversions = gr_inversions
     
-    @property
-    def tau(self) -> Tau:
-        """Propriété tau, sans calcul différé."""
-        return self._tau
     
     @cached_property
     def wtau(self) -> Tau:
         return Tau(tuple(wk.inverse(ck) for wk, ck in zip(self.w, self.tau.components)))
     
     @cached_property
-    def w(self) -> list[OurPermutation]:
+    def w(self) -> tuple[Permutation, ...]:
         """
         Property w computed from inversions if not given at the initialisation.
         """
-        if self._w is None:
-            # Calcul à partir des inversions
-            self._w = self._compute_w()
-        return self._w
+        return self.__compute_w()
 
     @cached_property
-    def inversions(self) -> Iterable[Root]:
+    def inversions(self) -> tuple[Root, ...]:
         """
         Property inversions computed from gr_inversions or w if not given at the initialisation.
         """
-        if self._inversions is None and self._gr_inversions is not None :
+        if "gr_inversions" in self.__dict__:
             # Compute from gr_inversions
-            self._inversions = list(itertools.chain.from_iterable(self._gr_inversions.values()))
-        elif self._inversions is None :
+            return tuple(itertools.chain.from_iterable(self.gr_inversions.values()))
+        else:
             # Compute from w
-            self._inversions = self._compute_inversions_from_w()
-        return self._inversions
-    
+            return self.__compute_inversions_from_w()
+        
     @cached_property
     def gr_inversions(self) -> dict[int, list[Root]]:
         """
         Property gr_inversions computed from inversions if not given at the initialisation.
         """
-        if self._gr_inversions is None :
-            self._gr_inversions = self.tau.grading_roots_in(self.inversions) 
-        return self._gr_inversions    
+        return self.tau.grading_roots_in(self.inversions) 
 
-    def _compute_w(self) -> tuple[OurPermutation]:
+    def __compute_w(self) -> tuple[Permutation, ...]:
         """
         Compute w from the inversions.
         """
         w=[]
         dims=self.tau.G
         inversions=self.inversions
-        classified_inversions=[[] for _ in range(len(dims))]
+        classified_inversions: list[list[Root]] = [[] for _ in range(len(dims))]
         for inv in inversions:
             classified_inversions[inv.k].append(inv)
         #print(classified_inversions)
         for l,d in enumerate(dims):
             i_inversions=[(inv.i,inv.j) for inv in classified_inversions[l]]
-            w.append(OurPermutation.from_inversions(d,i_inversions))
+            w.append(Permutation.from_inversions(d,i_inversions))
         return tuple(w)
 
-    def _compute_inversions_from_w(self) -> tuple[Root]:
+    def __compute_inversions_from_w(self) -> tuple[Root, ...]:
         """
         Compute the inversions from w.
         
@@ -127,8 +118,8 @@ class Inequality:
         """
         result=[]
         for k, p in enumerate(self.w):
-            result+=[Root(k,i,j) for i,j in p.inversions]
-        return(tuple(result))    
+            result += [Root(k,i,j) for i,j in p.inversions]
+        return tuple(result)
         
     
 
@@ -156,7 +147,7 @@ class Inequality:
         taup = Tau(
             Blocks.from_blocks([[t for t, i in taub] for taub in tau_pairs])
         )
-        w = tuple((OurPermutation([i for t, i in taub]) for taub in tau_pairs))
+        w = tuple((Permutation([i for t, i in taub]) for taub in tau_pairs))
         return Inequality(taup, w=w)
     
     @staticmethod
@@ -220,9 +211,6 @@ class Inequality:
         tau_components, w = zip(*itertools.chain.from_iterable(blocks))
         tau = Tau(tau_components)
         return Inequality(tau, w=w)
-        
-
-
     
     def weight_det(self,V: Representation) -> Vector:
         """

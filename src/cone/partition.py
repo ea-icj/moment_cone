@@ -192,12 +192,15 @@ class Partition:
             map(max, itertools.zip_longest(*partitions, fillvalue=0))
         )
 
-def find_max_index(L: Partition, Out: Partition): # output not typed because int or None
+
+def find_max_index(L: Partition, Out: Partition) -> Optional[int]:
     """
-    Biggest index i that can be increased in L to stay a subpartition of Out by keepping the first values of L unchanged.
+    Biggest index i that can be increased in L to stay a sub-partition of Out by keeping the first values of L unchanged.
     Return None if such an index does not exist.
-    Example
-    > find_max_index([2,1,1],[3,2,1])
+
+    Example:
+
+    >>> find_max_index([2,1,1], [3,2,1])
     1
     """
     for i in reversed(range(1, len(Out))):  # Parcours à l'envers
@@ -207,41 +210,47 @@ def find_max_index(L: Partition, Out: Partition): # output not typed because int
         return 0
     return None
 
-def gen_partitions(min: int,max: int,In: Partition,Out: Partition) -> list[Partition]:
+
+def gen_partitions(
+        min_weight: int,
+        max_weight: int,
+        In: Partition,
+        Out: Partition
+    ) -> list[Partition]:
     """
-    Generate all the partitions containing In contained in Out and of weight in [min;max]
-    > [l for l in gen_partitions(4,6,[2,1,0],[4,3,1])]
-    [[2, 1, 1],
-     [2, 2, 0],
-     [2, 2, 1],
-     [3, 1, 0],
-     [3, 1, 1],
-     [3, 2, 0],
-     [3, 2, 1],
-     [3, 3, 0],
-     [4, 1, 0],
-     [4, 1, 1],
-     [4, 2, 0]]
+    Generate all the partitions containing In contained in Out and of weight in [min_weight, max_weight]
+    >>> for l in gen_partitions(4, 6, [2,1,0], [4,3,1]):
+    ...     print(l)
+    Partition((2, 1, 1))
+    Partition((2, 2))
+    Partition((2, 2, 1))
+    Partition((3, 1))
+    Partition((3, 1, 1))
+    Partition((3, 2))
+    Partition((3, 2, 1))
+    Partition((3, 3))
+    Partition((4, 1))
+    Partition((4, 1, 1))
+    Partition((4, 2))
     """
     if len(Out)==0:
-        if min == 0 :
-            #print('là',Partition((0))==None)
-            return([Partition([0])])
+        if min_weight == 0 :
+            return [Partition([0])]
         else :
-            return([]) 
+            return []
     result = []    
-    current=[x for x in In]+[0]*(len(Out)-len(In)) # copy
+    current = [x for x in In]+[0]*(len(Out)-len(In)) # copy
     S=sum(current)
-    if S<=max and S>=min :
+    if S<=max_weight and S>=min_weight :
         result.append(Partition([x for x in current]))
-    i=find_max_index(current, Out)
+    i = find_max_index(Partition(current), Out)
     while i is not None:
         current[i]+=1
         for j in range(i+1,len(Out)):
             current[j]=In[j]
-        i=find_max_index(current, Out)
+        i=find_max_index(Partition(current), Out)
         S=sum(current)
-        if S<=max and S>=min :
+        if S<=max_weight and S>=min_weight :
             result.append(Partition([x for x in current]))
     return result    
 

@@ -167,7 +167,7 @@ class GeneralStabilizerDimensionCheck(Step):
         if self.no_dim_check:
             return
         
-        from .stabK import mat_C_to_R, dim_gen_stab_of_K
+        from .stabK import dim_gen_stab_of_K
         Ms = self.V.actionK
         #MsR = [mat_C_to_R(M) for M in Ms.values()]
         # Check that the dim is computed in U_n(C)^s without the isolated S^1
@@ -235,15 +235,13 @@ class StabilizerConditionStep(FilterStep[Tau]):
     It only reject pending Taus and doesn't modified the validated ones.
     """
     def __call__(self, tau_dataset: Dataset[Tau]) -> ListDataset[Tau]:
-        from .stabK import Lie_action_as_matrices_Vtau, mat_C_to_R, dim_gen_stab_of_K
+        from .stabK import dim_gen_stab_of_K
         Ms = self.V.actionK
         output: list[Tau] = []
         for tau in tau_dataset.pending():
             if  tau.is_dom_reg :
                 output.append(tau)
             else: 
-                #Ms_tau = Lie_action_as_matrices_Vtau(tau, Ms, self.V)
-                #Ms_tauR = [mat_C_to_R(M) for M in Ms_tau.values()]
                 L=Root.dict_rootK(self.G)
                 ListK=[L[beta] for beta in tau.orthogonal_rootsB]+[L[beta.opposite] for beta in tau.orthogonal_rootsU]
                 ListChi=[self.V.index_of_weight(chi) for chi in tau.orthogonal_weights(self.V)]+[self.V.dim+self.V.index_of_weight(chi) for chi in tau.orthogonal_weights(self.V)]
@@ -643,11 +641,12 @@ class ExportStep(FilterStep[Inequality]):
 
 ###############################################################################
 InequalityFilterStr = Literal[
+    "ModuloReduction",
     "PiDominancy",
     "LinearTriangular",
     "BKRCondition",
-    "Grobner",
     "Birationality",   
+    "Grobner",
 ]
 
 inequalities_filter_dict: Final[dict[InequalityFilterStr, type[Step]]] = {
@@ -659,8 +658,13 @@ inequalities_filter_dict: Final[dict[InequalityFilterStr, type[Step]]] = {
     "Grobner": GrobnerStep,
 }
 
-# All filters by default except Grobner (the last one)
-default_inequalities_filters: tuple[InequalityFilterStr, ...] = typing.get_args(InequalityFilterStr)[:-1]
+# Default filters
+default_inequalities_filters: tuple[InequalityFilterStr, ...] = (
+    "PiDominancy",
+    "LinearTriangular",
+    "BKRCondition",
+    "Birationality",
+)
 
 TStep = TypeVar("TStep", bound=Step)
 

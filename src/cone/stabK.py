@@ -1,6 +1,4 @@
 __all__ = (
-    "mat_C_to_R",
-    "Lie_action_as_matrices_Vtau",
     "dim_gen_stab_of_K",
 )
 
