@@ -19,6 +19,9 @@ from .rings import Matrix, Vector, Ring, PolynomialRingForWeights
 from .root import Root
 from .utils import CachedClass
 
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
 
 class Representation(CachedClass, ABC):
     """ Base class of a representation """
@@ -81,7 +84,8 @@ class Representation(CachedClass, ABC):
         ...
 
     @cached_property
-    def actionK(self):
+    @abstractmethod
+    def actionK(self) -> "NDArray":
         """
         The list of matrices rho_V(xi) for xi in the bases of K as a tridimensional np.array.
         The first entry are indexed by all_rootsK using the dictionnary dict_rootK of the class LinearGroup.
@@ -233,26 +237,23 @@ class KroneckerRepresentation(Representation):
     
     #@property
     @cached_property
-    def actionK(self):
+    def actionK(self) -> "NDArray":
         """
         The list of matrices rho_V(xi) for xi in the bases of K as a tridimensional np.array.
         The first entry are indexed by all_rootsK using the dictionnary dict_rootK of the class LinearGroup.
         The other entries are indexed by self.all_Weights using self.index_of_weight(chi).
         """
-        print('ici')
         alphatest=Root(0,1,0)
         L=Root.dict_rootK(self.G)
         shiftI = self.dim # basis over the real e_0,...,e_{D-1},Ie_0,Ie_1,...
         result=np.zeros((self.G.dim,2*self.dim,2*self.dim), dtype=np.int8)
         for chi in self.all_weights:
             id_chi=self.index_of_weight(chi)
-            #print('chi',chi.as_list)
             for k,b in enumerate(chi.as_list):
                 # entries for action of I E^k_bb
                 result[L[Root(k,b,b)],shiftI+id_chi,id_chi]=1
                 result[L[Root(k,b,b)],id_chi,shiftI+id_chi]=-1
                 for j in range(b+1,self.G[k]):
-                    #print(chi.as_list[:k] + (j,) + chi.as_list[k+1:])
                     chi_j = WeightAsList(
                         self.G,
                         as_list=chi.as_list[:k] + (j,) + chi.as_list[k+1:]
