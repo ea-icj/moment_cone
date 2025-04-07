@@ -88,7 +88,7 @@ class Representation(CachedClass, ABC):
     def actionK(self) -> "NDArray":
         """
         The list of matrices rho_V(xi) for xi in the bases of K as a tridimensional np.array.
-        The first entry are indexed by all_rootsK using the dictionnary dict_rootK of the class LinearGroup.
+        The first entry are indexed by all_rootsK using index_in_all_of_K of the class LinearGroup.
         The other entries are indexed by self.all_Weights using self.index_of_weight(chi).
         """
         ... 
@@ -235,38 +235,35 @@ class KroneckerRepresentation(Representation):
                 as_list=list(vector(sum(w, start=())))
             ) # Summing tuples is concatenating them 
     
-    #@property
+    
     @cached_property
     def actionK(self) -> "NDArray":
         """
         The list of matrices rho_V(xi) for xi in the bases of K as a tridimensional np.array.
-        The first entry are indexed by all_rootsK using the dictionnary dict_rootK of the class LinearGroup.
+        The first entry are indexed by all_rootsK using index_in_all_of_K of the class LinearGroup.
         The other entries are indexed by self.all_Weights using self.index_of_weight(chi).
         """
-        alphatest=Root(0,1,0)
-        L=Root.dict_rootK(self.G)
+       
         shiftI = self.dim # basis over the real e_0,...,e_{D-1},Ie_0,Ie_1,...
         result=np.zeros((self.G.dim,2*self.dim,2*self.dim), dtype=np.int8)
         for chi in self.all_weights:
             id_chi=self.index_of_weight(chi)
             for k,b in enumerate(chi.as_list):
                 # entries for action of I E^k_bb
-                result[L[Root(k,b,b)],shiftI+id_chi,id_chi]=1
-                result[L[Root(k,b,b)],id_chi,shiftI+id_chi]=-1
+                result[Root(k,b,b).index_in_all_of_K(self.G),shiftI+id_chi,id_chi]=1
+                result[Root(k,b,b).index_in_all_of_K(self.G),id_chi,shiftI+id_chi]=-1
                 for j in range(b+1,self.G[k]):
                     chi_j = WeightAsList(
                         self.G,
                         as_list=chi.as_list[:k] + (j,) + chi.as_list[k+1:]
                         )
                     id_j = self.index_of_weight(chi_j)
-                    #print('id',L[Root(k,i,j)],id_chi,id_j)
-                    #if Root(k,b,j) == alphatest or Root(k,j,b) == alphatest:
-                    #    print('là1')
+                    
                     # entries for action of E^k_ij - E^k_ji
-                    result[L[Root(k,b,j)],id_j,id_chi]=-1
-                    result[L[Root(k,b,j)],shiftI+id_j,shiftI+id_chi]=-1
-                    result[L[Root(k,j,b)],shiftI+id_j,id_chi]=1
-                    result[L[Root(k,j,b)],id_j,shiftI+id_chi]=-1
+                    result[Root(k,b,j).index_in_all_of_K(self.G),id_j,id_chi]=-1
+                    result[Root(k,b,j).index_in_all_of_K(self.G),shiftI+id_j,shiftI+id_chi]=-1
+                    result[Root(k,j,b).index_in_all_of_K(self.G),shiftI+id_j,id_chi]=1
+                    result[Root(k,j,b).index_in_all_of_K(self.G),id_j,shiftI+id_chi]=-1
 
                 for i in range(b):
                     #print(chi.as_list[:k] + (i,) + chi.as_list[k+1:])
@@ -275,14 +272,10 @@ class KroneckerRepresentation(Representation):
                         as_list=chi.as_list[:k] + (i,) + chi.as_list[k+1:]
                         )
                     id_i = self.index_of_weight(chi_i)
-                    #print('id',L[Root(k,i,j)],id_chi,id_i)
-                    # entries for action of E^k_ij - E^k_ji
-                    #if Root(k,b,i) == alphatest or Root(k,i,b) == alphatest:
-                    #    print('là2',L[Root(k,i,b)],L[Root(k,b,i)],shiftI+id_i,id_chi)
-                    result[L[Root(k,i,b)],id_i,id_chi]=1
-                    result[L[Root(k,i,b)],shiftI+id_i,shiftI+id_chi]=1
-                    result[L[Root(k,b,i)],shiftI+id_i,id_chi]=1
-                    result[L[Root(k,b,i)],id_i,shiftI+id_chi]=-1
+                    result[Root(k,i,b).index_in_all_of_K(self.G),id_i,id_chi]=1
+                    result[Root(k,i,b).index_in_all_of_K(self.G),shiftI+id_i,shiftI+id_chi]=1
+                    result[Root(k,b,i).index_in_all_of_K(self.G),shiftI+id_i,id_chi]=1
+                    result[Root(k,b,i).index_in_all_of_K(self.G),id_i,shiftI+id_chi]=-1
         return(result)            
     
     def rhoEij(self, alpha: Root) -> Matrix:
@@ -420,6 +413,65 @@ class ParticleRepresentation(Representation):
                 for i in range(len(p))
             ])
             yield chi
+
+    @cached_property
+    def actionK(self) -> "NDArray":
+        """
+        The list of matrices rho_V(xi) for xi in the bases of K as a tridimensional np.array.
+        The first entry are indexed by all_rootsK using index_in_all_of_K of the class LinearGroup.
+        The other entries are indexed by self.all_Weights using self.index_of_weight(chi).
+        """
+        
+        shiftI = self.dim # basis over the real e_0,...,e_{D-1},Ie_0,Ie_1,...
+        result=np.zeros((self.G.dim,2*self.dim,2*self.dim), dtype=np.int8)
+        
+        for chi in self.all_weights:#coucou
+            id_chi=self.index_of_weight(chi)
+            for k,b in enumerate(chi.as_list_of_list[0]):
+                index_b = chi.as_list_of_list[0].index(b)
+                if k == index_b : # otherwise already done
+                    mult = chi.as_list_of_list[0].count(b)
+                    # entries for action of I E^k_bb
+                    result[Root(k,b,b).index_in_all_of_K(self.G),shiftI+id_chi,id_chi]=1
+                    result[Root(k,b,b).index_in_all_of_K(self.G),id_chi,shiftI+id_chi]=-1
+                
+                
+                    # split chi 
+                    L1 = chi.as_list_of_list[0][:index_b]
+                    L2 = chi.as_list_of_list[0][index_b+1:]
+                    for j in range(b+1,self.G[k]):
+                        if isinstance(self, BosonRepresentation) or j not in L2 :
+                            L3=[j]+L2
+                            L3.sort()
+                            if isinstance(self, BosonRepresentation) :
+                                dec=0
+                            else :
+                                dec=L3.index(j)
+                            Lj=L1+L3
+                            chi_j = WeightAsListOfList(self.G, as_list_of_list=[Lj])
+                            id_j = self.index_of_weight(chi_j)
+                            # entries for action of E^k_ij - E^k_ji
+                            result[Root(k,b,j).index_in_all_of_K(self.G),id_j,id_chi]=-mult* (-1)**dec
+                            result[Root(k,b,j).index_in_all_of_K(self.G),shiftI+id_j,shiftI+id_chi]=-mult* (-1)**dec
+                            result[Root(k,j,b).index_in_all_of_K(self.G),shiftI+id_j,id_chi]=mult* (-1)**dec
+                            result[Root(k,j,b).index_in_all_of_K(self.G),id_j,shiftI+id_chi]=-mult* (-1)**dec
+
+                    for i in range(b):
+                        if isinstance(self, BosonRepresentation) or j not in L2 :
+                            L3=L1+[i]
+                            L3.sort()
+                            if isinstance(self, BosonRepresentation) :
+                                dec=0
+                            else :
+                                dec=len(L3)-L3.index(j)-1
+                            Li=L3+L2
+                            chi_i = WeightAsListOfList(self.G, as_list_of_list=[Li])
+                            id_i = self.index_of_weight(chi_i) 
+                            result[Root(k,i,b).index_in_all_of_K(self.G),id_i,id_chi]=mult* (-1)**dec
+                            result[Root(k,i,b).index_in_all_of_K(self.G),shiftI+id_i,shiftI+id_chi]=mult* (-1)**dec
+                            result[Root(k,b,i).index_in_all_of_K(self.G),shiftI+id_i,id_chi]=mult* (-1)**dec
+                            result[Root(k,b,i).index_in_all_of_K(self.G),id_i,shiftI+id_chi]=-mult* (-1)**dec
+        return(result)                    
     
     def rhoEij(self, alpha: Root) -> Matrix:
         """

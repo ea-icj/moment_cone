@@ -242,8 +242,7 @@ class StabilizerConditionStep(FilterStep[Tau]):
             if  tau.is_dom_reg :
                 output.append(tau)
             else: 
-                L=Root.dict_rootK(self.G)
-                ListK=[L[beta] for beta in tau.orthogonal_rootsB]+[L[beta.opposite] for beta in tau.orthogonal_rootsU]
+                ListK=[beta.index_in_all_of_K(self.G) for beta in tau.orthogonal_rootsB]+[beta.opposite.index_in_all_of_K(self.G) for beta in tau.orthogonal_rootsU]
                 ListChi=[self.V.index_of_weight(chi) for chi in tau.orthogonal_weights(self.V)]+[self.V.dim+self.V.index_of_weight(chi) for chi in tau.orthogonal_weights(self.V)]
                 if dim_gen_stab_of_K(Ms,ListK,ListChi) == self.G.rank - self.V.dim_cone + 1:
                     output.append(tau)
