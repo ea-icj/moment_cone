@@ -432,17 +432,15 @@ class ParticleRepresentation(Representation):
                 if k == index_b : # otherwise already done
                     mult = chi.as_list_of_list[0].count(b)
                     # entries for action of I E^k_bb
-                    result[Root(k,b,b).index_in_all_of_K(self.G),shiftI+id_chi,id_chi]=1
-                    result[Root(k,b,b).index_in_all_of_K(self.G),id_chi,shiftI+id_chi]=-1
-                
+                    result[Root(0,b,b).index_in_all_of_K(self.G),shiftI+id_chi,id_chi]=1
+                    result[Root(0,b,b).index_in_all_of_K(self.G),id_chi,shiftI+id_chi]=-1
                 
                     # split chi 
                     L1 = chi.as_list_of_list[0][:index_b]
                     L2 = chi.as_list_of_list[0][index_b+1:]
-                    for j in range(b+1,self.G[k]):
-                        if isinstance(self, BosonRepresentation) or j not in L2 :
-                            L3=[j]+L2
-                            L3.sort()
+                    for j in range(b+1, self.G[0]):
+                        if isinstance(self, BosonRepresentation) or j not in L2:
+                            L3 = tuple(sorted((j,) + L2))
                             if isinstance(self, BosonRepresentation) :
                                 dec=0
                             else :
@@ -451,26 +449,25 @@ class ParticleRepresentation(Representation):
                             chi_j = WeightAsListOfList(self.G, as_list_of_list=[Lj])
                             id_j = self.index_of_weight(chi_j)
                             # entries for action of E^k_ij - E^k_ji
-                            result[Root(k,b,j).index_in_all_of_K(self.G),id_j,id_chi]=-mult* (-1)**dec
-                            result[Root(k,b,j).index_in_all_of_K(self.G),shiftI+id_j,shiftI+id_chi]=-mult* (-1)**dec
-                            result[Root(k,j,b).index_in_all_of_K(self.G),shiftI+id_j,id_chi]=mult* (-1)**dec
-                            result[Root(k,j,b).index_in_all_of_K(self.G),id_j,shiftI+id_chi]=-mult* (-1)**dec
+                            result[Root(0,b,j).index_in_all_of_K(self.G),id_j,id_chi]=-mult* (-1)**dec
+                            result[Root(0,b,j).index_in_all_of_K(self.G),shiftI+id_j,shiftI+id_chi]=-mult* (-1)**dec
+                            result[Root(0,j,b).index_in_all_of_K(self.G),shiftI+id_j,id_chi]=mult* (-1)**dec
+                            result[Root(0,j,b).index_in_all_of_K(self.G),id_j,shiftI+id_chi]=-mult* (-1)**dec
 
                     for i in range(b):
-                        if isinstance(self, BosonRepresentation) or j not in L2 :
-                            L3=L1+[i]
-                            L3.sort()
+                        if isinstance(self, BosonRepresentation) or i not in L1:
+                            L3 = tuple(sorted(L1 + (i,)))
                             if isinstance(self, BosonRepresentation) :
                                 dec=0
                             else :
-                                dec=len(L3)-L3.index(j)-1
+                                dec=len(L3)-L3.index(i)-1
                             Li=L3+L2
                             chi_i = WeightAsListOfList(self.G, as_list_of_list=[Li])
                             id_i = self.index_of_weight(chi_i) 
-                            result[Root(k,i,b).index_in_all_of_K(self.G),id_i,id_chi]=mult* (-1)**dec
-                            result[Root(k,i,b).index_in_all_of_K(self.G),shiftI+id_i,shiftI+id_chi]=mult* (-1)**dec
-                            result[Root(k,b,i).index_in_all_of_K(self.G),shiftI+id_i,id_chi]=mult* (-1)**dec
-                            result[Root(k,b,i).index_in_all_of_K(self.G),id_i,shiftI+id_chi]=-mult* (-1)**dec
+                            result[Root(0,i,b).index_in_all_of_K(self.G), id_i, id_chi] = mult* (-1)**dec
+                            result[Root(0,i,b).index_in_all_of_K(self.G), shiftI + id_i, shiftI + id_chi] = mult* (-1)**dec
+                            result[Root(0,b,i).index_in_all_of_K(self.G), shiftI + id_i, id_chi] = mult* (-1)**dec
+                            result[Root(0,b,i).index_in_all_of_K(self.G), id_i, shiftI + id_chi] = -mult* (-1)**dec
         return(result)                    
     
     def rhoEij(self, alpha: Root) -> Matrix:
