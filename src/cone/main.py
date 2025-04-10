@@ -82,12 +82,24 @@ def cone_from_cmd() -> None:
         default=None,
         help="Profile function calls and output results in given file name (pstats and kcachegrind format)",
     )
+    parser.add_argument(
+        "--logging_level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        type=str.upper,
+        default="INFO",
+        help="Level of the displayed logging messages",
+    )
 
     from .main_steps import ConeStep
     ConeStep.add_arguments(parser)
 
     # Parsing command-line arguments
     config = parser.parse_args()
+
+    # Configuring the logging level
+    from .utils import getLogger
+    import logging
+    getLogger().setLevel(getattr(logging, config.logging_level))
 
     # Displaying configuration
     if not config.quiet:

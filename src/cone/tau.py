@@ -752,7 +752,9 @@ def find_1PS(V: Representation, quiet: bool = False) -> list["Tau"]:
             
             #List_1PS_smalld_reg_mod_outer= list(find_1PS_reg_mod_sym_dim(Vred,umax))
             if not quiet:
-                print('For G=',Vred.G,'we get',len(List_1PS_Vred_reg),' candidates regular dominant')
+                from .utils import getLogger
+                logger = getLogger("tau.find_1PS")
+                logger.debug(f'For G={Vred.G} we get {len(List_1PS_Vred_reg)} candidates regular dominant')
 
             #List_1PS_smalld_reg=sum([list(tau.orbit_symmetries()) for tau in List_1PS_smalld_reg_mod_sym]  ,[])
             List_1PS_Vred_extended=[]

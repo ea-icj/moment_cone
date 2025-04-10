@@ -2,8 +2,10 @@ import contextlib
 import itertools
 import time
 from contextlib import contextmanager
+import logging
 
 from .typing import *
+from .utils import getLogger
 
 __all__ = (
     "Task",
@@ -26,6 +28,7 @@ class Task(contextlib.AbstractContextManager["Task"]):
     name: str
     perf_counter: tuple[Optional[int], Optional[int]]
     process_time: tuple[Optional[int], Optional[int]]
+    level: int
 
     all_tasks: ClassVar[list["Task"]] = [] # All created tasks (static)
     all_start: ClassVar[tuple[int, int]] = (time.perf_counter_ns(), time.process_time_ns())
@@ -112,11 +115,15 @@ class Task(contextlib.AbstractContextManager["Task"]):
         print(f"Total of {len(cls.all_tasks)} tasks: {Task.format_wall_cpu(total_tasks)}")
         print(f"Total of interludes: {Task.format_wall_cpu(total_interludes)}")
 
-    def __init__(self, name: str, auto_start: bool = False):
+    def __init__(self, name: str, auto_start: bool = False, level: Optional[int] = None):
         """ Manual construction """
         self.name = name
         self.perf_counter = None, None
         self.process_time = None, None
+        if level is None:
+            level = sum(1 for t in self.all_tasks if Task.is_running(t))
+        self.level = level
+
         self.all_tasks.append(self)
         if auto_start:
             self.start()
@@ -125,14 +132,14 @@ class Task(contextlib.AbstractContextManager["Task"]):
         """ Entering context """
         self.start()
         if not self.quiet:
-            print(self, end='\r')
+            self.log(disp_duration=False)
         return self
 
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         """ Leaving context """
         self.stop()
         if not self.quiet:
-            print(self)
+            self.log()
 
     def start(self) -> None:
         assert Task.is_clear(self)
@@ -159,16 +166,26 @@ class Task(contextlib.AbstractContextManager["Task"]):
         else:
             return (0, 0)
 
-    def __repr__(self) -> str:
+    def status_str(self) -> str:
         if Task.is_clear(self):
-            status = "Waiting"
+            return "Waiting"
         elif Task.is_running(self):
-            status = "..."
+            return "..."
         else:
-            status = "Done"
-
+            return "Done"        
+    
+    def __repr__(self) -> str:
+        status = self.status_str()
         return f"{self.name}: {status} ({Task.format_wall_cpu(self.duration)})"
     
+    def log(self, level: int = logging.INFO, disp_duration: bool = True) -> None:
+        status = self.status_str()
+        logger = getLogger(self.name, indentation_level=self.level)
+        msg = f"{self.name}: {status}"
+        if disp_duration:
+            msg = msg + f" ({Task.format_wall_cpu(self.duration)})"
+        logger.log(level, msg)
+
 
 # Sub-classes to make type check working
 class ClearTask(Task):

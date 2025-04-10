@@ -33,6 +33,7 @@ dependencies = [
    "types-psutil", # Associated type stubs
    "line_profiler", # Profiling functions by line_profiler
    "pyprof2calltree", # Converter of functions call stats for kcachegrind
+   "tqdm", # Progress bar
 ]
 requires-python = ">=3.10"
 

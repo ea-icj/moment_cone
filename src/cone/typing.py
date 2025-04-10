@@ -4,7 +4,7 @@ __all__ = (
     "cast", "overload",
     "Any", "Self", "Literal", "TYPE_CHECKING", "Concatenate",
     "ClassVar", "Final", "TypedDict",
-    "Iterable", "Iterator", "Generator", "Mapping",
+    "Iterable", "Iterator", "Generator", "Mapping", "MutableMapping",
     "Sequence", "MutableSequence", "Sized", "Callable",
     "ABC", "abstractmethod",
     "T", "Ts", "T_co", "U",
@@ -16,7 +16,7 @@ from typing import TypeAlias, TypeVarTuple, Unpack
 from typing import cast, overload
 from typing import Any, Self, Literal, TYPE_CHECKING, Concatenate
 from typing import ClassVar, Final, TypedDict
-from collections.abc import Iterable, Iterator, Generator, Mapping
+from collections.abc import Iterable, Iterator, Generator, Mapping, MutableMapping
 from collections.abc import Sequence, MutableSequence, Sized, Callable
 from abc import ABC, abstractmethod
 

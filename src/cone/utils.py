@@ -3,7 +3,7 @@ from .typing import *
 import itertools
 import functools
 import operator
-import copy as cp
+import logging
 
 __all__ = (
     "is_decreasing",
@@ -26,6 +26,7 @@ __all__ = (
     "line_profiler",
     "CachedClass",
     "fl_dic",
+    "getLogger",
 )
 
 if TYPE_CHECKING:
@@ -471,3 +472,44 @@ class CachedClass:
             super().__new__(cls),
         )
 
+
+class IndentedLogger(logging.LoggerAdapter[logging.Logger]):
+    def __init__(
+            self,
+            logger: logging.Logger,
+            indentation_level: Optional[int] = None,
+            indentation_width: int = 4,
+            extra: Optional[dict[Any, Any]] = None,
+            ):
+        if indentation_level is None:
+            from .task import Task
+            indentation_level = sum(1 for t in Task.all_tasks if Task.is_running(t))
+        if extra is None:
+            extra = dict()
+        extra["indentation_level"] = indentation_level
+        extra["indentation_width"] = indentation_width
+        super().__init__(logger, extra)
+
+    def process(self,
+                msg: str,
+                kwargs: MutableMapping[str, Any]
+                ) -> tuple[str, MutableMapping[str, Any]]:
+        assert self.extra is not None
+        indentation_level = cast(int, self.extra["indentation_level"])
+        indentation_width = cast(int, self.extra["indentation_width"])
+        return ' ' * indentation_width * indentation_level + msg, kwargs
+    
+
+def getLogger(
+        name: Optional[str] = None,
+        indentation_level: Optional[int] = None,
+        indentation_width: int = 4,
+        extra: Optional[dict[Any, Any]] = None,
+        ) -> logging.LoggerAdapter[logging.Logger]:
+    logger = logging.getLogger(name)
+    return IndentedLogger(logger, indentation_level, indentation_width, extra)
+
+# Setting default logging format
+#logging.basicConfig(level=logging.DEBUG, format="%(name)s: %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(message)-80s {%(name)s}")
+logging.getLogger('asyncio').setLevel(logging.WARNING)
