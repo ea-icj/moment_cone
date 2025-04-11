@@ -703,6 +703,9 @@ class ConeStep(GeneratorStep[Inequality]):
         from .task import Task
         Task.quiet = self.quiet
 
+        # Clearing TPi_3D cache
+        self.V.clear_T_Pi_3D()
+
         # Checking if the cone has the expected dimension
         general_stab_dim_step = self.__create_step(GeneralStabilizerDimensionCheck)
         with Task(general_stab_dim_step.name):
