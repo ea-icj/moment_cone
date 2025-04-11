@@ -27,7 +27,7 @@ from .kronecker import KroneckerCoefficient, KroneckerCoefficientMLCache
 from .bkr import PlethysmCache
 from .utils import to_literal
 from .export import ExportFormat
-
+from .root import Root
 
 class Dataset(Generic[T], ABC):
     """ Catalog of pending and validated objects of type T
@@ -167,11 +167,11 @@ class GeneralStabilizerDimensionCheck(Step):
         if self.no_dim_check:
             return
         
-        from .stabK import mat_C_to_R, dim_gen_stab_of_K
+        from .stabK import dim_gen_stab_of_K
         Ms = self.V.actionK
-        MsR = [mat_C_to_R(M) for M in Ms.values()]
+        #MsR = [mat_C_to_R(M) for M in Ms.values()]
         # Check that the dim is computed in U_n(C)^s without the isolated S^1
-        if (dim := dim_gen_stab_of_K(MsR)) > self.G.rank - self.V.dim_cone:
+        if (dim := dim_gen_stab_of_K(Ms)) > self.G.rank - self.V.dim_cone:
             raise ValueError(
                 f"The general stabilizer of K in V is too big."
                 f"Namely of dimension {dim}."
@@ -235,17 +235,16 @@ class StabilizerConditionStep(FilterStep[Tau]):
     It only reject pending Taus and doesn't modified the validated ones.
     """
     def __call__(self, tau_dataset: Dataset[Tau]) -> ListDataset[Tau]:
-        from .stabK import Lie_action_as_matrices_Vtau, mat_C_to_R, dim_gen_stab_of_K
+        from .stabK import dim_gen_stab_of_K
         Ms = self.V.actionK
         output: list[Tau] = []
         for tau in tau_dataset.pending():
             if  tau.is_dom_reg :
                 output.append(tau)
             else: 
-                Ms_tau = Lie_action_as_matrices_Vtau(tau, Ms, self.V)
-                Ms_tauR = [mat_C_to_R(M) for M in Ms_tau.values()]
-                
-                if dim_gen_stab_of_K(Ms_tauR) == self.G.rank - self.V.dim_cone + 1:
+                ListK=[beta.index_in_all_of_K(self.G) for beta in tau.orthogonal_rootsB]+[beta.opposite.index_in_all_of_K(self.G) for beta in tau.orthogonal_rootsU]
+                ListChi=[self.V.index_of_weight(chi) for chi in tau.orthogonal_weights(self.V)]+[self.V.dim+self.V.index_of_weight(chi) for chi in tau.orthogonal_weights(self.V)]
+                if dim_gen_stab_of_K(Ms,ListK,ListChi) == self.G.rank - self.V.dim_cone + 1:
                     output.append(tau)
 
         return ListDataset(

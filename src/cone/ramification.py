@@ -18,7 +18,7 @@ from .inequality import *
 from .permutation import *
 from .kx_mod import *
 from .rings import PolynomialRing, Polynomial, Variable
-from .utils import prod
+from .utils import prod,fl_dic
 
     
 def is_not_contracted(
@@ -126,10 +126,6 @@ def Compute_JA_square_free(ineq: Inequality, V: Representation) -> tuple[Polynom
     return J, Jred, factors_Jred
 
 def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, method_R0: Method) -> bool :
-    ineq_check=Inequality.from_tau(Tau(((0, -1, 0, 1),(0, 1, -1, 0),(1, 0, -1, 0),(-1,))))
-    #if Inequality.from_tau(ineq.wtau.end0_representative.sort_mod_sym_dim)  == Inequality.from_tau(Tau(((-1, 0, 1, 0), (0, 1, -1, 0), (1, 0, -1, 0), (-1,))).end0_representative.sort_mod_sym_dim):
-    #    print('coucou Ram',ineq, ineq.inversions, ineq.gr_inversions)
-    #print('Tau',ineq.tau)    
     ws=ineq.w
     Inv_w=list(root for root in ineq.inversions)
     dU=len(Inv_w)
@@ -151,6 +147,10 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
     Neg0_Weights_sorted=list(itertools.chain.from_iterable(tau.non_positive_weights(V)[k] for k in sorted(tau.non_positive_weights(V))))
     Pos_Weights_sorted=list(itertools.chain.from_iterable(tau.positive_weights(V)[k] for k in sorted(tau.positive_weights(V))))
     
+    gr_rootU = tau.grading_rootsU
+    sorted_weightsU = sorted(gr_rootU.keys())
+    fl_inv_w=fl_dic(ineq.gr_inversions,sorted_weightsU)
+
     #print('entry in boundary')
     ### Divisors of the boudary
     for k,w in enumerate(ws):
@@ -158,12 +158,17 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
             if v.is_min_rep(tau.reduced.mult[k]): 
                 vs = list(ws[:k]) + [v] + list(ws[k+1:])
                 ineqv = Inequality(tau,w=tuple(vs))
-                if is_not_contracted(tuple(ineqv.inversions), V, method_S, Neg0_Weights_sorted, Pos_Weights_sorted) :
+                fl_inv_v=fl_dic(ineqv.gr_inversions,sorted_weightsU)
+                if any([fl_inv_v[key] > fl_inv_w[key] for key in fl_inv_v.keys()]):
+                    continue
+                #for i,j in v.inversions : 
+                #    if Root(k,i,j) not in ineq.inversions : ## TODO : c'est all(alha + chi not in weights for chi orthogonal)
+                #    h=tau.dot_root(Root(k,i,j))
+                #    if [fl_inv_v[h-1] == fl_inv_w[h-1]:
+       	        #        continue
+                if is_not_contracted(tuple(ineqv.inversions),V,method_S,Neg0_Weights_sorted,Pos_Weights_sorted) :
                     return(False)
-                
-    #if Inequality.from_tau(ineq.wtau.end0_representative.sort_mod_sym_dim)  == Inequality.from_tau(Tau(((-1, 0, 1, 0), (0, 1, -1, 0), (1, 0, -1, 0), (-1,))).end0_representative.sort_mod_sym_dim):
-    #    print('Schub passed')            
-    #print('boundary passed')
+
     ### Divisor R_0
     J,J_square_free, factors_J_sqf= Compute_JA_square_free(ineq, V) # The Jacobian and it's reduced form
     
@@ -235,9 +240,6 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
         delta=1
     else: 
         delta = prod(Ldelta)            
-    
-    #if Inequality.from_tau(ineq.wtau.end0_representative.sort_mod_sym_dim)  == Inequality.from_tau(Tau(((-1, 0, 1, 0), (0, 1, -1, 0), (1, 0, -1, 0), (-1,))).end0_representative.sort_mod_sym_dim):
-    #    print('delta',delta)
 
     # Computation of Bezout inverse
     LIB=Bezout_Inverse(Ldelta,ring_R0)
@@ -252,13 +254,8 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
     #    print('kernel',noyau)
     # Check divisibility
     check=L0z*B0z*noyau
-    #L0B0z=(L0*B0).subs(subs_dict)
-    #check=L0B0z*noyau
     check=ring_R0(check[0])
     quo, rem = check.quo_rem(delta)
-    #if Inequality.from_tau(ineq.wtau.end0_representative.sort_mod_sym_dim)  == Inequality.from_tau(Tau(((-1, 0, 1, 0), (0, 1, -1, 0), (1, 0, -1, 0), (-1,))).end0_representative.sort_mod_sym_dim):
-    #    print('Ram0',rem)
-    #    print(ineq)
     return cast(bool, rem == 0)
    
 

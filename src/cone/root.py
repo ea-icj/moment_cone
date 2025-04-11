@@ -175,7 +175,24 @@ class Root:
         """
         for k, dk in enumerate(G):
             for i in range(dk):
-                yield Root(k, i, i)       
+                yield Root(k, i, i)
+
+    @staticmethod
+    def dict_rootK(G: LinearGroup) -> dict["Root",int]:
+        """
+        A dictionnary that numbers the roots of K. Used in Representation to index tables.
+        """
+        L={}
+        col=0
+        for beta in Root.all_of_B(G) :
+            if beta.i == beta.j :
+                L[beta]=col
+                col+=1
+            else :
+                L[beta]=col
+                L[beta.opposite]=col+1
+                col+=2
+        return(L)                    
     
     @property
     #TODO: erase this one if not used in Groebner

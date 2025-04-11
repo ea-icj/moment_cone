@@ -25,6 +25,7 @@ __all__ = (
     "get_function_by_name",
     "line_profiler",
     "CachedClass",
+    "fl_dic",
 )
 
 if TYPE_CHECKING:
@@ -430,6 +431,24 @@ def cprofile(
         convert(stats, file_name + ".prof")
 
     return result, stats
+
+def fl_dic(D : dict[int,list["Root"]],L: list[int])-> dict[int,int]:
+    """
+    dictionnary h -> sum lenght D[i] for i <=h, for h in L.
+    L has to be a sorted list.
+    """
+    length_D = {}
+    total = 0
+    for key in sorted(D.keys()) :
+        total += len(D[key])
+        length_D[key] = total
+    result = {}
+    for j in L:
+        # Chercher la plus grande clé i ≤ j (ou 0 si aucune clé ne convient)
+        i_max = max((i for i in sorted(D.keys()) if i <= j), default=None)
+        result[j] = length_D[i_max] if i_max is not None else 0
+    return(result)    
+    
 
 class CachedClass:
     """ Base class that ensure instance uniqueness relatively to the construction arguments 
