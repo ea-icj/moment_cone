@@ -24,46 +24,44 @@ from .utils import CachedClass
 
 class TPi3DResult(NamedTuple):
     """ Result class of Representation.T_Pi_3D method """
-    Q: NDArray
-    QI: NDArray
-    QV: NDArray
-    line_Q: NDArray
-    line_QV: NDArray
+    Q: NDArray[Any]
+    QI: NDArray[Any]
+    QV: NDArray[Any]
+    line_Q: NDArray[Any]
+    line_QV: NDArray[Any]
     dict_Q: dict[Polynomial, Polynomial]
     dict_QV: dict[Polynomial, Polynomial]
 
     @overload
     def __call__(
             self,
-            method: Literal["probabilistic", "imaginary_probabilistic",
-                           'symbolic', 'imaginary_symbolic',
-                           'line_probabilistic', 'line_symbolic']
-        ) -> NDArray:
+            method: Method,
+            kind: Optional[Literal["imaginary", "line"]] = None,
+        ) -> NDArray[Any]:
         ...
     
     @overload
     def __call__(
             self,
-            method: Literal['dict_probabilistic', 'dict_symbolic']
+            method: Method,
+            kind: Literal["dict"]
         ) -> dict[Polynomial, Polynomial]:
         ...
 
     def __call__(
             self,
-            method: Literal["probabilistic", "imaginary_probabilistic",
-                           'symbolic', 'imaginary_symbolic',
-                           'line_probabilistic', 'line_symbolic',
-                           'dict_probabilistic', 'dict_symbolic']
-        ) -> NDArray | dict[Polynomial, Polynomial]:
-        match method:
-            case 'probabilistic': return self.Q
-            case 'imaginary_probabilistic': return self.QI
-            case 'symbolic' | 'imaginary_symbolic': return self.QV
-            case 'line_probabilistic': return self.line_Q
-            case 'line_symbolic': return self.line_QV
-            case 'dict_probabilistic': return self.dict_Q
-            case 'dict_symbolic': return self.dict_QV
-            case _: raise ValueError(f"Unknown method {method}")
+            method: Method,
+            kind: Optional[Literal["imaginary", "line", "dict"]] = None,
+        ) -> NDArray[Any] | dict[Polynomial, Polynomial]:
+        match kind, method:
+            case None, 'probabilistic': return self.Q
+            case 'imaginary', 'probabilistic': return self.QI
+            case None | 'imaginary', 'symbolic': return self.QV
+            case 'line', 'probabilistic': return self.line_Q
+            case 'line', 'symbolic': return self.line_QV
+            case 'dict', 'probabilistic': return self.dict_Q
+            case 'dict', 'symbolic': return self.dict_QV
+            case _: raise ValueError(f"Unknown method {method} and kind {kind}")
 
 
 class Representation(CachedClass, ABC):
@@ -148,7 +146,7 @@ class Representation(CachedClass, ABC):
 
     @cached_property
     @abstractmethod
-    def actionK(self) -> NDArray:
+    def actionK(self) -> NDArray[Any]:
         """
         The list of matrices rho_V(xi) for xi in the bases of K as a tridimensional np.array.
         The first entry are indexed by all_rootsK using index_in_all_of_K of the class LinearGroup.
@@ -227,20 +225,21 @@ class Representation(CachedClass, ABC):
     def QU_QV(self) -> PolynomialRingForWeights:
         return (self.G).QU((self.QV.sage_ring).fraction_field())
 
-    def random_element(self):# Random vector avoiding 0 entries
+    def random_element(self) -> NDArray[np.int64]:
+        """ Random vector avoiding 0 entries """
         return (-1)**np.random.randint(0,2,size=self.dim)*np.random.randint(1, 1000, size=self.dim)
     
     @cached_property
-    def fixed_random_element_Q(self):
+    def fixed_random_element_Q(self) -> NDArray[np.int64]:
         return self.random_element()
     
     @cached_property
-    def fixed_random_element_QI(self):
+    def fixed_random_element_QI(self) -> Polynomial:
         from .rings import I
         return self.random_element() + I * self.random_element()
 
     @cached_property
-    def fixed_random_line_in(self):
+    def fixed_random_line_in(self) -> Polynomial:
         return self.random_element() * self.QZ('z') + self.random_element()
     
 
@@ -342,7 +341,7 @@ class KroneckerRepresentation(Representation):
         for chi in self.all_weights:
             id_chi=self.index_of_weight(chi)
             vchi_a, vchi_b = self.QV2.variable(chi)
-            dict_QV[self.QV.variable(chi)]= vchi_a*ring_R0('z') + vchi_b
+            dict_QV[self.QV.variable(chi)]= vchi_a*ring_R0('z') + vchi_b # type: ignore
             for k,b in enumerate(chi.as_list):
                 for i in range(b):
                     chi_i = WeightAsList(
@@ -365,7 +364,7 @@ class KroneckerRepresentation(Representation):
     
     
     @cached_property
-    def actionK(self) -> NDArray:
+    def actionK(self) -> NDArray[Any]:
         """
         The list of matrices rho_V(xi) for xi in the bases of K as a tridimensional np.array.
         The first entry are indexed by all_rootsK using index_in_all_of_K of the class LinearGroup.
@@ -543,7 +542,7 @@ class ParticleRepresentation(Representation):
             yield chi
 
     @cached_property
-    def actionK(self) -> NDArray:
+    def actionK(self) -> NDArray[Any]:
         """
         The list of matrices rho_V(xi) for xi in the bases of K as a tridimensional np.array.
         The first entry are indexed by all_rootsK using index_in_all_of_K of the class LinearGroup.
