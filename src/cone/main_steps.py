@@ -5,7 +5,6 @@ __all__ = (
     "SubModuleConditionStep",
     "StabilizerConditionStep",
     "InequalityCandidatesStep",
-    "ModuloReductionStep",
     "PiDominancyStep",
     "LinearTriangularStep",
     "BKRConditionStep",
@@ -270,23 +269,6 @@ class InequalityCandidatesStep(TransformerStep[Tau, Inequality]):
         return ListDataset(
             pending=ineqalities,
             validated=[]
-        )
-
-
-###############################################################################
-class ModuloReductionStep(FilterStep[Inequality]):
-    """
-    Reduction modulo symmetries of the dimension vector
-    
-    It only reject pending inequalities and doesn't modified the validated ones.
-    """
-    def __call__(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
-        inequalities = {
-            ineq.sort_mod_sym_dim for ineq in ineq_dataset.pending()
-        }
-        return ListDataset(
-            pending=list(inequalities),
-            validated=list(ineq_dataset.validated()),
         )
     
 
@@ -640,7 +622,6 @@ class ExportStep(FilterStep[Inequality]):
 
 ###############################################################################
 InequalityFilterStr = Literal[
-    "ModuloReduction",
     "PiDominancy",
     "LinearTriangular",
     "BKRCondition",
@@ -649,7 +630,6 @@ InequalityFilterStr = Literal[
 ]
 
 inequalities_filter_dict: Final[dict[InequalityFilterStr, type[Step]]] = {
-    "ModuloReduction": ModuloReductionStep,
     "PiDominancy": PiDominancyStep,
     "LinearTriangular": LinearTriangularStep,
     "BKRCondition": BKRConditionStep,
@@ -660,8 +640,6 @@ inequalities_filter_dict: Final[dict[InequalityFilterStr, type[Step]]] = {
 # Default filters
 default_inequalities_filters: tuple[InequalityFilterStr, ...] = (
     "PiDominancy",
-    "LinearTriangular",
-    "BKRCondition",
     "Birationality",
 )
 
