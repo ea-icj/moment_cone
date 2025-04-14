@@ -38,6 +38,7 @@ class Tau:
     """
     #__slots__ =  '_components' # FIXME cached_property cannot work without __dict__ ... => self managed cache or removing __slots__
     _components: Blocks[int]
+    _grading_weights_cache: dict[Representation, dict[int, list[Weight]]]
 
     def __init__(self, components: Iterable[Sequence[int]] | Blocks[int]):
         """
@@ -50,7 +51,6 @@ class Tau:
         else:
             self._components = Blocks.from_blocks(components)
         self._grading_weights_cache = {}    
-        #self.G = LinearGroup([len(c) for c in components])
         
     @staticmethod
     def from_flatten(s: Iterable[int], G: LinearGroup) -> "Tau":

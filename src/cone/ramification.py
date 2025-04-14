@@ -7,6 +7,7 @@ __all__ = (
 from random import randint
 import itertools
 import numpy as np
+from numpy.typing import NDArray
 import sympy as sp
 
 from .typing import *
@@ -68,21 +69,29 @@ def is_not_contracted(
     #for j, root in enumerate(inversions_v):
     #    uv = V.action_op_el(root, v)
     #    for i, chi in enumerate(positive_weights):
-    #        A[i, j] = uv[V.index_of_weight(chi)]  
+    #        A[i, j] = uv[V.index_of_weight(chi)]
+    An: NDArray[Any]
+    rank_A: int
+
     if method == "probabilistic" :
         An = V.T_Pi_3D(method, "imaginary")[np.ix_([0,1],npw_idx, pw_idx, invs_idx)].sum(axis=1)
         # Conversion in a sympy matrix of rationnals
-        A = sp.Matrix(len(pw_idx), len(invs_idx), lambda i, j:
+        A = sp.Matrix( # type: ignore
+            len(pw_idx),
+            len(invs_idx),
+            lambda i, j:
                     sp.Rational(An[0,i, j]) + sp.Rational(An[1,i, j]) * sp.I
-                    )         
+        )       
+        rank_A = A.rank() # type: ignore
     else :
         An = V.T_Pi_3D(method, "imaginary")[np.ix_(npw_idx, pw_idx, invs_idx)].sum(axis=0)    
         # Sage matrix
         A = matrix(ring,An)
+        rank_A = A.rank() # type: ignore
     
     #A=matrix(ring,An)     
     #rank_A: int = A.change_ring(ring.fraction_field()).rank()
-    return A.rank() == len(invs_idx)
+    return rank_A == len(invs_idx)
 
 
 def Normalization_Factorized_Polynomial(Jb: dict[Polynomial, int]) -> dict[Polynomial, int]:

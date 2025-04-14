@@ -274,26 +274,30 @@ def Check_Rank_Tpi(ineq : Inequality, V: Representation, method: Method) -> bool
 
     gw = tau.grading_weights(V)
     chi_Vtau_idx=[V.index_of_weight(chi) for chi in gw[0]]
-    gr = ineq.gr_inversions 
+    gr = ineq.gr_inversions
+    rank_M: int
     for x in sorted(gr.keys(),reverse=True): # Run over the possible values of tau.scalar(root) for root inversion of w
         gr_idx=[a.index_in_all_of_U(G) for a in gr[x]]
         gw_idx=[V.index_of_weight(chi) for chi in gw[x]]
         if method == "probabilistic" :
             Mn = V.T_Pi_3D(method, "imaginary")[np.ix_([0,1],chi_Vtau_idx, gw_idx, gr_idx)].sum(axis=1)
             # Sympy matrix
-            M = sp.Matrix(len(gr_idx), len(gr_idx), lambda i, j:
-                    sp.Rational(Mn[0,i, j]) + sp.Rational(Mn[1,i, j]) * sp.I
-                    )
+            M = sp.Matrix( # type: ignore
+                len(gr_idx),
+                len(gr_idx),
+                lambda i, j: sp.Rational(Mn[0,i, j]) + sp.Rational(Mn[1,i, j]) * sp.I
+            )
+            rank_M = M.rank() # type: ignore
         else :
             Mn = V.T_Pi_3D(method, "imaginary")[np.ix_(chi_Vtau_idx, gw_idx, gr_idx)].sum(axis=0) 
             # Sage matrix
             M = matrix(ring,Mn)
+            rank_M = M.rank() # type: ignore
         # Conversion in a sympy matrix of rationnals
         
-        rank_M = M.rank()      
         #M=matrix(ring,Mn)
         #rank_M = M.change_ring(ring.fraction_field()).rank()
-        if rank_M<len(gr_idx):
+        if rank_M < len(gr_idx):
                return False
     return True       
 
