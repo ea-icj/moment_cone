@@ -270,23 +270,30 @@ def Check_Rank_Tpi(ineq : Inequality, V: Representation, method: Method) -> bool
     else:
         raise ValueError(f"Invalid value {method} of the computation method")
     
-    import numpy as np
+    import sympy as sp
 
-    zero_weights = tau.orthogonal_weights(V)
-    chi_Vtau_idx=[V.index_of_weight(chi) for chi in zero_weights]
-    #v = point_vect(zero_weights, V, ring, bounds=(-100, 100))
     gw = tau.grading_weights(V)
+    chi_Vtau_idx=[V.index_of_weight(chi) for chi in gw[0]]
     gr = ineq.gr_inversions 
     for x in sorted(gr.keys(),reverse=True): # Run over the possible values of tau.scalar(root) for root inversion of w
         gr_idx=[a.index_in_all_of_U(G) for a in gr[x]]
         gw_idx=[V.index_of_weight(chi) for chi in gw[x]]
-        Mn = V.T_Pi_3D(method, "imaginary")[np.ix_(chi_Vtau_idx, gw_idx, gr_idx)].sum(axis=0) 
-        #M=sp.Matrix(Mn)
-        #rank_M = M.rank()     
-        M=matrix(ring,Mn)
-        rank_M = M.change_ring(ring.fraction_field()).rank()
-        #if rank_M < M.shape[0]:
-        if rank_M<M.nrows():
+        if method == "probabilistic" :
+            Mn = V.T_Pi_3D(method, "imaginary")[np.ix_([0,1],chi_Vtau_idx, gw_idx, gr_idx)].sum(axis=1)
+            # Sympy matrix
+            M = sp.Matrix(len(gr_idx), len(gr_idx), lambda i, j:
+                    sp.Rational(Mn[0,i, j]) + sp.Rational(Mn[1,i, j]) * sp.I
+                    )
+        else :
+            Mn = V.T_Pi_3D(method, "imaginary")[np.ix_(chi_Vtau_idx, gw_idx, gr_idx)].sum(axis=0) 
+            # Sage matrix
+            M = matrix(ring,Mn)
+        # Conversion in a sympy matrix of rationnals
+        
+        rank_M = M.rank()      
+        #M=matrix(ring,Mn)
+        #rank_M = M.change_ring(ring.fraction_field()).rank()
+        if rank_M<len(gr_idx):
                return False
     return True       
 

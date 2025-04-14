@@ -7,6 +7,7 @@ __all__ = (
 from random import randint
 import itertools
 import numpy as np
+import sympy as sp
 
 from .typing import *
 from .tau import Tau
@@ -67,11 +68,21 @@ def is_not_contracted(
     #for j, root in enumerate(inversions_v):
     #    uv = V.action_op_el(root, v)
     #    for i, chi in enumerate(positive_weights):
-    #        A[i, j] = uv[V.index_of_weight(chi)]   
-    An = V.T_Pi_3D(method)[np.ix_(npw_idx, pw_idx, invs_idx)].sum(axis=0) 
-    A=matrix(ring,An)     
-    rank_A: int = A.change_ring(ring.fraction_field()).rank()
-    return rank_A == len(inversions_v)
+    #        A[i, j] = uv[V.index_of_weight(chi)]  
+    if method == "probabilistic" :
+        An = V.T_Pi_3D(method, "imaginary")[np.ix_([0,1],npw_idx, pw_idx, invs_idx)].sum(axis=1)
+        # Conversion in a sympy matrix of rationnals
+        A = sp.Matrix(len(pw_idx), len(invs_idx), lambda i, j:
+                    sp.Rational(An[0,i, j]) + sp.Rational(An[1,i, j]) * sp.I
+                    )         
+    else :
+        An = V.T_Pi_3D(method, "imaginary")[np.ix_(npw_idx, pw_idx, invs_idx)].sum(axis=0)    
+        # Sage matrix
+        A = matrix(ring,An)
+    
+    #A=matrix(ring,An)     
+    #rank_A: int = A.change_ring(ring.fraction_field()).rank()
+    return A.rank() == len(invs_idx)
 
 
 def Normalization_Factorized_Polynomial(Jb: dict[Polynomial, int]) -> dict[Polynomial, int]:
@@ -204,6 +215,7 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
     for col,idx in enumerate(zw_idx):
         chi = V.all_weights[idx]
         L0[0,col]=J_square_free.derivative(V.QV.variable(chi))
+    #print('L0 done')    
     #for col,chi in enumerate(tau.orthogonal_weights(V)) :
     #    L0[0,col]=J_square_free.derivative(V.QV.variable(chi))
 
@@ -224,8 +236,9 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
     #Jz=J.subs(subs_dict)
     Jz=J.subs(V.T_Pi_3D(method_R0, 'dict'))
     assert method_R0 == 'symbolic' or J.degree() == Jz.degree(), "The random line is not enough generic to intersect each irreducible component of R0. Please Restart."
-    #print("Assert degree",J.degree(), Jz.degree())
+    #print("L0z Jz done")
     factors_J_sqf_z = sum([list(dict(Poly.subs(V.T_Pi_3D(method_R0, 'dict')).factor()).keys()) for Poly in factors_J_sqf],[])
+    #print("factor J done")
     Ldelta=[]
     for delta1 in factors_J_sqf_z:
         quo, rem = Jz.quo_rem(delta1**2)
@@ -240,13 +253,13 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
         delta=1
     else: 
         delta = prod(Ldelta)            
-
+    #print("delta done")
     # Computation of Bezout inverse
     LIB=Bezout_Inverse(Ldelta,ring_R0)
-    
+    #print("Bezout done")
     # Kernel of Az modulo delta
     noyau=Kernel_modulo_P(ring_R0,Az,Ldelta,LIB)
-
+    #print("kernel done")
     #print("inversions",ineq.inversions)
     #print("orth weights",tau.orthogonal_weights(V))
     #print("positive weights",tau.positive_weights(V))

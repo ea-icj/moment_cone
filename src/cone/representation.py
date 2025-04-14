@@ -324,7 +324,7 @@ class KroneckerRepresentation(Representation):
         # Calcul effectué une seule fois
         print("Computation of Tpi (once)")
         result_Q = np.zeros((self.dim, self.dim, self.G.dimU), dtype=np.int8)
-        result_QI = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)
+        result_QI = np.zeros((2,self.dim, self.dim, self.G.dimU), dtype=np.int8) #fist index is used for real and imaginary part.
         result_QV = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)
         result_line_Q = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)
         result_line_QV = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)
@@ -350,7 +350,8 @@ class KroneckerRepresentation(Representation):
                         )
                     id_i = self.index_of_weight(chi_i)
                     result_Q[id_chi,id_i,Root(k,i,b).index_in_all_of_U(self.G)] = v[id_chi]
-                    result_QI[id_chi,id_i,Root(k,i,b).index_in_all_of_U(self.G)] = v_real[id_chi]+I*v_im[id_chi]
+                    result_QI[0,id_chi,id_i,Root(k,i,b).index_in_all_of_U(self.G)] = v_real[id_chi]
+                    result_QI[1,id_chi,id_i,Root(k,i,b).index_in_all_of_U(self.G)] = v_im[id_chi]
                     result_QV[id_chi,id_i,Root(k,i,b).index_in_all_of_U(self.G)] = self.QV.variable(chi)
                     result_line_Q[id_chi,id_i,Root(k,i,b).index_in_all_of_U(self.G)] = va[id_chi]*self.QZ('z')+vb[id_chi]
                     dict_Q[self.QV.variable(chi)]= va[id_chi]*self.QZ('z')+vb[id_chi]
@@ -608,7 +609,7 @@ class ParticleRepresentation(Representation):
         # Calcul effectué une seule fois
         print("Computation of Tpi (once)")
         result_Q = np.zeros((self.dim, self.dim, self.G.dimU), dtype=np.int8)
-        result_QI = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)
+        result_QI = np.zeros((2,self.dim, self.dim, self.G.dimU), np.int8)
         result_QV = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)
         result_line_Q = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)
         result_line_QV = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)
@@ -645,7 +646,8 @@ class ParticleRepresentation(Representation):
                             chi_i = WeightAsListOfList(self.G, as_list_of_list=[Li])
                             id_i = self.index_of_weight(chi_i)
                             result_Q[id_chi,id_i,Root(0,i,b).index_in_all_of_U(self.G)] = mult* (-1)**dec*v[id_chi]
-                            result_QI[id_chi,id_i,Root(0,i,b).index_in_all_of_U(self.G)] = mult*(-1)**dec*(v_real[id_chi]+I*v_im[id_chi])
+                            result_QI[0,id_chi,id_i,Root(0,i,b).index_in_all_of_U(self.G)] = mult*(-1)**dec*v_real[id_chi]
+                            result_QI[1,id_chi,id_i,Root(0,i,b).index_in_all_of_U(self.G)] = mult*(-1)**dec*v_im[id_chi]
                             result_QV[id_chi,id_i,Root(0,i,b).index_in_all_of_U(self.G)] = mult* (-1)**dec*self.QV.variable(chi)
                             result_line_Q[id_chi,id_i,Root(0,i,b).index_in_all_of_U(self.G)] = mult* (-1)**dec*(va[id_chi]*self.QZ('z')+vb[id_chi])
                             dict_Q[self.QV.variable(chi)] = va[id_chi]*self.QZ('z')+vb[id_chi]

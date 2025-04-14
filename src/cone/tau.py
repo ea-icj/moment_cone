@@ -49,6 +49,7 @@ class Tau:
             self._components = components.freeze()
         else:
             self._components = Blocks.from_blocks(components)
+        self._grading_weights_cache = {}    
         #self.G = LinearGroup([len(c) for c in components])
         
     @staticmethod
@@ -240,6 +241,13 @@ class Tau:
 
     
     def grading_weights(self, V: Representation) -> dict[int, list[Weight]]:
+        if V not in self._grading_weights_cache:
+            # calcul coûteux ici
+            result = self._compute_grading_weights(V)
+            self._grading_weights_cache[V] = result
+        return self._grading_weights_cache[V]
+
+    def _compute_grading_weights(self, V: Representation) -> dict[int, list[Weight]]:
         """
         Dictionary whose keys are eigenvalues of the action of tau on V.
         
@@ -293,7 +301,8 @@ class Tau:
     @cached_property
     def grading_rootsB(self) -> dict[int, list[Root]]:
         return self.grading_roots_in(Root.all_of_B(self.G))
-        
+
+      
     def positive_weights(self, V: Representation) -> dict[int, list[Weight]]:
         """
         Basis of the eigen space for positive eigen values for the action of tau on V.
