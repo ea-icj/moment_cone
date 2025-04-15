@@ -11,7 +11,7 @@ __all__ = (
 
 from .typing import *
 from .tau import *
-from .inequality import Inequality
+from .inequality import Inequality, full_under_symmetry_list_of_ineq
 from .representation import *
 from re import split as re_split
 
@@ -321,7 +321,7 @@ def export_many(
     for format in formats:
         match to_literal(ExportFormat, format):
             case "Normaliz":
-                export_normaliz(V, inequations, extra_info=extra_info)
+                export_normaliz(V, full_under_symmetry_list_of_ineq(inequations), extra_info=extra_info, add_equations="all")
             case "LaTeX":
                 export_latex(V, inequations, extra_info=extra_info)
             case "Python":
