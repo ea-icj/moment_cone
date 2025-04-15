@@ -745,7 +745,6 @@ class ConeStep(GeneratorStep[Inequality]):
         # Clearing TPi_3D cache to ensure using fresh random numbers
         self.V.clear_T_Pi_3D()
 
-<<<<<<< HEAD
         # Clearing previous executed steps
         self.clear_steps()
 
