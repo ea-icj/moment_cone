@@ -116,12 +116,24 @@ class Step:
         """ Effective computation of the step """
         pass
 
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}()"
+
 
 class GeneratorStep(Step, Generic[T]):
     """ A step that generate a dataset """
-    @abstractmethod
+    output_dataset: Dataset[T] # Keeping generated dataset for logging purpose
+
     def __call__(self) -> Dataset[T]:
+        self.output_dataset = self.apply()
+        return self.output_dataset
+    
+    @abstractmethod
+    def apply(self) -> Dataset[T]:
         ...
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(output={self.output_dataset})"
 
 
 class FilterStep(Step, Generic[T]):
@@ -135,16 +147,38 @@ class FilterStep(Step, Generic[T]):
     dataset may be definitively rejected (not included in the output dataset),
     or remain in a pending state, or be definitively validated.
     """
+    input_dataset: Dataset[T] # Keeping input dataset for logging purpose
+    output_dataset: Dataset[T] # Keeping filtered dataset for logging purpose
+
+    def __call__(self, dataset: Dataset[T], /) -> Dataset[T]:
+        self.input_dataset = dataset
+        self.output_dataset = self.apply(self.input_dataset)
+        return self.output_dataset
+    
     @abstractmethod
-    def __call__(self, dataset: Dataset[T]) -> Dataset[T]:
+    def apply(self, dataset: Dataset[T], /) -> Dataset[T]:
         ...
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(input={self.input_dataset}, output={self.output_dataset})"
 
 
 class TransformerStep(Step, Generic[T, U]):
     """ A step that transforms a dataset into a dataset of different type """
+    input_dataset: Dataset[T] # Keeping input dataset for logging purpose
+    output_dataset: Dataset[U] # Keeping transformed dataset for logging purpose
+
+    def __call__(self, dataset: Dataset[T], /) -> Dataset[U]:
+        self.input_dataset = dataset
+        self.output_dataset = self.apply(self.input_dataset)
+        return self.output_dataset
+
     @abstractmethod
-    def __call__(self, dataset: Dataset[T]) -> Dataset[U]:
+    def apply(self, dataset: Dataset[T], /) -> Dataset[U]:
         ...
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(input={self.input_dataset}, output={self.output_dataset})"
 
 
 ###############################################################################
@@ -162,7 +196,7 @@ class GeneralStabilizerDimensionCheck(Step):
         super().__init__(V, **kwargs)
         self.no_dim_check = no_dim_check
 
-    def __call__(self) -> None:
+    def apply(self) -> None:
         if self.no_dim_check:
             return
         
@@ -204,7 +238,7 @@ class TauCandidatesStep(GeneratorStep[Tau]):
     
     It generates only pending Taus.
     """
-    def __call__(self) -> ListDataset[Tau]:
+    def apply(self) -> ListDataset[Tau]:
         from .tau import find_1PS
         return ListDataset(
             pending=find_1PS(self.V, quiet=self.quiet),
@@ -219,7 +253,7 @@ class SubModuleConditionStep(FilterStep[Tau]):
     
     It only reject pending Taus and doesn't modified the validated ones.
     """
-    def __call__(self, tau_dataset: Dataset[Tau]) -> ListDataset[Tau]:
+    def apply(self, tau_dataset: Dataset[Tau]) -> ListDataset[Tau]:
         return ListDataset(
             pending=[tau for tau in tau_dataset.pending() if tau.is_sub_module(self.V)],
             validated=list(tau_dataset.validated()),
@@ -233,7 +267,7 @@ class StabilizerConditionStep(FilterStep[Tau]):
     
     It only reject pending Taus and doesn't modified the validated ones.
     """
-    def __call__(self, tau_dataset: Dataset[Tau]) -> ListDataset[Tau]:
+    def apply(self, tau_dataset: Dataset[Tau]) -> ListDataset[Tau]:
         from .stabK import dim_gen_stab_of_K
         Ms = self.V.actionK
         output: list[Tau] = []
@@ -259,7 +293,7 @@ class InequalityCandidatesStep(TransformerStep[Tau, Inequality]):
     
     It generates only pending inequalities.
     """
-    def __call__(self, tau_dataset: Dataset[Tau]) -> ListDataset[Inequality]:
+    def apply(self, tau_dataset: Dataset[Tau]) -> ListDataset[Inequality]:
         from .list_of_W import List_Inv_Ws_Mod
         ineqalities: list[Inequality] = []
         for tau in tau_dataset.pending():
@@ -280,7 +314,7 @@ class TPiPreComputationStep(FilterStep[Inequality]):
 
     It thus filter nothing.
     """
-    def __call__(self, dataset: Dataset[T]) -> Dataset[T]:
+    def apply(self, dataset: Dataset[T]) -> Dataset[T]:
         self.V.T_Pi_3D
         return dataset
     
@@ -300,7 +334,7 @@ class PiDominancyStep(FilterStep[Inequality]):
         super().__init__(V, **kwargs)
         self.tpi_method = tpi_method
 
-    def __call__(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
+    def apply(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
         from .list_of_W import Check_Rank_Tpi
         inequalities = [
             ineq
@@ -342,7 +376,7 @@ class LinearTriangularStep(FilterStep[Inequality]):
     
     This filter can only definitively validate some of the inequalities (this inequalities are then not redondant).
     """
-    def __call__(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
+    def apply(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
         from .linear_triangular import is_linear_triangular
         pending: list[Inequality] = []
         validated: list[Inequality] = []
@@ -377,7 +411,7 @@ class BKRConditionStep(FilterStep[Inequality]):
         self.kronecker = kronecker
         self.plethysm = plethysm
 
-    def __call__(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
+    def apply(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
         from .representation import ParticleRepresentation
         if isinstance(self.V, ParticleRepresentation) and self.G[0] >= 8:
             return ListDataset(
@@ -462,7 +496,7 @@ class BirationalityStep(FilterStep[Inequality]):
         self.ram_schub_method = ram_schub_method
         self.ram0_method = ram0_method
 
-    def __call__(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
+    def apply(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
         from .ramification import Is_Ram_contracted
         inequalities = [
             ineq
@@ -532,7 +566,7 @@ class GrobnerStep(FilterStep[Inequality]):
         self.method = grobner_method
         self.timeout = grobner_timeout
 
-    def __call__(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
+    def apply(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
         from .groebner import Grobner_List_Test
         grobner_true, grobner_inconclusive = Grobner_List_Test(
             list(ineq_dataset.pending()),
@@ -597,7 +631,7 @@ class ExportStep(FilterStep[Inequality]):
         else:
             self.formats = list(formats)
 
-    def __call__(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
+    def apply(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
         from .export import export_many
         inequations = ListDataset(
             pending=list(ineq_dataset.pending()),
@@ -699,7 +733,7 @@ class ConeStep(GeneratorStep[Inequality]):
         """ Clear all stored steps """
         self.steps.clear()
         
-    def __call__(self) -> Dataset[Inequality]:
+    def apply(self) -> Dataset[Inequality]:
         from .task import Task
         Task.quiet = self.quiet
 

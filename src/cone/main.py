@@ -9,18 +9,36 @@ from .typing import *
 from .representation import Representation
 from .inequality import Inequality
 from .main_steps import Dataset, InequalityFilterStr, default_inequalities_filters
+from .main_steps import ConeStep
 
+@overload
+def cone(V: Representation,
+         filters: Sequence[InequalityFilterStr],
+         return_step: Literal[False],
+         **options: Any) -> Dataset[Inequality]:
+    ...
+
+@overload
+def cone(V: Representation,
+         filters: Sequence[InequalityFilterStr],
+         return_step: Literal[True],
+         **options: Any) -> tuple[Dataset[Inequality], ConeStep]:
+    ...
 
 def cone(V: Representation,
          filters: Sequence[InequalityFilterStr] = default_inequalities_filters,
-         **options: Any) -> Dataset[Inequality]:
+         return_step: bool = False, # Returns the dataset and the ConeStep instance
+         **options: Any
+    ) -> Dataset[Inequality] | tuple[Dataset[Inequality], ConeStep]:
     """ Main entrance from Python prompt
 
-    For the options, see the description of each step in main_steps
+    For the options, see the description of each step in main_steps.
     """
-    from .main_steps import ConeStep
     cone_step = ConeStep(V, filters=filters, **options)
-    return cone_step()
+    if return_step:
+        return cone_step(), cone_step
+    else:
+        return cone_step()
 
 
 def cone_from_cmd() -> None:
