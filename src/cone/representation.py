@@ -322,7 +322,6 @@ class KroneckerRepresentation(Representation):
         """
 
         # Calcul effectué une seule fois
-        print("Computation of Tpi (once)")
         result_Q = np.zeros((self.dim, self.dim, self.G.dimU), dtype=np.int8)
         result_QI = np.zeros((2,self.dim, self.dim, self.G.dimU), dtype=np.int8) #fist index is used for real and imaginary part.
         result_QV = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)
@@ -607,7 +606,6 @@ class ParticleRepresentation(Representation):
         """
         
         # Calcul effectué une seule fois
-        print("Computation of Tpi (once)")
         result_Q = np.zeros((self.dim, self.dim, self.G.dimU), dtype=np.int8)
         result_QI = np.zeros((2,self.dim, self.dim, self.G.dimU), np.int8)
         result_QV = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)

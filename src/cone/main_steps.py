@@ -273,6 +273,19 @@ class InequalityCandidatesStep(TransformerStep[Tau, Inequality]):
     
 
 ###############################################################################
+class TPiPreComputationStep(FilterStep[Inequality]):
+    """
+    Pre-computing the Representation.TPi3D matrix used in PiDominancy
+    and Birationality steps.
+
+    It thus filter nothing.
+    """
+    def __call__(self, dataset: Dataset[T]) -> Dataset[T]:
+        self.V.T_Pi_3D
+        return dataset
+    
+
+###############################################################################
 class PiDominancyStep(FilterStep[Inequality]):
     """
     Checking dominancy of the map pi
@@ -723,7 +736,13 @@ class ConeStep(GeneratorStep[Inequality]):
                 ineq_candidates = ineq_candidates_step(tau_candidates)
                 #print(ineq_candidates)
 
-            # Filters candidate tau
+            # Pre-computation of Representation.TPi 3D matrix if necessary
+            if 'PiDominancy' in self.filters or 'Birationality' in self.filters:
+                TPi_step = self.__add_step(TPiPreComputationStep)
+                with Task(TPi_step.name):
+                    ineq_candidates = TPi_step(ineq_candidates)
+
+            # Filters candidate inequalities
             for name in self.filters:
                 ineq_filter_type = inequalities_filter_dict[name]
                 ineq_filter_step = self.__add_step(ineq_filter_type)
