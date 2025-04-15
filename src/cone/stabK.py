@@ -75,6 +75,8 @@ def dim_gen_stab_of_K_vref(
     if dQ == 0 :
         return(dk-n)
     
+    if len(List_Pivots)==0:
+        return dim_gen_stab_of_K(T)
     # The images of the elements of the canonical bases indexed by i not in List_Pivots form a basis Bc of V/F 
     List_Not_Pivots=[i for i in range(B.ncols()) if i not in List_Pivots] # TODO : Complexité quadratique. On peut aller plus vite comme dans complement_of_coordinate avec first...    # The image of e_i for i in List_Pivots is the ith columns of N in the basis Bc
     N: Matrix = -B.matrix_from_columns(List_Not_Pivots).transpose()
@@ -149,7 +151,7 @@ def dim_gen_stab_of_K(
     n: int = len(ListChi)
 
     # Create the vector v in the representation
-    v = np.random.randint(-1, 1, size=n) # higher bound in excluded in Numpy
+    v = np.random.randint(-9, 10, size=n) # higher bound in excluded in Numpy
 
     # Construct the matrix M
     # M_{i, k} = \sum_{j=0}^n T_{ListK_k, ListChi_i, ListChi_j} * v_j
