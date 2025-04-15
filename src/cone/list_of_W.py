@@ -13,13 +13,12 @@ from .permutation import *
 from .partition import *
 from .root import *
 from .vector_chooser import *
-from .rings import matrix, QQ
+from .rings import matrix, QQ, I
 from .tau import Tau
 from .representation import *
 from .inequality import Inequality
 from .utils import *
 from .array import *
-import sympy as sp
 
 def List_Inv_Ws_Mod(tau: Tau, V: Representation) -> list[dict[int,list[Root]]]:
     """
@@ -270,8 +269,6 @@ def Check_Rank_Tpi(ineq : Inequality, V: Representation, method: Method) -> bool
     else:
         raise ValueError(f"Invalid value {method} of the computation method")
     
-    import sympy as sp
-
     gw = tau.grading_weights(V)
     chi_Vtau_idx=[V.index_of_weight(chi) for chi in gw[0]]
     gr = ineq.gr_inversions
@@ -280,20 +277,17 @@ def Check_Rank_Tpi(ineq : Inequality, V: Representation, method: Method) -> bool
         gr_idx=[a.index_in_all_of_U(G) for a in gr[x]]
         gw_idx=[V.index_of_weight(chi) for chi in gw[x]]
         if method == "probabilistic" :
-            Mn = V.T_Pi_3D(method, "imaginary")[np.ix_([0,1],chi_Vtau_idx, gw_idx, gr_idx)].sum(axis=1)
-            # Sympy matrix
-            M = sp.Matrix( # type: ignore
+            Mn = V.T_Pi_3D(method, "imaginary")[np.ix_([0, 1], chi_Vtau_idx, gw_idx, gr_idx)].sum(axis=1)
+            M = matrix(
                 len(gr_idx),
                 len(gr_idx),
-                lambda i, j: sp.Rational(Mn[0,i, j]) + sp.Rational(Mn[1,i, j]) * sp.I
+                lambda i, j: QQ(Mn[0, i, j]) + I * QQ(Mn[1, i, j])
             )
-            rank_M = M.rank() # type: ignore
+            rank_M = M.rank()
         else :
             Mn = V.T_Pi_3D(method, "imaginary")[np.ix_(chi_Vtau_idx, gw_idx, gr_idx)].sum(axis=0) 
-            # Sage matrix
             M = matrix(ring,Mn)
-            rank_M = M.rank() # type: ignore
-        # Conversion in a sympy matrix of rationnals
+            rank_M = M.rank()
         
         #M=matrix(ring,Mn)
         #rank_M = M.change_ring(ring.fraction_field()).rank()

@@ -8,18 +8,16 @@ from random import randint
 import itertools
 import numpy as np
 from numpy.typing import NDArray
-import sympy as sp
 
 from .typing import *
 from .tau import Tau
 from .root import Root
 from .weight import Weight
 from .representation import *
-from .vector_chooser import point_vect, vector, matrix, Matrix
 from .inequality import *
 from .permutation import *
 from .kx_mod import *
-from .rings import PolynomialRing, Polynomial, Variable
+from .rings import QQ, I, matrix, Matrix, Polynomial, PolynomialRing
 from .utils import prod,fl_dic
 
     
@@ -70,24 +68,21 @@ def is_not_contracted(
     #    uv = V.action_op_el(root, v)
     #    for i, chi in enumerate(positive_weights):
     #        A[i, j] = uv[V.index_of_weight(chi)]
-    An: NDArray[Any]
     rank_A: int
 
     if method == "probabilistic" :
-        An = V.T_Pi_3D(method, "imaginary")[np.ix_([0,1],npw_idx, pw_idx, invs_idx)].sum(axis=1)
-        # Conversion in a sympy matrix of rationnals
-        A = sp.Matrix( # type: ignore
+        An = V.T_Pi_3D(method, "imaginary")[np.ix_([0, 1], npw_idx, pw_idx, invs_idx)].sum(axis=1)
+        A = matrix(
             len(pw_idx),
             len(invs_idx),
-            lambda i, j:
-                    sp.Rational(An[0,i, j]) + sp.Rational(An[1,i, j]) * sp.I
-        )       
-        rank_A = A.rank() # type: ignore
+            lambda i, j: QQ(An[0, i, j]) + I * QQ(An[1, i, j])
+        )
+        rank_A = A.rank()
     else :
         An = V.T_Pi_3D(method, "imaginary")[np.ix_(npw_idx, pw_idx, invs_idx)].sum(axis=0)    
         # Sage matrix
-        A = matrix(ring,An)
-        rank_A = A.rank() # type: ignore
+        A = matrix(ring, An)
+        rank_A = A.rank()
     
     #A=matrix(ring,An)     
     #rank_A: int = A.change_ring(ring.fraction_field()).rank()
