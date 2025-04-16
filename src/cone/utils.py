@@ -27,6 +27,7 @@ __all__ = (
     "CachedClass",
     "fl_dic",
     "getLogger",
+    "FilteredSet",
 )
 
 if TYPE_CHECKING:
@@ -513,3 +514,51 @@ def getLogger(
 #logging.basicConfig(level=logging.DEBUG, format="%(name)s: %(message)s")
 logging.basicConfig(level=logging.INFO, format="%(message)-80s {%(name)s}")
 logging.getLogger('asyncio').setLevel(logging.WARNING)
+
+
+class FilteredSet(Generic[T]):
+    """ Set with additional filter
+    
+    This implement also allows to iterate through the added elements that were
+    not already in the set, using the `yield_update` method.
+
+    Example:
+    >>> s = FilteredSet(lambda v: v % 2 == 0)
+    >>> list(s.yield_update(range(6)))
+    [0, 2, 4]
+    >>> list(s.yield_update(range(6))) # Elements are already in the set
+    []
+    >>> list(s.yield_update(range(10))) # New elements
+    [6, 8]
+    >>> s.data
+    {0, 2, 4, 6, 8}
+    """
+    data: set[T]
+    filter: Callable[[T], bool]
+
+    def __init__(self, filter: Callable[[T], bool] = lambda t: True):
+        self.data = set()
+        self.filter = filter
+
+    def __iter__(self) -> Iterable[T]:
+        return iter(self.data)
+    
+    def update(self, *args: Iterable[T]) -> None:
+        self.data.update(*(
+            filter(self.filter, values)
+            for values in args
+        ))
+
+    def yield_update(self, *args: Iterable[T]) -> Iterator[T]:
+        """ Update set while yielding new values
+        
+        Warning: the set is not updated if the returned iterator is not consumed!
+        """
+        for v in itertools.chain(*args):
+            if v not in self.data and self.filter(v):
+                self.data.add(v)
+                yield v
+
+    def __repr__(self) -> str:
+        return repr(self.data)
+        

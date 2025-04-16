@@ -269,7 +269,7 @@ class TauCandidatesStep(GeneratorStep[Tau]):
     def apply(self) -> ListDataset[Tau]:
         from .tau import find_1PS
         return ListDataset(
-            pending=find_1PS(self.V, quiet=self.quiet),
+            pending=list(self._tqdm(find_1PS(self.V, quiet=self.quiet))),
             validated=[]
         )
 

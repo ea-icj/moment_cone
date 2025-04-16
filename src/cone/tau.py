@@ -717,16 +717,23 @@ def full_under_symmetry_list_of_tau(seq_tau: Iterable[Tau]) -> Iterable[Tau]:
     return itertools.chain.from_iterable(tau.orbit_symmetries() for tau in seq_tau)
 
 
-def find_1PS(V: Representation, quiet: bool = False) -> list["Tau"]:
+def find_1PS(V: Representation, quiet: bool = False) -> Iterator[Tau]:
     """
     Same as find_1PS_reg_mod_sym_dim without regularity condition
     Computed by 
     """
     from .hyperplane_candidates import find_hyperplanes_reg_mod_outer, check_hyperplane_dim
-    from .utils import symmetries
+    from .utils import symmetries, FilteredSet
 
     # Initialisation with regular 1-PS
-    List_1PS: list[Tau] = []
+    # We use here a FilteredSet that allows to iterate through the unique added
+    # elements while filtering them using a predicate.
+    # The predicate checks that the candidates really give a candidate
+    List_1PS = FilteredSet[Tau](
+        lambda tau: check_hyperplane_dim(tau.orthogonal_weights(V), V.dim_cone - 1)
+    )
+
+    # Reduced representation
     Vred: Representation
     
     if isinstance(V, KroneckerRepresentation):
@@ -765,10 +772,10 @@ def find_1PS(V: Representation, quiet: bool = False) -> list["Tau"]:
                     for tau_ext in list_tau_extended:
                         if len(flatten_dictionary(tau_ext.positive_weights(V)))<=tau_ext.dim_Pu:
                             List_1PS_Vred_extended.append(tau_ext)
-            List_1PS+=unique_modulo_symmetry_list_of_tau(List_1PS_Vred_extended)
-            tau_ext=List_1PS[0]
+            yield from List_1PS.yield_update(unique_modulo_symmetry_list_of_tau(List_1PS_Vred_extended))
+
     else:
-        assert(isinstance(V, ParticleRepresentation))
+        assert isinstance(V, ParticleRepresentation)
         list_partS=[p for p in Partition.all_for_integer(V.G.rank)][1:] #[1:] excludes n, so S is the center of G
         for partS in list_partS :
             from math import floor
@@ -785,12 +792,5 @@ def find_1PS(V: Representation, quiet: bool = False) -> list["Tau"]:
                 l1.sort(reverse=True)
                 l2=list(tau.opposite.flattened)
                 l2.sort(reverse=True)
-                List_1PS+=[Tau.from_flatten(l1,V.G),Tau.from_flatten(l2,V.G)]
+                yield from List_1PS.yield_update([Tau.from_flatten(l1, V.G), Tau.from_flatten(l2, V.G)])
 
-    List_1PS=list(set(List_1PS)) # Suppressing the repetitions
-    
-    # Checking that the candidates really give a candidate
-        
-    ListRes=[tau for tau in List_1PS if check_hyperplane_dim([chi for chi in tau.orthogonal_weights(V)], V.dim_cone-1)] # TODO : liste de chi utile ou itérable suffit ?
-    
-    return ListRes
