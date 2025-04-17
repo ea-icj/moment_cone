@@ -18,7 +18,7 @@ from .tau import *
 from .rings import matrix, Matrix, vector, Vector, QQ, ZZ, I, real_part, imag_part
 
 
-def pivot_columns_rref(M):
+def pivot_columns_rref(M: Matrix) -> list[int]:
     """
     Returns the indices of the pivot columns (where the 1's are) in a scaled reduced-form matrix,
  assumed to have no zero rows and maximum rank.

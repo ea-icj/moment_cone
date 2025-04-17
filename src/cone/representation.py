@@ -29,8 +29,8 @@ class TPi3DResult(NamedTuple):
     QV: NDArray[Any]
     line_Q: NDArray[Any]
     line_QV: NDArray[Any]
-    dict_Q: dict[Polynomial, Polynomial]
-    dict_QV: dict[Polynomial, Polynomial]
+    dict_Q: list[dict[Polynomial, Polynomial]]
+    dict_QV: list[dict[Polynomial, Polynomial]]
 
     @overload
     def __call__(
@@ -45,14 +45,14 @@ class TPi3DResult(NamedTuple):
             self,
             method: Method,
             kind: Literal["dict"]
-        ) -> dict[Polynomial, Polynomial]:
+        ) -> list[dict[Polynomial, Polynomial]]:
         ...
 
     def __call__(
             self,
             method: Method,
             kind: Optional[Literal["imaginary", "line", "dict"]] = None,
-        ) -> NDArray[Any] | dict[Polynomial, Polynomial]:
+        ) -> NDArray[Any] | list[dict[Polynomial, Polynomial]]:
         match kind, method:
             case None, 'probabilistic': return self.Q
             case 'imaginary', 'probabilistic': return self.QI
@@ -311,8 +311,8 @@ class KroneckerRepresentation(Representation):
         
         K=self.QV2.fraction_field()
         ring_R0 = PolynomialRing(K,"z")
-        dict_Q = [{} for _ in range(self.random_deep)]
-        dict_QV = [{} for _ in range(self.random_deep)]
+        dict_Q: list[dict[Polynomial, Polynomial]] = [{} for _ in range(self.random_deep)]
+        dict_QV: list[dict[Polynomial, Polynomial]] = [{} for _ in range(self.random_deep)]
         
         # produce a collection of 5* random_deep random vectors 
         random_vectors =(-1)**np.random.randint(0,2,size=(5*self.random_deep,self.dim))*np.random.randint(1, 1000, size=(5*self.random_deep,self.dim))
@@ -535,8 +535,8 @@ class ParticleRepresentation(Representation):
         result_line_QV = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)        
         K=self.QV2.fraction_field()
         ring_R0 = PolynomialRing(K,"z")
-        dict_Q = [{}]*self.random_deep
-        dict_QV=[{}]*self.random_deep
+        dict_Q: list[dict[Polynomial, Polynomial]] = [{} for _ in range(self.random_deep)]
+        dict_QV: list[dict[Polynomial, Polynomial]] = [{} for _ in range(self.random_deep)]
         #for p in range(self.random_deep):
         #    dict_Q[p]={}
         #    dict_QV[p]={}
