@@ -1,4 +1,7 @@
 #Inequalities selected for V of kron type with dimensions [4, 4, 4, 1]
+__all__ = (
+    'inequalities_VW444',
+)
 
 from ..linear_group import LinearGroup
 from ..representation import *

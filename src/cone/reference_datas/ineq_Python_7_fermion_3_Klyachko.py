@@ -1,4 +1,7 @@
 #Inequalities selected for V of fermion type with dimensions [7]with number of particules = 3
+__all__ = (
+    'inequalities_K37',
+)
 
 from ..linear_group import LinearGroup
 from ..representation import *

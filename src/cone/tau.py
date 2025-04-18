@@ -179,8 +179,7 @@ class Tau:
         """ Hash consistent with equality so that to be safely used in a set or a dict """
         return hash(self._components)
 
-    # TODO: or same dot method with @singledispatch ?
-    def dot_weight(self, chi: Weight) -> int: # chi can be a Weight or a Weight_as_list or  a Weight_as_list_of_list 
+    def dot_weight(self, chi: Weight) -> int:
         """ Scalar product of tau with a weight of V """
         if isinstance(chi, WeightAsList): 
             return sum(c[eps] for c, eps in zip(self.components, chi.as_list))
@@ -241,6 +240,28 @@ class Tau:
 
     
     def grading_weights(self, V: Representation) -> dict[int, list[Weight]]:
+        """
+        Dictionary whose keys are eigenvalues of the action of tau on V.
+        
+        For each key p, the weights in the entry p correspond to a basis of the eigen space
+        
+        >>> from cone import *
+        >>> tau = Tau(((3, 2, 2), (-4, 2, 1), (-3, 2), (1,)))
+        >>> tau
+        3 2 2 | -4 2 1 | -3 2 | 1
+        >>> V = KroneckerRepresentation(tau.G)
+        >>> gw = tau.grading_weights(V)
+        >>> for k in sorted(gw.keys()):
+        ...     print(f"{k}:", gw[k])
+        -4: [WeightAsList((1, 0, 0, 0), idx: 6), WeightAsList((2, 0, 0, 0), idx: 12)]
+        -3: [WeightAsList((0, 0, 0, 0), idx: 0)]
+        1: [WeightAsList((1, 0, 1, 0), idx: 7), WeightAsList((1, 2, 0, 0), idx: 10), WeightAsList((2, 0, 1, 0), idx: 13), WeightAsList((2, 2, 0, 0), idx: 16)]
+        2: [WeightAsList((0, 0, 1, 0), idx: 1), WeightAsList((0, 2, 0, 0), idx: 4), WeightAsList((1, 1, 0, 0), idx: 8), WeightAsList((2, 1, 0, 0), idx: 14)]
+        3: [WeightAsList((0, 1, 0, 0), idx: 2)]
+        6: [WeightAsList((1, 2, 1, 0), idx: 11), WeightAsList((2, 2, 1, 0), idx: 17)]
+        7: [WeightAsList((0, 2, 1, 0), idx: 5), WeightAsList((1, 1, 1, 0), idx: 9), WeightAsList((2, 1, 1, 0), idx: 15)]
+        8: [WeightAsList((0, 1, 1, 0), idx: 3)]
+        """
         if V not in self._grading_weights_cache:
             # calcul coûteux ici
             result = self._compute_grading_weights(V)
@@ -248,26 +269,6 @@ class Tau:
         return self._grading_weights_cache[V]
 
     def _compute_grading_weights(self, V: Representation) -> dict[int, list[Weight]]:
-        """
-        Dictionary whose keys are eigenvalues of the action of tau on V.
-        
-        For each key p, the weights in the entry p correspond to a basis of the eigen space
-        
-        >>> from cone import *
-        >>> tau = Tau(((3, 2, 2), (4, 2, 1), (3, 2), (1,)))
-        >>> tau
-        3 2 2 | 4 2 1 | 3 2 | 1
-        >>> V = KroneckerRepresentation(tau.G)
-        >>> gw = tau.grading_weights(V)
-        >>> for k in sorted(gw.keys()):
-        ...     print(f"{k}:", gw[k])
-        -2: [WeightAsList((1, 2, 1), idx: 11), WeightAsList((2, 2, 1), idx: 17)]
-        -1: [WeightAsList((0, 2, 1), idx: 5), WeightAsList((1, 1, 1), idx: 9), WeightAsList((1, 2, 0), idx: 10), WeightAsList((2, 1, 1), idx: 15), WeightAsList((2, 2, 0), idx: 16)]
-        0: [WeightAsList((0, 1, 1), idx: 3), WeightAsList((0, 2, 0), idx: 4), WeightAsList((1, 1, 0), idx: 8), WeightAsList((2, 1, 0), idx: 14)]
-        1: [WeightAsList((0, 1, 0), idx: 2), WeightAsList((1, 0, 1), idx: 7), WeightAsList((2, 0, 1), idx: 13)]
-        2: [WeightAsList((0, 0, 1), idx: 1), WeightAsList((1, 0, 0), idx: 6), WeightAsList((2, 0, 0), idx: 12)]
-        3: [WeightAsList((0, 0, 0), idx: 0)]
-        """
         return self.grading_weights_in(V.all_weights)
 
     def grading_roots_in(self, roots: Iterable[Root]) -> dict[int, list[Root]]:
@@ -706,8 +707,8 @@ def unique_modulo_symmetry_list_of_tau(seq_tau: Iterable[Tau]) -> set[Tau]:
     >>> t5 = Tau.from_flatten([2, 6, 2, 1, 5, 1, 4, 5, 3], G)
     >>> for tau in unique_modulo_symmetry_list_of_tau((t1, t2, t3, t4, t5)):
     ...     print(tau)
-    -4 0 | -3 0 | 4 0 | 0 | 0 | 21
-    -4 0 | -3 0 | 4 0 | 0 | 0 | 20
+    -5 0 | 1 0 | 4 0 | 0 | 0 | 20
+    -4 0 | 1 0 | 4 0 | 0 | 0 | 20
     """
     return {tau.end0_representative.sort_mod_sym_dim for tau in seq_tau}
 

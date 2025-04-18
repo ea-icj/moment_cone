@@ -5,10 +5,19 @@ from .ineq_Python_8_fermion_3_Klyachko import *
 from .ineq_Python_8_fermion_4_Klyachko import *
 
 from ..tau import *
+from ..representation import *
+from ..inequality import *
+from ..typing import *
 
 
 #TODO check unitary tests
-def compare(list1,list2, comment0="elements", comment1="1", comment2="2"):
+def compare(
+        list1: Iterable[T],
+        list2: Iterable[T],
+        comment0: str ="elements",
+        comment1: str = "1",
+        comment2: str ="2"
+    ) -> tuple[set[T], set[T]]:
     """ Compares two lists. returns elements from the first one that don't belong to the second one and conversely.
     elements have to be hashable (e.g. tuples) so that set(list1) works
     optional arguments comments are here to caracterise the nature of elements (comment0) and particularities of the compared lists (cf compareK_ineq and compareVW_ineq below)
@@ -27,19 +36,24 @@ def compare(list1,list2, comment0="elements", comment1="1", comment2="2"):
     #   print "case not supported by Klyachko"
     inter=set1.intersection(set2)
     print(len(list(inter)),comment0," in both lists")
-    only=[set1-set2, set2-set1]
+    only = set1-set2, set2-set1
     print(len(only[0]), comment0, "appearing only in list",comment1)
     print(len(only[1]), comment0, "appearing only in list",comment2)
     return only
 
-def compare_ineq_mod_sym_dim(list1_ineq,list2_ineq, comment1="1", comment2="2"):
+def compare_ineq_mod_sym_dim(
+        list1_ineq: Iterable[Inequality],
+        list2_ineq: Iterable[Inequality],
+        comment1: str = "1",
+        comment2: str = "2"
+    ) -> tuple[set[Tau], set[Tau]]:
     #assumes that list1 and list2 are lists of inequalities in a Kronecker representation
     list1_tau=unique_modulo_symmetry_list_of_tau([ineq.wtau.end0_representative for ineq in list1_ineq])
     list2_tau=unique_modulo_symmetry_list_of_tau([ineq.wtau.end0_representative for ineq in list2_ineq])
     return compare(list1_tau,list2_tau,"inequalities",comment1,comment2)
     
 
-def compare_to_reference(list_ineq,V):
+def compare_to_reference(list_ineq: Sequence[Inequality], V: Representation) -> Optional[tuple[set[Inequality], set[Inequality]]]:
     """
     list_ineq is a list of Inequalities computed for a certain representation V.
     If exists, it will be compared to a reference list of inequalities (currently only the cases of Klyachko.py for fermions and Vergne_Walter.py for kronecker)

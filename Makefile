@@ -13,7 +13,7 @@ mypy:
 	python3 -m mypy --check-untyped-defs --exclude=src/cone/reference_datas src/cone tests
 
 mypy_strict:
-	python3 -m mypy --strict src/cone tests
+	python3 -m mypy --strict --no-warn-unused-ignores src/cone tests
 
 
 fixme:

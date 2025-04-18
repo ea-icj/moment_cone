@@ -1,5 +1,9 @@
 #Inequalities selected for V of boson type with dimensions [8]with number of particules = 4
- 
+__all__ = (
+    'inequalities_K48',
+)
+
+
 from ..linear_group import LinearGroup
 from ..representation import *
 from ..inequality import Inequality
