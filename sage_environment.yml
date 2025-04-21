@@ -1,0 +1,8 @@
+name: sage
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.11
+  - sage>=10.2
+  - numpy>=2
