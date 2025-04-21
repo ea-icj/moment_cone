@@ -322,8 +322,8 @@ class KroneckerRepresentation(Representation):
         """
 
         # Calcul effectué une seule fois
-        result_Q = np.zeros((self.dim, self.dim, self.G.dimU), dtype=np.int8)
-        result_QI = np.zeros((2,self.dim, self.dim, self.G.dimU), dtype=np.int8) #fist index is used for real and imaginary part.
+        result_Q = np.zeros((self.dim, self.dim, self.G.dimU), dtype=np.int64)
+        result_QI = np.zeros((2,self.dim, self.dim, self.G.dimU), dtype=np.int64) #fist index is used for real and imaginary part.
         result_QV = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)
         result_line_Q = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)
         result_line_QV = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)
@@ -372,7 +372,7 @@ class KroneckerRepresentation(Representation):
         """
        
         shiftI = self.dim # basis over the real e_0,...,e_{D-1},Ie_0,Ie_1,...
-        result=np.zeros((self.G.dim,2*self.dim,2*self.dim), dtype=np.int8)
+        result=np.zeros((self.G.dim,2*self.dim,2*self.dim), dtype=np.int64)
         for chi in self.all_weights:
             id_chi=self.index_of_weight(chi)
             for k,b in enumerate(chi.as_list):
@@ -550,7 +550,7 @@ class ParticleRepresentation(Representation):
         """
         
         shiftI = self.dim # basis over the real e_0,...,e_{D-1},Ie_0,Ie_1,...
-        result=np.zeros((self.G.dim,2*self.dim,2*self.dim), dtype=np.int8)
+        result=np.zeros((self.G.dim,2*self.dim,2*self.dim), dtype=np.int64)
         
         for chi in self.all_weights:#coucou
             id_chi=self.index_of_weight(chi)
@@ -606,8 +606,8 @@ class ParticleRepresentation(Representation):
         """
         
         # Calcul effectué une seule fois
-        result_Q = np.zeros((self.dim, self.dim, self.G.dimU), dtype=np.int8)
-        result_QI = np.zeros((2,self.dim, self.dim, self.G.dimU), np.int8)
+        result_Q = np.zeros((self.dim, self.dim, self.G.dimU), dtype=np.int64)
+        result_QI = np.zeros((2,self.dim, self.dim, self.G.dimU), np.int64)
         result_QV = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)
         result_line_Q = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)
         result_line_QV = np.zeros((self.dim, self.dim, self.G.dimU), dtype=object)

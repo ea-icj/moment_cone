@@ -261,7 +261,7 @@ def multiset_permutations(m: Iterable[T]) -> Generator[list[T]]:
     Is it simply a wrapper of sympy.utilities.iterables.multiset_permutations
     so that to get the correct return type.
     """
-    from sympy.utilities.iterables import multiset_permutations as mp
+    from sympy.utilities.iterables import multiset_permutations as mp # type: ignore
     return cast(Generator[list[T]], mp(m)) # type: ignore
 
 def orbit_symmetries(flatten: Iterable[T], symmetries: Iterable[int]) -> Generator[Iterable[T]]:

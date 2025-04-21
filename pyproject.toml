@@ -44,10 +44,11 @@ dev = [
    "pytest", # Checking examples in docstring
    "line_profiler", # Profiling functions by line_profiler
    "pyprof2calltree", # Converter of functions call stats for kcachegrind
+   "types-tqdm", # Stubs for tqdm
 ]
 
 [project.scripts]
-moment_cone = "moment_cone.main:cone_from_cmd"
+moment_cone = "moment_cone.main:moment_cone_from_cmd"
 
 [project.urls]
 homepage = "https://github.com/ea-icj/moment_cone"
