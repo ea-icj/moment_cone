@@ -36,7 +36,7 @@ def is_not_contracted(
     FIXME: example
 
     Example:
-    >>> from cone import *
+    >>> from moment_cone import *
     >>> G = LinearGroup((2, 3, 4, 1))
     >>> V = KroneckerRepresentation(G)
     >>> tau = Tau.from_flatten([6, 2, 1, 4, 1, 4, 5, 3, 1, 1], G)

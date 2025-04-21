@@ -17,7 +17,7 @@ from .representation import *
 def classif_roots(V: Representation, roots: Iterable[Root]) -> list[list[list[Root]]]:
     """
     Sorts the roots of list_roots in a list of list of roots. First coordinate corresponding to root.k (useful only for kron type) and second coordinate corresponding to root.j (the roots with non-trival action on a weight involving epsilon_j)
-    >>> from cone import LinearGroup, KroneckerRepresentation, Root
+    >>> from moment_cone import LinearGroup, KroneckerRepresentation, Root
     >>> G = LinearGroup([4, 4, 4, 1])
     >>> V = KroneckerRepresentation(G)
     >>> for row in classif_roots(V,Root.all_of_U(G)):

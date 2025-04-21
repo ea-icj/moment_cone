@@ -7,13 +7,13 @@ unittest:
 	python3 -m unittest discover --verbose .
 
 doctest:
-	python3 -m pytest --doctest-modules --verbose --ignore=src/cone/reference_datas src/cone
+	python3 -m pytest --doctest-modules --verbose --ignore=src/moment_cone/reference_datas src/moment_cone
 
 mypy:
-	python3 -m mypy --check-untyped-defs --exclude=src/cone/reference_datas src/cone tests
+	python3 -m mypy --check-untyped-defs --exclude=src/moment_cone/reference_datas src/moment_cone tests
 
 mypy_strict:
-	python3 -m mypy --strict --no-warn-unused-ignores src/cone tests
+	python3 -m mypy --strict --no-warn-unused-ignores src/moment_cone tests
 
 
 fixme:
@@ -23,5 +23,5 @@ todo:
 	grep -ir --exclude-dir=__pycache__ --color --line-number "TODO" tests/ src/
 
 doc:
-	pdoc3 --html --force src/cone
+	pdoc3 --html --force src/moment_cone
 

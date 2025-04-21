@@ -245,7 +245,7 @@ class Tau:
         
         For each key p, the weights in the entry p correspond to a basis of the eigen space
         
-        >>> from cone import *
+        >>> from moment_cone import *
         >>> tau = Tau(((3, 2, 2), (-4, 2, 1), (-3, 2), (1,)))
         >>> tau
         3 2 2 | -4 2 1 | -3 2 | 1
@@ -308,7 +308,7 @@ class Tau:
         """
         Basis of the eigen space for positive eigen values for the action of tau on V.
 
-        >>> from cone import *
+        >>> from moment_cone import *
         >>> tau = Tau(((3, 2, 2), (4, 2, 1), (3, 2), (-7,)))
         >>> tau
         3 2 2 | 4 2 1 | 3 2 | -7
@@ -328,7 +328,7 @@ class Tau:
         """
         Basis of the eigen space for non-positive eigen values for the action of tau on V.
 
-        >>> from cone import *
+        >>> from moment_cone import *
         >>> tau = Tau(((3, 2, 2), (4, 2, 1), (3, 2), (-7,)))
         >>> tau
         3 2 2 | 4 2 1 | 3 2 | -7
@@ -350,7 +350,7 @@ class Tau:
         """
         Basis of the eigen space for non-negative eigen values for the action of tau on V.
 
-        >>> from cone import *
+        >>> from moment_cone import *
         >>> tau = Tau(((3, 2, 2), (4, 2, 1), (3, 2), (-7,)))
         >>> tau
         3 2 2 | 4 2 1 | 3 2 | -7
@@ -440,7 +440,7 @@ class Tau:
         """
         All the root beta so that <beta, tau> = 0
         
-        >>> from cone import *
+        >>> from moment_cone import *
         >>> tau = Tau(((3, 2, 2), (4, 2, 1), (3, 2), (-7,)))
         >>> tau
         3 2 2 | 4 2 1 | 3 2 | -7

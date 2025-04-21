@@ -1,6 +1,6 @@
 import unittest
 
-from cone.partition import Partition
+from moment_cone.partition import Partition
 
 class TestPartition(unittest.TestCase):
 

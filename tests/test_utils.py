@@ -1,6 +1,6 @@
 import unittest
 
-from cone.utils import *
+from moment_cone.utils import *
 
 class TestUtils(unittest.TestCase):
 

@@ -1,7 +1,7 @@
 import unittest
 
-from cone.root import Root
-from cone.linear_group import LinearGroup
+from moment_cone.root import Root
+from moment_cone.linear_group import LinearGroup
 
 class TestRoot(unittest.TestCase):
     def test_interface(self) -> None:

@@ -1,7 +1,7 @@
 import unittest
 
-from cone.permutation import Permutation
-from cone.linear_group  import LinearGroup
+from moment_cone.permutation import Permutation
+from moment_cone.linear_group  import LinearGroup
 
 class TestPermutation(unittest.TestCase):
     def test_interface(self) -> None:

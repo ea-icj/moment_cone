@@ -6,39 +6,53 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cone"
-version = "0.0.1"
-description = "Kronecker, cone and co."
+name = "moment_cone"
+version = "0.1.0"
+description = "Python/Sage package for computing the moment cone for QMP (Kronecker) and fermion"
 readme = "README.md"
 authors = [
     {name = "Michael Bulois", email = "michael.bulois@univ-st-etienne.fr"},
     {name = "Roland Denis", email = "denis@math.univ-lyon1.fr"},
     {name = "Nicolas Ressayre", email = "ressayre@math.univ-lyon1.fr"},
 ]
-maintainers = []
+maintainers = [
+    {name = "Michael Bulois", email = "michael.bulois@univ-st-etienne.fr"},
+    {name = "Roland Denis", email = "denis@math.univ-lyon1.fr"},
+    {name = "Nicolas Ressayre", email = "ressayre@math.univ-lyon1.fr"},
+]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
-keywords = []
+keywords = [
+    "Moment cone",
+    "Kronecker",
+    "Fermion",
+    "Sage",
+]
+requires-python = ">=3.11"
 dependencies = [
-   "sagemath >= 1.3.0", # To have Python >= 3.10
-   "mypy",   # Checking unit tests
-   "pytest", # Checking examples in docstring
-   "pdoc3",  # Generating documentation
-   "psutil", # Performance monitoring
-   "types-psutil", # Associated type stubs
-   "line_profiler", # Profiling functions by line_profiler
-   "pyprof2calltree", # Converter of functions call stats for kcachegrind
    "tqdm", # Progress bar
 ]
-requires-python = ">=3.10"
+
+[project.optional-dependencies]
+dev = [
+   "mypy",   # Checking type annotations
+   "pytest", # Checking examples in docstring
+   "line_profiler", # Profiling functions by line_profiler
+   "pyprof2calltree", # Converter of functions call stats for kcachegrind
+]
 
 [project.scripts]
-cone = "cone.main:cone_from_cmd"
+moment_cone = "moment_cone.main:cone_from_cmd"
+
+[project.urls]
+homepage = "https://github.com/ea-icj/moment_cone"
+repository = "https://github.com/ea-icj/moment_cone"
+"Bug Tracker" = "https://github.com/ea-icj/moment_cone/issues"
 
 [tool.mypy]
 plugins = "numpy.typing.mypy_plugin"

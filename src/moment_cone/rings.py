@@ -108,7 +108,7 @@ class PolynomialRingForWeights:
     z
 
     FIXME
-    #>>> from cone import Weight, Dimension
+    #>>> from moment_cone import Weight, Dimension
     #>>> d = Dimension((4, 3, 2))
     #>>> weights = list(Weight.all(d))[5:12]
     #>>> QV = PolynomialRingForWeights(QQ, weights=weights)

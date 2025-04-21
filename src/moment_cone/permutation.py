@@ -20,7 +20,7 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
     Using that convention, length computation is faster.
 
     Example:
-    >>> from cone.permutation import Permutation
+    >>> from moment_cone.permutation import Permutation
     >>> p = Permutation((3, 2, 1, 4, 0, 5))
     >>> p
     Permutation((3, 2, 1, 4, 0, 5))
@@ -68,7 +68,7 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
 
         Example:
 
-        >>> from cone import Permutation
+        >>> from moment_cone import Permutation
         >>> p = Permutation((2, 3, 5, 0, 4, 1))
         >>> p.inversions
         ((0, 3), (0, 5), (1, 3), (1, 5), (2, 3), (2, 4), (2, 5), (4, 5))

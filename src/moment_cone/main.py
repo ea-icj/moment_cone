@@ -1,6 +1,6 @@
 __all__ = (
-    'cone',
-    'cone_from_cmd',
+    'moment_cone',
+    'moment_cone_from_cmd',
 )
 
 import typing
@@ -9,46 +9,46 @@ from .typing import *
 from .representation import Representation
 from .inequality import Inequality
 from .main_steps import Dataset, InequalityFilterStr, default_inequalities_filters
-from .main_steps import ConeStep
+from .main_steps import MomentConeStep
 
 @overload
-def cone(V: Representation,
+def moment_cone(V: Representation,
          filters: Sequence[InequalityFilterStr],
          return_step: Literal[False],
          **options: Any) -> Dataset[Inequality]:
     ...
 
 @overload
-def cone(V: Representation,
+def moment_cone(V: Representation,
          filters: Sequence[InequalityFilterStr],
          return_step: Literal[True],
-         **options: Any) -> tuple[Dataset[Inequality], ConeStep]:
+         **options: Any) -> tuple[Dataset[Inequality], MomentConeStep]:
     ...
 
-def cone(V: Representation,
+def moment_cone(V: Representation,
          filters: Sequence[InequalityFilterStr] = default_inequalities_filters,
          return_step: bool = False, # Returns the dataset and the ConeStep instance
          **options: Any
-    ) -> Dataset[Inequality] | tuple[Dataset[Inequality], ConeStep]:
+    ) -> Dataset[Inequality] | tuple[Dataset[Inequality], MomentConeStep]:
     """ Main entrance from Python prompt
 
     For the options, see the description of each step in main_steps.
     """
-    cone_step = ConeStep(V, filters=filters, **options)
+    cone_step = MomentConeStep(V, filters=filters, **options)
     if return_step:
         return cone_step(), cone_step
     else:
         return cone_step()
 
 
-def cone_from_cmd() -> None:
+def moment_cone_from_cmd() -> None:
     """ Main entrance from command-line """
     import argparse
     from .utils import to_literal
 
     parser = argparse.ArgumentParser(
-        "Redundant list of inequalities for the cone",
-        description="""This software compute a irredundant list of inequalities for a cone""",
+        "Redundant list of inequalities for the moment cone",
+        description="""This software computes the moment cone for QMP (Kronecker) and fermion""",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,    
     )
     parser.add_argument(
@@ -90,8 +90,8 @@ def cone_from_cmd() -> None:
         help="Level of the displayed logging messages",
     )
 
-    from .main_steps import ConeStep
-    ConeStep.add_arguments(parser)
+    from .main_steps import MomentConeStep
+    MomentConeStep.add_arguments(parser)
 
     # Parsing command-line arguments
     config = parser.parse_args()
@@ -129,7 +129,7 @@ def cone_from_cmd() -> None:
             raise ValueError(f"Invalid representation name {config.representation}")
     
     # Creating the overall cone computational step
-    step = ConeStep.from_config(V, config)
+    step = MomentConeStep.from_config(V, config)
 
     # Reset task history
     from .task import Task

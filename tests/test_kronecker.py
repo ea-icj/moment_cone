@@ -1,7 +1,7 @@
 import unittest
 
-from cone.kronecker import *
-from cone.partition import Partition
+from moment_cone.kronecker import *
+from moment_cone.partition import Partition
 
 class TestKronecker(unittest.TestCase):
     def test_kronecker(self) -> None:

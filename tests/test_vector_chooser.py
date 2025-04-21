@@ -3,10 +3,10 @@ import random
 
 from sage.all import ZZ, QQ, I # type: ignore
 
-from cone.linear_group import LinearGroup
-from cone.weight import Weight
-from cone.representation import KroneckerRepresentation
-import cone.vector_chooser as cd
+from moment_cone.linear_group import LinearGroup
+from moment_cone.weight import Weight
+from moment_cone.representation import KroneckerRepresentation
+import moment_cone.vector_chooser as cd
 
 class TestPermutation(unittest.TestCase):
     def test_pointv(self) -> None:

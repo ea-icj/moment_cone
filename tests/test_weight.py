@@ -1,8 +1,8 @@
 import unittest
 
-from cone.weight import WeightAsList
-from cone.linear_group import LinearGroup
-from cone.representation import KroneckerRepresentation
+from moment_cone.weight import WeightAsList
+from moment_cone.linear_group import LinearGroup
+from moment_cone.representation import KroneckerRepresentation
 
 class TestWeightAsList(unittest.TestCase):
 
@@ -85,7 +85,7 @@ class TestWeightAsList(unittest.TestCase):
         """
 
     def test_orbit(self) -> None:
-        from cone.utils import symmetries
+        from moment_cone.utils import symmetries
         G = LinearGroup((5, 5, 5, 3, 3, 3, 5))
         p = WeightAsList(G, (2, 2, 4, 1, 2, 1, 4))
         orbits = list(p.orbit_symmetries(symmetries(G)))

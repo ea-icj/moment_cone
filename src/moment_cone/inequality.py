@@ -23,7 +23,7 @@ class Inequality:
     In wtau, the blocks are permuted by the **inverse** of the corresponding permutation.
     
     Example :
-    >>> from cone import *
+    >>> from moment_cone import *
     >>> G = LinearGroup((4, 3, 2,1))
     >>> tau = Tau.from_flatten([6,2,1,4,1,2,5,3,1,1], G)
     >>> w = Permutation((1, 0, 3, 2)), Permutation((0, 2, 1)), Permutation((0, 1)),Permutation((0,))
@@ -105,7 +105,7 @@ class Inequality:
         """
         Compute the inversions from w.
         
-        >>> from cone import *
+        >>> from moment_cone import *
         >>> G = LinearGroup((2, 2, 2, 3, 1))
         >>> tau = Tau.from_flatten([6, 2, 1, 4, 1, 4, 5, 3, 1, 1], G)
         >>> w = Permutation((0, 1)), Permutation((1, 0)), Permutation((0, 1)), Permutation((2, 0, 1)),Permutation((0,))
@@ -192,7 +192,7 @@ class Inequality:
         """
         Sort (tau_i, w_i)_i by block of the dimensions
 
-        >>> from cone import *
+        >>> from moment_cone import *
         >>> G = LinearGroup((2, 2, 2, 3, 1))
         >>> tau = Tau.from_flatten([6, 2, 1, 4, 1, 4, 5, 3, 1, 1], G)
         >>> w = Permutation((0, 1)), Permutation((1, 0)), Permutation((0, 1)), Permutation((2, 0, 1)), Permutation((0,))

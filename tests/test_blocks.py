@@ -1,6 +1,6 @@
 import unittest
 
-from cone.blocks import Blocks
+from moment_cone.blocks import Blocks
 
 class TestBlocks(unittest.TestCase):
 

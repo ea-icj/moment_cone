@@ -11,7 +11,7 @@ __all__ = (
     "BirationalityStep",
     "GrobnerStep",
     "ExportStep",
-    "ConeStep",
+    "MomentConeStep",
 )
 
 from argparse import ArgumentParser, Namespace
@@ -730,9 +730,9 @@ default_inequalities_filters: tuple[InequalityFilterStr, ...] = (
 
 TStep = TypeVar("TStep", bound=Step)
 
-class ConeStep(GeneratorStep[Inequality]):
+class MomentConeStep(GeneratorStep[Inequality]):
     """
-    Main step to generate inequalities of the cone
+    Main step to generate inequalities of the moment cone
     
     It returns a dataset containing the inequalities that are definitively
     validated and the ones whose state is still pending.
@@ -835,7 +835,7 @@ class ConeStep(GeneratorStep[Inequality]):
         """ Add command-line arguments specific to this step """
         
         group = parent_parser.add_argument_group(
-            "General cone computation options"
+            "General moment cone computation options"
         )
         group.add_argument(
             "--quiet",
@@ -856,12 +856,12 @@ class ConeStep(GeneratorStep[Inequality]):
         module = sys.modules[__name__]
         for name in __all__:
             item_type = getattr(module, name)
-            if issubclass(item_type, Step) and not issubclass(item_type, ConeStep):
+            if issubclass(item_type, Step) and not issubclass(item_type, MomentConeStep):
                 item_type.add_arguments(parent_parser)
 
 
     @classmethod
-    def from_config(cls: type[Self], V: Representation, config: Namespace, **kwargs: Any) -> "ConeStep":
+    def from_config(cls: type[Self], V: Representation, config: Namespace, **kwargs: Any) -> "MomentConeStep":
         """ Build a step from the representation and the command-line arguments """
         return super().from_config(
             V,

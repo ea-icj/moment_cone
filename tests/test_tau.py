@@ -1,9 +1,9 @@
 import unittest
 
-from cone.tau import Tau, ReducedTau
-from cone.blocks import Blocks
-from cone.linear_group import LinearGroup
-from cone.root import Root
+from moment_cone.tau import Tau, ReducedTau
+from moment_cone.blocks import Blocks
+from moment_cone.linear_group import LinearGroup
+from moment_cone.root import Root
 
 class TestTau(unittest.TestCase):
 

@@ -339,7 +339,7 @@ def to_literal(literals: Any, arg: str) -> str:
 def get_function_by_name(name: str) -> Callable[..., Any]:
     """ Returns a function by it's name 
     
-    The name may include full module or a sub-module of cone
+    The name may include full module or a sub-module of moment_cone
     and can be a method of class.
     """
     # Trying in global scope
@@ -348,16 +348,16 @@ def get_function_by_name(name: str) -> Callable[..., Any]:
     except KeyError:
         pass
 
-    # Trying in objects imported from cone
-    import cone
+    # Trying in objects imported from moment_cone
+    import moment_cone
     try:
-        return cast(Callable[..., Any], getattr(cone, name))
+        return cast(Callable[..., Any], getattr(moment_cone, name))
     except AttributeError:
         pass
 
     # Trying with sub-module or class name
     from importlib import import_module
-    for full_name in (name, "cone." + name):
+    for full_name in (name, "moment_cone." + name):
         components = full_name.split(".")
         # Splitting module name and object name
         for n in range(1, len(components)):
