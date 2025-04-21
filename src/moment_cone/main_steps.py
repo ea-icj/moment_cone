@@ -602,7 +602,7 @@ class GrobnerStep(FilterStep[Inequality]):
     def apply(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
         from .groebner import Grobner_List_Test
         grobner_true, grobner_inconclusive = Grobner_List_Test(
-            list(ineq_dataset.pending()),
+            self._tqdm(ineq_dataset.pending(), unit="ineq"),
             lim=self.timeout,
             V=self.V,
             method=self.method,
