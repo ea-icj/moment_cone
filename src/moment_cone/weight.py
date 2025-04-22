@@ -52,7 +52,9 @@ class Weight:
 
         Used in type boson and fermion
         The convention is 
-                chi2.leq(chi,sym) and tau dominant => <chi2,tau> <= <chi2,tau>
+        
+            chi2.leq(chi,sym) and tau dominant => <chi2,tau> <= <chi2,tau>
+
         sym precise the sense of tau strictly dominant (decreasing on each
         block of sizes given by sym).
         """
@@ -125,7 +127,6 @@ class WeightAsList(Weight):
         """
         Implementation of self <= other (partial ordering)
         
-        Example:
         >>> from .representation import KroneckerRepresentation
         >>> G = LinearGroup((3, 2))
         >>> K = KroneckerRepresentation(G)

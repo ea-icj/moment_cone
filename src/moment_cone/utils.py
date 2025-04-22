@@ -20,6 +20,7 @@ __all__ = (
     "compare_C_Mod",
     "quotient_C_Mod",
     "dictionary_list_lengths",
+    "orbit_symmetries",
     "unique_combinations",
     "to_literal",
     "get_function_by_name",
@@ -61,7 +62,6 @@ def symmetries(values: Iterable[T]) -> Iterable[int]:
     """
     Returns the multiplicities of identical consecutive values in a sequence
     
-    Example:
     >>> tuple(symmetries((4, 4, 3, 2, 2, 2, 1)))
     (2, 1, 3, 1)
     """
@@ -122,7 +122,6 @@ def grading_dictionary(elements: Iterable[T], fn: Callable[[T], U]) -> dict[U, l
     From a sequence of elements and a function that applies on these elements,
     generates a dictionary that maps each image to it's preimage.
 
-    Example:
     >>> elements = range(40)
     >>> fn = lambda e: e % 7
     >>> gd = grading_dictionary(elements, fn)
@@ -145,7 +144,7 @@ def grading_dictionary(elements: Iterable[T], fn: Callable[[T], U]) -> dict[U, l
 def filter_dict_by_key(d: Mapping[T, U], predicate: Callable[[T], bool]) -> dict[T, U]:
     """
     Filter a dictionary using a predicate on its keys
-    Example:
+
     >>> elements = range(40)
     >>> fn = lambda e: e % 7
     >>> gd = grading_dictionary(elements, fn)
@@ -163,7 +162,6 @@ def extend_with_repetitions(seq: Sequence[T], l: int) -> Iterable[tuple[T, ...]]
     """
     From a sequence seq of length <= l with no repetition, returns the list of all expanded sequences of length l obtained from seq by repetitions of some elements.
 
-    Examples:
     >>> for l in extend_with_repetitions([1, 2, 3], 5):
     ...     print(l)
     (1, 2, 3, 3, 3)
@@ -190,7 +188,6 @@ def flatten_dictionary(dic: Mapping[U, Iterable[T]]) -> list[T]:
     """
     Returns the concatenation of all list stored as values in a dict.
     
-    Example:
     >>> d = {0: [1, 2], 1: [4, 5], 2: [3, 6, 7]}
     >>> sorted(flatten_dictionary(d))
     [1, 2, 3, 4, 5, 6, 7]
@@ -202,7 +199,6 @@ def dictionary_list_lengths(dic: Mapping[U, Sequence[T]]) -> dict[U, int]:
     """
     From a dictionary of list, returns the dictionary of the length of each list.
 
-    Example:
     >>> d = {0: [1, 2], 1: [4, 5], 2: [3, 6, 7]}
     >>> dl = dictionary_list_lengths(d)
     >>> for k in sorted(dl.keys()):
@@ -229,7 +225,6 @@ def compare_C_Mod(
 def quotient_C_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> dict[int, int]:
     """ Quotient of two dictionary int -> int.
 
-    Examples:
     >>> d1 = {0: 0, 1: 1, 2: 2}
     >>> d2 = {0: 0, 2: 2}
     >>> quotient_C_Mod(d1, d2)
@@ -274,7 +269,6 @@ def orbit_symmetries(flatten: Iterable[T], symmetries: Iterable[int]) -> Generat
     - https://stackoverflow.com/questions/19676109/how-to-generate-all-the-permutations-of-a-multiset/
     - https://stackoverflow.com/questions/70057504/speed-up-multiset-permutations
 
-    Example:
     >>> orbits = orbit_symmetries((2, 2, 4, 1, 2, 1, 4), (3, 3, 1))
     >>> for p in orbits:
     ...     print(tuple(p))
@@ -300,7 +294,6 @@ def unique_combinations(mylist: Sequence[int], k: int) -> list[tuple[int, ...]]:
     The list is viewed as a multiset. 
     Create the list of multisets contained in list of cardinality k
 
-    Example :
     >>> unique_combinations([3,3,3,2,2,1],3)
     [(3, 3, 3), (3, 3, 2), (3, 3, 1), (3, 2, 2), (3, 2, 1), (2, 2, 1)]
     """
@@ -522,7 +515,6 @@ class FilteredSet(Generic[T]):
     This implement also allows to iterate through the added elements that were
     not already in the set, using the `yield_update` method.
 
-    Example:
     >>> s = FilteredSet(lambda v: v % 2 == 0)
     >>> list(s.yield_update(range(6)))
     [0, 2, 4]

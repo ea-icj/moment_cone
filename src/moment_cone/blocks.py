@@ -17,6 +17,7 @@ class Blocks(Generic[T]):
     It is internally stored as a flattened sequence of values and the indexes of each blocks.
 
     When initializing from a sequence, the mutability of the sequence (ie list of tuple) defined the mutability of the instance of Blocks. When mutable, a whole block or an element of block can be modified, eg:
+
     >>> b = Blocks([1, 2, 3], (2, 1))
     >>> print(b)
     1 2 | 3
@@ -28,6 +29,7 @@ class Blocks(Generic[T]):
     1 3 | 3 4 5
 
     When immutable, hash is consistent with equality thus allowing to safely use a Blocks in a set of a dict. An mutable Blocks can be converted to a immutable one using the `freeze` method:
+    
     >>> b1 = Blocks([1, 2, 3], (2, 1))
     >>> b2 = Blocks([1, 2, 3], (2, 1))
     >>> b1 == b2, hash(b1), hash(b2) # doctest: +SKIP

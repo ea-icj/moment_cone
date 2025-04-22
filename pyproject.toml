@@ -46,6 +46,8 @@ dev = [
    "line_profiler", # Profiling functions by line_profiler
    "pyprof2calltree", # Converter of functions call stats for kcachegrind
    "types-tqdm", # Stubs for tqdm
+   "sphinx", # Documentation
+   "sphinx-autodoc-typehints", # Type annotation in the doc
 ]
 
 [project.scripts]

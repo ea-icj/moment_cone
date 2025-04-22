@@ -26,6 +26,7 @@ class Tau:
     Tuple of partition along with a coefficient
     
     Example:
+
     >>> tau = Tau(((3, 3, 2, 2), (2, 2, 1), (2, 2, 1)))
     >>> tau
     3 3 2 2 | 2 2 1 | 2 2 1
@@ -129,7 +130,6 @@ class Tau:
         """ 
         Returns reduced form of tau
         
-        Example:
         >>> tau = Tau(((3, 3, 2), (4, 4, 2), (1, 1)))
         >>> tau.reduced
         3^2 2^1 | 4^2 2^1 | 1^2
@@ -147,7 +147,6 @@ class Tau:
         """
         Extends self in all possible manners to a Tau of G by adding repetitions
                 
-        Example:
         >>> tau = Tau([[5, 4, 0], [4, 3, 0], [4, 2, 0]])
         >>> tau
         5 4 0 | 4 3 0 | 4 2 0
@@ -195,7 +194,6 @@ class Tau:
         """ 
         Scalar product of tau with a root of self.G
         
-        Example:
         >>> tau = Tau([[5, 4, 0], [4, 3, 0], [4, 2, 0]])
         >>> tau.dot_root(Root(1,0,2))
         4
@@ -207,7 +205,7 @@ class Tau:
     def is_dom_reg(self) -> bool:
         """ 
         Check if tau is dominant and regular 
-        Examples:
+
         >>> tau=Tau(((3, 3, 2, 2), (2, 2, 1), (2, 2, 1)))
         >>> tau.is_dom_reg
         False
@@ -223,7 +221,6 @@ class Tau:
         """ 
         Check if tau is dominant 
         
-        Example:
         >>> tau=Tau(((3, 3, 2, 2), (2, 2, 1), (2, 2, 1)))
         >>> tau.is_dominant
         True
@@ -480,7 +477,6 @@ class Tau:
         """
         Lists the orbit of tau under symmetries of dimensions of its components
 
-        Example:
         >>> G = LinearGroup([2, 2, 2, 1, 1])
         >>> tau = Tau.from_flatten([6, 2, 1, 4, 1, 4, 5, 3], G)
         >>> tau
@@ -523,7 +519,6 @@ class Tau:
         """
         Dimension of Pu
         
-        Example:
         >>> tau = Tau(((3, 3, 2, 2), (2, 2, 1), (2, 2, 1),(1,)))
         >>> tau
         3 3 2 2 | 2 2 1 | 2 2 1 | 1
@@ -542,7 +537,6 @@ class Tau:
         Returns representative of tau in X*(T/Z)  with final value of each block is zero.
         Since Z is trivial when len(G)==1 return self.
 
-        Examples:
         >>> tau = Tau(((3, 3, 2, 2), (2, 2, 1), (2, 2, 1), (1,)))
         >>> tau.end0_representative
         1 1 0 0 | 1 1 0 | 1 1 0 | 5
@@ -577,7 +571,6 @@ class Tau:
         Returns representative of tau in X*(T/Z)  in product of SL.
         Since Z is trivial when len(G)==1 return self.
 
-        Examples:
         >>> tau = Tau(((3, 3, 2, 2), (2, 2, 1), (2, 2, 1), (1,)))
         >>> tau.sl_representative
         3 3 -3 -3 | 2 2 -4 | 2 2 -4 | 41
@@ -640,6 +633,7 @@ class ReducedTau:
     Tau in a reduction form
     
     Example:
+
     >>> tau = Tau(((3, 3, 2, 2), (2, 2, 1), (2, 2, 1),(1,)))
     >>> tau
     3 3 2 2 | 2 2 1 | 2 2 1 | 1
@@ -699,6 +693,7 @@ def unique_modulo_symmetry_list_of_tau(seq_tau: Iterable[Tau]) -> set[Tau]:
     Unique sequence of tau modulo the it's symmetries
 
     Example:
+    
     >>> G = LinearGroup([2, 2, 2, 1, 1, 1])
     >>> t1 = Tau.from_flatten([1, 6, 2, 1, 5, 1, 4, 5, 3], G)
     >>> t2 = t1.end0_representative

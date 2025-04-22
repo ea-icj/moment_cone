@@ -20,6 +20,7 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
     Using that convention, length computation is faster.
 
     Example:
+
     >>> from moment_cone.permutation import Permutation
     >>> p = Permutation((3, 2, 1, 4, 0, 5))
     >>> p
@@ -66,7 +67,6 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         Returns:
             The reconstructed permutation.
 
-        Example:
 
         >>> from moment_cone import Permutation
         >>> p = Permutation((2, 3, 5, 0, 4, 1))
@@ -148,7 +148,6 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         Denote its Weyl group by W_L
         w satisfies is_min_rep if it is a representative of W/W_L of minimal length
 
-        Example:
         >>> p = Permutation((1, 2, 3, 3, 4, 2, 3, 4, 5))
         >>> p.is_min_rep((3, 2, 4))
         True
@@ -183,7 +182,6 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
 
         n is defined by the sum of the block sizes.
 
-        Examples:
         >>> n = 7
         >>> symmetries = (2, 3, 2)
         >>> naive_way = filter(
@@ -280,7 +278,6 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         Returns the list of permutation of e (each encoded by a permutation of the indices) such that the value in the i-th component of the permuted e is at most d[i]
         Outputs are irredundant modulo symmetries of e and d
         
-        Example:
         >>> d = [4, 4, 3, 3, 2]
         >>> e = [4, 3, 3, 2, 1]
         >>> emb = list(Permutation.embeddings_mod_sym(d, e))
@@ -384,7 +381,6 @@ class AllPermutationsByLength:
     this catalogue can use lot of memory to store each permutation,
     it's list of inversion, it's length, ...
 
-    Examples:
     >>> ap = AllPermutationsByLength(3)
     >>> len(ap) # Number of different lengths
     4
@@ -397,6 +393,7 @@ class AllPermutationsByLength:
 
     It is worth noting that this class ensure uniqueness of an instance for a given n
     so that it can be constructed multiple times for a same n without a computation time penalty.
+    
     >>> ap2 = AllPermutationsByLength(3)
     >>> ap is ap2
     True
