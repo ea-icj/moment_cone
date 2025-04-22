@@ -18,12 +18,13 @@ class Task(contextlib.AbstractContextManager["Task"]):
     Context manager to measure and log task durations
 
     Example:
-    with Task("Computing stuff"):
-        # do things
-        ...
-        ...
 
-    Task.print_all()
+    >>> with Task("Computing stuff"):
+    ...    # do things
+    ...    ...
+    ...    ...
+
+    >>> Task.print_all()
     """
     name: str
     perf_counter: tuple[Optional[int], Optional[int]]
@@ -236,6 +237,7 @@ def timeout(t: float, no_raise: bool = True) -> Generator[None]:
     1 2 3
 
     Example of usage as a context manager with raised exception:
+    
     >>> a, b, c = 1, 2, 3
     >>> try:
     ...    with timeout(10, no_raise=False):

@@ -107,7 +107,6 @@ def find_hyperplanes_reg_mod_outer(weights: Sequence[Weight], V: Representation,
     """
     Returns the subsets of weights, each set generating an hyperplane in X^*(T) likely to be the orthogonal of a dominant 1-parameter subgroup tau, such that there is at most u weights we of V with tau(we)>0
 
-    Example:
     >>> from moment_cone import *
     >>> G = LinearGroup((4, 4, 4))
     >>> V = KroneckerRepresentation(G)

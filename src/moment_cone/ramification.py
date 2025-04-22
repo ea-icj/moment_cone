@@ -35,7 +35,6 @@ def is_not_contracted(
 
     FIXME: example
 
-    Example:
     >>> from moment_cone import *
     >>> G = LinearGroup((2, 3, 4, 1))
     >>> V = KroneckerRepresentation(G)

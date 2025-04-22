@@ -23,6 +23,7 @@ class Inequality:
     In wtau, the blocks are permuted by the **inverse** of the corresponding permutation.
     
     Example :
+
     >>> from moment_cone import *
     >>> G = LinearGroup((4, 3, 2,1))
     >>> tau = Tau.from_flatten([6,2,1,4,1,2,5,3,1,1], G)
@@ -125,10 +126,10 @@ class Inequality:
 
     @staticmethod
     def from_tau(tau: Tau) -> "Inequality":
-        """ Converts a (possibly non-dominant) tau to an element of the class Inequality,
-        that is a pair (taup, w) where w.taup = tau and w is of minimal length with this property.
+        """ Converts a (possibly non-dominant) tau to an element of the class Inequality
+
+        An inequality is a pair (taup, w) where w.taup = tau and w is of minimal length with this property.
         
-        Example:
         >>> tau0 = Tau([[4, 9, 6, 5], [3, 1, 1, 2], [2, 2, 8, 2],[7]])
         >>> ineq0 = Inequality.from_tau(tau0)
         >>> Inequality.from_tau(tau0)
