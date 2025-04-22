@@ -46,6 +46,12 @@ exclude_patterns = []
 
 html_theme = 'alabaster'
 html_static_path = ['_static']
+html_theme_options = {
+    "github_user": "ea-icj",
+    "github_repo": "moment_cone",
+    "github_button": True,
+    "github_banner": True,
+}
 
 autodoc_typehints = "description"
 
