@@ -138,8 +138,7 @@ class Task(contextlib.AbstractContextManager["Task"]):
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         """ Leaving context """
         self.stop()
-        if not self.quiet:
-            self.self_log(format="{status} ({duration})", indent=1)
+        self.self_log(format="{status} ({duration})", indent=1)
 
     def start(self) -> None:
         assert Task.is_clear(self)
@@ -186,8 +185,9 @@ class Task(contextlib.AbstractContextManager["Task"]):
         self.log(msg, level, indent)
 
     def log(self, msg: str, level: int = logging.INFO, indent: int = 0) -> None:
-        logger = getLogger(self.name, indentation_level=self.level + indent)
-        logger.log(level, msg)
+        if not self.quiet:
+            logger = getLogger(self.name, indentation_level=self.level + indent)
+            logger.log(level, msg)
 
 
 
