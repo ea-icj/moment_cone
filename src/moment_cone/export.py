@@ -152,7 +152,7 @@ def Latex_string_of_tau(
         lambda_notation: bool = False,
         sgn: int = 1
         ) -> str:
-    chaine=''
+    chaine='$'
     if not lambda_notation:
         for taui in tau.components:
             if len(taui)>1:
@@ -177,7 +177,7 @@ def Latex_string_of_tau(
                 chaine+='\\lambda_{'+str(i+1)+'}'
                 started=True
         chaine+='\\geq 0'
-    return chaine 
+    return chaine+'$'
 
 def Latex_string_of_cluster_dom1PS(
         inequations: Sequence[Inequality],
@@ -187,7 +187,7 @@ def Latex_string_of_cluster_dom1PS(
     """ converts a list of Inequalities (associated to a given dominant 1PS  taudom) to a string describing part of a latex tabular
     """
     n=len(inequations)
-    chaine='\\multirow{'+str(n)+'}{*}{'
+    chaine='\\multirow{'+str(n)+'}{*}{ '
     chaine+=Latex_string_of_tau(inequations[0].tau, False, sgn)+' } ' 
     for ineq in inequations:
         chaine+=' & '+Latex_string_of_tau(ineq.wtau, lambda_notation, sgn)+' & '
@@ -245,16 +245,16 @@ def export_latex(
         if isinstance(V, BosonRepresentation):
             caption="Bosonic case $S^{"+str(V.particle_cnt)+"}\\mathbb{C}^{"+str(V.G[0])+"}$"
     grouped_ineqs=group_by_dom1PS(list(inequations))
-    chaine='$\\begin{array}{|c| c |c|} \n \\hline \n \\textrm{dominant 1-PS} & \\textrm{Inequality} & w \\\\ \n \\hline'
+    chaine='\\hline \n \\textrm{dominant 1-PS} & \\textrm{Inequality} & $w$ \\\\ \n \\hline'
     for taudom_list in grouped_ineqs:
         chaine+=Latex_string_of_cluster_dom1PS(taudom_list,lambda_notation,sgn) 
-    chaine+='\\end{array}$'
+    chaine+=''
     info=info_from_GV(V)+extra_info
     file0 = open('ineq_Latex-'+info+'.tex','w')
     
-    file0.write("\\documentclass[12pt]{article} \n \\usepackage{amsmath,amssymb} \n \\usepackage{multirow} \n \\usepackage{graphicx} \n \n  \\begin{document}\n \n \\begin{table}\n \\caption{"+ caption+"}\n")
+    file0.write("\\documentclass[12pt]{article} \n \\usepackage{amsmath,amssymb} \n \\usepackage{multirow} \n \\usepackage{graphicx} \n  \\usepackage{longtable} \n \\usepackage{geometry} \n \\newgeometry{left=1cm,right=1cm} \\usepackage{changepage} \n \n  \\begin{document}\n \n \\begin{center} \n  \\end{center} \n \\begin{longtable}[l]{|c|c|c|} \n \\caption{"+ caption+"} \\\\  \n \n ")
     file0.write(chaine)
-    file0.write("\n \n \\end{table} \n \\end{document}")
+    file0.write("\n  \n \\end{longtable} \n \\end{document}")
     file0.close()
 
 
