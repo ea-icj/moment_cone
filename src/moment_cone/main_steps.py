@@ -1,5 +1,11 @@
 
 __all__ = (
+    "Dataset",
+    "ListDataset",
+    "Step",
+    "GeneratorStep",
+    "FilterStep",
+    "TransformerStep",
     "GeneralStabilizerDimensionCheck",
     "TauCandidatesStep",
     "SubModuleConditionStep",
@@ -16,7 +22,7 @@ __all__ = (
 
 from argparse import ArgumentParser, Namespace
 import typing
-from tqdm.auto import tqdm # type: ignore
+from tqdm.auto import tqdm
 
 from .typing import *
 from .representation import Representation
@@ -27,7 +33,6 @@ from .kronecker import KroneckerCoefficient, KroneckerCoefficientMLCache
 from .bkr import PlethysmCache
 from .utils import to_literal
 from .export import ExportFormat
-from .root import Root
 
 class Dataset(Generic[T], ABC):
     """ Catalog of pending and validated objects of type T
@@ -131,7 +136,7 @@ class Step:
               leave: bool = False,
               disable: Optional[bool] = None,
               **kwargs: Any,
-              ) -> tqdm:
+              ) -> tqdm: # type: ignore
         """ Helper function to generate a progress bar with appropriate configuration """
         if desc is None:
             desc = type(self).__name__
@@ -603,7 +608,7 @@ class GrobnerStep(FilterStep[Inequality]):
     def apply(self, ineq_dataset: Dataset[Inequality]) -> ListDataset[Inequality]:
         from .groebner import Grobner_List_Test
         grobner_true, grobner_inconclusive = Grobner_List_Test(
-            list(ineq_dataset.pending()),
+            self._tqdm(ineq_dataset.pending(), unit="ineq"),
             lim=self.timeout,
             V=self.V,
             method=self.method,
@@ -633,7 +638,7 @@ class GrobnerStep(FilterStep[Inequality]):
             "--grobner_timeout",
             type=float,
             default=1,
-            help="Maximal processing time per inequality when checking birationaly",
+            help="Maximal processing time per inequality when checking birationaly (<= 0 to disable the limit)",
         )
         
     @classmethod

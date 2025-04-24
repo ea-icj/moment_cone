@@ -14,6 +14,7 @@ class Parallel(contextlib.AbstractContextManager["Parallel"]):
     (not a local function or a lambda).
 
     Example:
+    
     >>> with Parallel(1) as p:
     ...     r = p.map(round, [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
     ...     r = list(r) # r in only an iterable

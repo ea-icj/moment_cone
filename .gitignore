@@ -6,3 +6,4 @@ build*
 html*
 *.prof
 *.pstats
+docs/source/moment_cone

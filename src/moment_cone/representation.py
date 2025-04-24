@@ -24,8 +24,8 @@ from .utils import CachedClass
 
 class TPi3DResult(NamedTuple):
     """ Result class of Representation.T_Pi_3D method """
-    Q: NDArray[Any]
-    QI: NDArray[Any]
+    Q: NDArray[np.int64]
+    QI: NDArray[np.int64]
     QV: NDArray[Any]
     line_Q: NDArray[Any]
     line_QV: NDArray[Any]

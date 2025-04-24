@@ -14,6 +14,7 @@ class Partition:
     Decreasing sequence of positive int
     
     Example:
+
     >>> p = Partition((3, 2, 1))
     >>> print(p)
     Partition((3, 2, 1))
@@ -73,6 +74,7 @@ class Partition:
         """ Concatenating a Partition with other iterable
         
         Example:
+
         >>> p = Partition((3, 2))
         >>> p + Partition((2, 1, 1))
         Partition((3, 2, 2, 1, 1))
@@ -128,7 +130,6 @@ class Partition:
         """
         All sub-partitions of the partition
         
-        Example:
         >>> p = Partition((4, 2, 2, 1))
         >>> for sp in p.all_subpartitions():
         ...     print(sp)
@@ -173,7 +174,6 @@ class Partition:
         """
         Returns the component-wise maximum of the given partitions
         
-        Examples:
         >>> Partition.join((
         ...     Partition(3, 2, 2),
         ...     Partition(4, 1, 1),
@@ -219,6 +219,7 @@ def gen_partitions(
     ) -> list[Partition]:
     """
     Generate all the partitions containing In contained in Out and of weight in [min_weight, max_weight]
+
     >>> for l in gen_partitions(4, 6, [2,1,0], [4,3,1]):
     ...     print(l)
     Partition((2, 1, 1))

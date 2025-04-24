@@ -178,7 +178,7 @@ def is_fiber_singleton_reorder(ineq: Inequality, V: Representation, method: Meth
     return is_fiber_singleton(V,ineq,method)
     
 
-def long_calculation(Liste: Sequence[T], function: Callable[..., U], lim: float, extra_arguments: Iterable[Any]) -> list[tuple[int, T, U]]:
+def long_calculation(Liste: Iterable[T], function: Callable[..., U], lim: float, extra_arguments: Iterable[Any]) -> list[tuple[int, T, Optional[U]]]:
     """
     For each element of Liste,
     computes function applied to each element, (and common list of extra_arguments for each call)
@@ -187,36 +187,36 @@ def long_calculation(Liste: Sequence[T], function: Callable[..., U], lim: float,
     from .task import timeout, TimeOutException
     from .utils import getLogger
     logger = getLogger("groebner.long_calculation")
-    Res: list[tuple[int, T, U]] = []
-    for i,l in enumerate(Liste):
+    Res: list[tuple[int, T, Optional[U]]] = []
+    for i, l in enumerate(Liste):
         try:
             with timeout(lim, no_raise=False):
-                logger.debug(f'starting calculation {i} over {len(Liste)}')
-                resl=function(l,*extra_arguments)
+                logger.debug(f'starting calculation {i}')
+                resl = function(l,*extra_arguments)
         except TimeOutException:
            logger.debug(f'{i} did not complete in {lim} seconds!')
+           Res.append((i, l, None))
         else:
           logger.debug(f'{i} completed, result is {resl}')
           assert resl is not None
           Res.append((i, l, resl))
 
-    logger.debug(f"{len(Res)} over {len(Liste)} computations finished")
+    logger.debug(f"{len(Res)} computations finished")
     if len(Res)>0 and type(Res[0][-1])==bool:
        logger.debug(f"{len([m for m in Res if m[-1]])} results with output True")
+
     return Res
 
 def Grobner_List_Test(
-        Liste: Sequence[Inequality],
+        Liste: Iterable[Inequality],
         lim: float,
         V: Representation,
         method: Method
     ) -> tuple[list[Inequality], list[Inequality]]:
     # FIXME: les éléments de Grobner_res sont de simples bool, et non des listes
-    Grobner_Res=long_calculation(Liste,is_fiber_singleton_reorder,lim,[V,method])
-    Grobner_True=[m[1] for m in Grobner_Res if m[2]]
-    Grobner_False=[m[1] for m in Grobner_Res if not(m[2])]
-    conclusive_indices=[m[0] for m in Grobner_Res]
-    Grobner_Inconclusive=[Liste[i] for i in range(len(Liste)) if not(i in conclusive_indices)]
+    Grobner_Res = long_calculation(Liste, is_fiber_singleton_reorder, lim, [V,method])
+    Grobner_True = [l for i, l, resl in Grobner_Res if resl]
+    Grobner_Inconclusive = [l for i, l, resl in Grobner_Res if resl is None]
 
     from .utils import getLogger
     logger = getLogger("groebner.Grobner_List_Test")

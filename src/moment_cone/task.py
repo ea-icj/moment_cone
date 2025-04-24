@@ -18,12 +18,13 @@ class Task(contextlib.AbstractContextManager["Task"]):
     Context manager to measure and log task durations
 
     Example:
-    with Task("Computing stuff"):
-        # do things
-        ...
-        ...
 
-    Task.print_all()
+    >>> with Task("Computing stuff"):
+    ...    # do things
+    ...    ...
+    ...    ...
+
+    >>> Task.print_all()
     """
     name: str
     perf_counter: tuple[Optional[int], Optional[int]]
@@ -138,8 +139,7 @@ class Task(contextlib.AbstractContextManager["Task"]):
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         """ Leaving context """
         self.stop()
-        if not self.quiet:
-            self.self_log(format="{status} ({duration})", indent=1)
+        self.self_log(format="{status} ({duration})", indent=1)
 
     def start(self) -> None:
         assert Task.is_clear(self)
@@ -186,8 +186,9 @@ class Task(contextlib.AbstractContextManager["Task"]):
         self.log(msg, level, indent)
 
     def log(self, msg: str, level: int = logging.INFO, indent: int = 0) -> None:
-        logger = getLogger(self.name, indentation_level=self.level + indent)
-        logger.log(level, msg)
+        if not self.quiet:
+            logger = getLogger(self.name, indentation_level=self.level + indent)
+            logger.log(level, msg)
 
 
 
@@ -215,6 +216,8 @@ def timeout(t: float, no_raise: bool = True) -> Generator[None]:
     """
     Decorator and context manager to limit wall execution time of a code
     
+    Negative or zero timeout disable the execution time.
+
     Example of usage as a decorator:
 
     >>> @timeout(10)
@@ -236,6 +239,7 @@ def timeout(t: float, no_raise: bool = True) -> Generator[None]:
     1 2 3
 
     Example of usage as a context manager with raised exception:
+    
     >>> a, b, c = 1, 2, 3
     >>> try:
     ...    with timeout(10, no_raise=False):
@@ -246,12 +250,15 @@ def timeout(t: float, no_raise: bool = True) -> Generator[None]:
     ...     pass # Some something when task didn't finished
     1 2 3
     """
-    from cysignals.alarm import alarm, AlarmInterrupt, cancel_alarm # type: ignore
-    try:
-        alarm(t)
+    if t <= 0:
         yield
-    except AlarmInterrupt:
-        if not no_raise:
-            raise TimeOutException("Time is out!")
-    finally:
-        cancel_alarm()
+    else:
+        from cysignals.alarm import alarm, AlarmInterrupt, cancel_alarm # type: ignore
+        try:
+            alarm(t)
+            yield
+        except AlarmInterrupt:
+            if not no_raise:
+                raise TimeOutException("Time is out!")
+        finally:
+            cancel_alarm()
