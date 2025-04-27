@@ -21,10 +21,15 @@ class Task(contextlib.AbstractContextManager["Task"]):
 
     >>> with Task("Computing stuff"):
     ...    # do things
-    ...    ...
-    ...    ...
+    ...    pass
 
-    >>> Task.print_all()
+    >>> Task.print_all() # doctest: +SKIP
+        interlude (Wall: 904.569ms, CPU: 892.139ms (99%))
+    Computing stuff: Done (Wall: 0.067ms, CPU: 0.066ms (98%))
+        interlude (Wall: 0.075ms, CPU: 0.075ms (100%))
+
+    Total of 1 tasks: Wall: 0.067ms, CPU: 0.066ms (98%)
+    Total of interludes: Wall: 904.644ms, CPU: 892.213ms (99%)
     """
     name: str
     perf_counter: tuple[Optional[int], Optional[int]]
