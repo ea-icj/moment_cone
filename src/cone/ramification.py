@@ -1,6 +1,5 @@
 __all__ = (
     'is_not_contracted',
-    'Compute_JA_square_free',
     'Is_Ram_contracted',
 )
 
@@ -160,8 +159,10 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
         for x in List_C_mult_dec : #sorted(gr_inv.keys(),reverse=True):
             n_block=len(gr_inv[x])
             Azi=Az.submatrix(shift,shift,n_block,n_block)
+            #print(Azi)
             Ji=Azi.det()
-            Azi_com=Ji*Azi.inverse()
+            #Azi_com=Ji*Azi.inverse()
+            Azi_com=Azi.adjugate()
             #print('test com :',Azi.adjugate()==Azi_com)
             #TODO : choisir entre ces deux méthodes
             List_Comatices.append(Azi_com.transpose())
@@ -170,11 +171,12 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
             Factors_Jz.append(Ji)
             List_deltas.append(dict(Ji.factor()))
             shift+=n_block
-            
+        #print('List of detas',List_deltas)    
         #print(ineq)   
         # Run over the diagonal blocks of A
         List_checked_deltas=[]
-        List_C_mult_dec=sorted(gr_inv.keys(), reverse=True)
+        List_C_mult_dec=sorted(gr_inv.keys(), reverse=True) # TODO : déplacer
+        #print('lCmult',List_C_mult_dec)
         for i,x in enumerate(List_C_mult_dec) : #sorted(gr_inv.keys(),reverse=True): 
             # Current block and its determinant
             Azi=Blocks_Az[i]
@@ -183,59 +185,61 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
             #deltas=dict(Ji.factor())
 
             for delta, m in List_deltas[i].items():
-                if delta not in List_checked_deltas:     
+                if delta not in List_checked_deltas:
+                    #print('delta',delta)    
                     List_checked_deltas.append(delta)
-                    # Occurences of delta
-                    occ_delta=[[i,m,x]]
-                    for j,y in enumerate(List_C_mult_dec[i+1:]): 
-                        if delta in List_deltas[j].items() :
-                            occ_delta.append([j,List_deltas[j][delta],y])
-                    #jmax=max([occ[0] for occ in occ_delta])
-                    jmin,mult_min,y = min(occ_delta, key=lambda occ: [occ[1],len(gr_inv[occ[2]])])
-                    # We minimize multiplicity of delta. If several ones, we minimize the size of the block                      
+                                          
                     
                     K=NumberField(delta, 'a')
                     a = K.gen()
+                    #phiK = V.QZ.hom([a], K) # homomorphism from Q[x] onto K via z ↦ a
                     # submatric of A modulo delta used to compute the kernel
-                    Ared=Az.matrix_from_columns(range(sizeblocks[i], Az.ncols())).apply_map(lambda entry: entry(a))
-                    B0z_red=B0z.matrix_from_columns(range(sizeblocks[i], Az.ncols())).apply_map(lambda entry: entry(a))
+                    #Ared=Az.matrix_from_columns(range(sizeblocks[i], Az.ncols())).apply_map(lambda entry: entry(a))
+                    Ared=Az.matrix_from_columns(range(sizeblocks[i], Az.ncols())).change_ring(K)
+                    #B0z_red=B0z.matrix_from_columns(range(sizeblocks[i], Az.ncols())).apply_map(lambda entry: entry(a))
                     # Block used to compoute L0
-                    Aredj=Blocks_Az[jmin].apply_map(lambda entry: entry(a)) # A modulo delta
-                    com_Aredj=List_Comatices[jmin].apply_map(lambda entry: entry(a)) # A modulo delta
+                    #Aredj=Blocks_Az[jmin].apply_map(lambda entry: entry(a)) # A modulo delta
                     
+                    #com_Aredj=List_Comatices[jmin].apply_map(lambda entry: entry(a)) # A modulo delta
+                    
+                    #com_Aredj=List_Comatices[jmin].apply_map(phiK)
                     if Jz % delta**2 != 0  or Ared.rank() == Ared.ncols()-1 :
                         noyau=Ared.right_kernel().basis()[0] 
-
-                        #noyau_converted = [ring_R0(n.lift()) for n in noyau]
-                        # Computation of L0   
+                        #print('noyau',noyau)
+                        
+                        ### Computation of L0
+                        # choose a block of minimal multiplicity. We first list the occurences of delta
+                        occ_delta=[[i,m,x]]
+                        for j,y in enumerate(List_C_mult_dec[i+1:]):
+                            #print('j',j) 
+                            if delta in List_deltas[i+j+1].keys() :
+                                #print('ici')
+                                occ_delta.append([j+i+1,List_deltas[j+i+1][delta],y])
+                        #print('occ delta',occ_delta)        
+                        #jmax=max([occ[0] for occ in occ_delta])
+                        jmin,mult_min,y = min(occ_delta, key=lambda occ: [occ[1],len(gr_inv[occ[2]])])
+                        #print('jmin',i,jmin,mult_min)
+                        # We minimize multiplicity of delta. If several ones, we minimize the size of the block
+                           
                         if mult_min==1:
                             nA = Ared.nrows()
                             L0=matrix(K,1,len(zw_idx))
                             #y=gr_inv.keys()[jmin]
-                            
+                            Aredj=Blocks_Az[jmin].change_ring(K) # block jmin modulo delta
+                            com_Aredj=List_Comatices[jmin].change_ring(K) # its comatrix
                             for col,idx in enumerate(zw_idx):
                                 Mn = V.T_Pi_3D('symbolic_int')[
                                     np.ix_([idx],[V.index_of_weight(chi) for chi in tau.positive_weights(V)[y]], 
                                     [alpha.index_in_all_of_U(V.G) for alpha in gr_inv[y]])].sum(axis=0)
                                 nrow,ncol=Mn.shape
-                                #M=matrix(V.QV,Mn)
-                                #print('type Ared',type(Ared))
-                                #L0[0,col] = sum(
-                                #    Mn[r,s] * Aredj.matrix_from_rows_and_columns(
-                                #        [u for u in range(n_current) if u != r],
-                                #        [v for v in range(n_current) if v != s]
-                                #    ).det() * (-1)**(r + s)
-                                #    for r in range(nrow)
-                                #    for s in range(ncol)
-                                #    if Mn[r,s] !=0
-                                #)
-                                # Alternative computation using Cramer
+                                #print('Mn',Mn)
                                 L0[0,col] = sum(
                                     Mn[r,s] * com_Aredj[r,s]
                                     for r in range(nrow)
                                     for s in range(ncol)
                                     if Mn[r,s] !=0
-                                )                                
+                                )
+                            #print(L0)                                
                         else : # In this case we use a symbolic method to avoid computation of all small minors.
                             print('A symbolic case with mult',mult_min,' and block of degree ',len(gr_inv[y]),'for:')
                             print(ineq)
@@ -243,8 +247,13 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
                                     np.ix_([V.index_of_weight(chi) for chi in tau.orthogonal_weights(V)],
                                     [V.index_of_weight(chi) for chi in tau.positive_weights(V)[y]], 
                                     [alpha.index_in_all_of_U(V.G) for alpha in gr_inv[y]])].sum(axis=0)
+                            #Mn2 = V.T_Pi_3D('symbolic')[
+                            #        np.ix_([V.index_of_weight(chi) for chi in tau.orthogonal_weights(V)],
+                            #        [V.index_of_weight(chi) for chi in tau.positive_weights(V)[2]], 
+                            #        [alpha.index_in_all_of_U(V.G) for alpha in gr_inv[2]])].sum(axis=0)
                             #print('matrix',Mn)
                             Jj=matrix(V.QV,Mn).det()
+                            #Jj=matrix(V.QV,Mn).det()*matrix(V.QV,Mn2).det()
                             #print('Jj',Jj)
                             partial_derivatives: list[Polynomial] = [
                                 Jj.derivative(V.QV.variable(chi))                                             
@@ -256,10 +265,17 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
                             Jjred: Polynomial = Jj//sage_gcd([Jj] + partial_derivatives)
                             Gradiant=[V.QV(Jjred.derivative(V.QV.variable(chi))) for chi in tau.orthogonal_weights(V)]
                             L0QV=matrix(V.QV,1,len(tau.orthogonal_weights(V)),Gradiant)
+                            #print('L0QV',L0QV)
                             phi = V.T_Pi_3D(method_R0, 'dict')[p]
                             L0 = matrix(V.QZ, L0QV.apply_map(phi))
-        
-                        if L0*B0z_red*noyau != 0 :
+                            #print('L0',L0)
+                            L0 =L0.change_ring(K)
+                            #print('L0K',L0)
+
+                        B0z_red=B0z.matrix_from_columns(range(sizeblocks[i], Az.ncols())).change_ring(K)
+                        #print('B0noyau',B0z_red*noyau)
+                        #print('B0noyau',L0*B0z_red*noyau[0])
+                        if (L0*B0z_red*noyau)[0] != 0 :
                             #print('Bizarre')
                             return False 
     #print('et là ?')                    
