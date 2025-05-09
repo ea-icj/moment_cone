@@ -18,7 +18,7 @@ from .weight import Weight
 from .representation import *
 from .inequality import *
 from .permutation import *
-from .kx_mod import *
+#from .kx_mod import *
 from .rings import QQ, I, matrix, vector, Matrix, Polynomial, PolynomialRing
 from .utils import prod,fl_dic
 
@@ -84,56 +84,6 @@ def is_not_contracted(
     
     return rank_A == len(invs_idx)
 
-
-def Normalization_Factorized_Polynomial(Jb: dict[Polynomial, int]) -> dict[Polynomial, int]: # A SUPPRIMER
-    d: dict[Polynomial, int] = {}
-    for P in Jb.keys():
-        a: int = P.monomial_coefficient(P.monomials()[0])
-        new_key=P/a
-        d[new_key]=Jb[P]
-    return d
-
-def Compute_JA_square_free(ineq: Inequality, V: Representation) -> tuple[Polynomial, Polynomial, list[Polynomial]]: # A SUPPRIMER
-    tau = ineq.tau
-    ring = V.QV
-    # a generic vector in VV^tau
-    zero_weights = tau.orthogonal_weights(V)
-    zw_idx=[V.index_of_weight(chi) for chi in tau.orthogonal_weights(V)]
-    gr = ineq.gr_inversions
-    Jred: Polynomial = 1
-    J: Polynomial = 1
-    ListJb =[]
-    sizeblocks=[0]
-    factors_Jred: list[Polynomial] = []
-    for x in sorted(gr.keys(),reverse=True): # Choose a diagonal block of Tpi that is a weight of tau
-        gr_idx=[a.index_in_all_of_U(V.G) for a in gr[x]]
-        sizeblocks.append(sizeblocks[-1]+len(gr_idx))
-        gw_idx=[V.index_of_weight(chi) for chi in tau.positive_weights(V)[x]]
-        Mn = V.T_Pi_3D('symbolic')[np.ix_(zw_idx, gw_idx, gr_idx)].sum(axis=0)
-        M=matrix(ring,Mn)
-        
-        Jb: Polynomial = M.det()
-        ListJb.append(Jb)
-        partial_derivatives: list[Polynomial] = [
-            Jb.derivative(V.QV.variable(chi))
-            for chi in zero_weights
-        ]
-        from sage.all import gcd as sage_gcd # type: ignore
-        Jbred_denom: Polynomial = sage_gcd([Jb] + partial_derivatives)
-        Jbred: Polynomial
-        remainder: Polynomial
-        Jbred, remainder = Jb.quo_rem(Jbred_denom)
-        assert remainder == 0
-        
-        factor_Jred = Jbred // sage_gcd(Jred,Jbred)        
-        #Jred_new, remainder = (Jred * Jbred).quo_rem(sage_gcd(Jred, Jbred)) #computing the square free version of Jred*Jbred
-        #factor_Jred,remainder2=Jred_new.quo_rem(Jred)
-        if factor_Jred.degree()!=0:
-            Jred *= factor_Jred
-            factors_Jred.append(factor_Jred) #new factor in Jred at this level
-        J *= Jb
-        
-    return J, Jred, factors_Jred, ListJb, sizeblocks
 
 def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, method_R0: Method) -> bool :
     ws=ineq.w
@@ -208,19 +158,20 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
         List_Comatices=[]
         shift=0
         for x in List_C_mult_dec : #sorted(gr_inv.keys(),reverse=True):
-            p=len(gr_inv[x])
-            Azi=Az.submatrix(shift,shift,p,p)
+            n_block=len(gr_inv[x])
+            Azi=Az.submatrix(shift,shift,n_block,n_block)
             Ji=Azi.det()
             Azi_com=Ji*Azi.inverse()
             #print('test com :',Azi.adjugate()==Azi_com)
             #TODO : choisir entre ces deux méthodes
-            List_Comatices.append(Azi.transpose())
+            List_Comatices.append(Azi_com.transpose())
             Jz*=Ji
             Blocks_Az.append(Azi)
             Factors_Jz.append(Ji)
             List_deltas.append(dict(Ji.factor()))
-            shift+=p
+            shift+=n_block
             
+        #print(ineq)   
         # Run over the diagonal blocks of A
         List_checked_deltas=[]
         List_C_mult_dec=sorted(gr_inv.keys(), reverse=True)
@@ -240,9 +191,9 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
                         if delta in List_deltas[j].items() :
                             occ_delta.append([j,List_deltas[j][delta],y])
                     #jmax=max([occ[0] for occ in occ_delta])
-                    jmin,mult_min,y = min(occ_delta, key=lambda occ: occ[1])
-                    #TODO : mettre un ordre lexico pour avoir taille mini parmis les blocs de multiplicité minimale.
-
+                    jmin,mult_min,y = min(occ_delta, key=lambda occ: [occ[1],len(gr_inv[occ[2]])])
+                    # We minimize multiplicity of delta. If several ones, we minimize the size of the block                      
+                    
                     K=NumberField(delta, 'a')
                     a = K.gen()
                     # submatric of A modulo delta used to compute the kernel
@@ -251,10 +202,7 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
                     # Block used to compoute L0
                     Aredj=Blocks_Az[jmin].apply_map(lambda entry: entry(a)) # A modulo delta
                     com_Aredj=List_Comatices[jmin].apply_map(lambda entry: entry(a)) # A modulo delta
-                    #print('delta',delta)
-                    #print('Ared',Ared)
-                    #print('Az',Az)
-
+                    
                     if Jz % delta**2 != 0  or Ared.rank() == Ared.ncols()-1 :
                         noyau=Ared.right_kernel().basis()[0] 
 
@@ -266,9 +214,6 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
                             #y=gr_inv.keys()[jmin]
                             
                             for col,idx in enumerate(zw_idx):
-                                #print('tailles',i,Az.ncols(),sizeblocks,len(zw_idx))
-                                #idx=zw_idx[col+sizeblocks[i]]                    
-                                #idx in enumerate(zw_idx):
                                 Mn = V.T_Pi_3D('symbolic_int')[
                                     np.ix_([idx],[V.index_of_weight(chi) for chi in tau.positive_weights(V)[y]], 
                                     [alpha.index_in_all_of_U(V.G) for alpha in gr_inv[y]])].sum(axis=0)
@@ -290,14 +235,33 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
                                     for r in range(nrow)
                                     for s in range(ncol)
                                     if Mn[r,s] !=0
-                                )
-                                
-                        else :
-                            print('Avec', ineq,' on a:')
-                            print('mult min',mult_min,'pour',delta)
+                                )                                
+                        else : # In this case we use a symbolic method to avoid computation of all small minors.
+                            print('A symbolic case with mult',mult_min,' and block of degree ',len(gr_inv[y]),'for:')
+                            print(ineq)
+                            Mn = V.T_Pi_3D('symbolic')[
+                                    np.ix_([V.index_of_weight(chi) for chi in tau.orthogonal_weights(V)],
+                                    [V.index_of_weight(chi) for chi in tau.positive_weights(V)[y]], 
+                                    [alpha.index_in_all_of_U(V.G) for alpha in gr_inv[y]])].sum(axis=0)
+                            #print('matrix',Mn)
+                            Jj=matrix(V.QV,Mn).det()
+                            #print('Jj',Jj)
+                            partial_derivatives: list[Polynomial] = [
+                                Jj.derivative(V.QV.variable(chi))                                             
+                                for chi in tau.orthogonal_weights(V)
+                            ]
+                            #print('partial der',partial_derivatives)
+                            from sage.all import gcd as sage_gcd # type: ignore
+                            #print('gcd',sage_gcd([Jj] + partial_derivatives))
+                            Jjred: Polynomial = Jj//sage_gcd([Jj] + partial_derivatives)
+                            Gradiant=[V.QV(Jjred.derivative(V.QV.variable(chi))) for chi in tau.orthogonal_weights(V)]
+                            L0QV=matrix(V.QV,1,len(tau.orthogonal_weights(V)),Gradiant)
+                            phi = V.T_Pi_3D(method_R0, 'dict')[p]
+                            L0 = matrix(V.QZ, L0QV.apply_map(phi))
         
-                        if mult_min==1 and L0*B0z_red*noyau != 0 : #TODO : traiter le cas m>1
+                        if L0*B0z_red*noyau != 0 :
+                            #print('Bizarre')
                             return False 
-
+    #print('et là ?')                    
     return True                    
                 
