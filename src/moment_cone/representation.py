@@ -598,7 +598,7 @@ class ParticleRepresentation(Representation):
                                 result_QI[2*p,id_chi,id_i,Root(0,i,b).index_in_all_of_U(self.G)] = mult*(-1)**dec*random_vectors[5*p+1,id_chi]
                                 result_QI[2*p+1,id_chi,id_i,Root(0,i,b).index_in_all_of_U(self.G)] = mult*(-1)**dec*random_vectors[5*p+2,id_chi]
                                 result_QV[id_chi,id_i,Root(0,i,b).index_in_all_of_U(self.G)] = mult* (-1)**dec*self.QV.variable(chi)
-                                result_QV_int[id_chi,id_i,Root(k,i,b).index_in_all_of_U(self.G)] = mult* (-1)**dec
+                                result_QV_int[id_chi,id_i,Root(0,i,b).index_in_all_of_U(self.G)] = mult* (-1)**dec
                                 result_line_Q[2*p,id_chi,id_i,Root(0,i,b).index_in_all_of_U(self.G)] = mult* (-1)**dec*random_vectors[5*p+3,id_chi]  #(va[id_chi]*self.QZ('z')+vb[id_chi])
                                 result_line_Q[2*p+1,id_chi,id_i,Root(0,i,b).index_in_all_of_U(self.G)] = mult* (-1)**dec*random_vectors[5*p+4,id_chi]
                                 dict_Q[p][self.QV.variable(chi)] = random_vectors[5*p+3,id_chi]*self.QZ('z')+random_vectors[5*p+4,id_chi]
