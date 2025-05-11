@@ -85,6 +85,9 @@ def is_not_contracted(
 
 
 def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, method_R0: Method) -> bool :
+    from .utils import getLogger
+    logger = getLogger("ramification.Is_Ram_contracted")
+
     ws=ineq.w
     Inv_w=list(root for root in ineq.inversions)
     dU=len(Inv_w)
@@ -241,8 +244,8 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
                                 )
                             #print(L0)                                
                         else : # In this case we use a symbolic method to avoid computation of all small minors.
-                            print('A symbolic case with mult',mult_min,' and block of degree ',len(gr_inv[y]),'for:')
-                            print(ineq)
+                            logger.debug(f'A symbolic case with mult {mult_min} and block of degree {len(gr_inv[y])} for:')
+                            logger.debug(str(ineq))
                             Mn = V.T_Pi_3D('symbolic')[
                                     np.ix_([V.index_of_weight(chi) for chi in tau.orthogonal_weights(V)],
                                     [V.index_of_weight(chi) for chi in tau.positive_weights(V)[y]], 
