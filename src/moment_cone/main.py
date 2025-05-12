@@ -45,44 +45,32 @@ def moment_cone_from_cmd() -> None:
     """ Main entrance from command-line """
     import argparse
     from .utils import to_literal
+    from .representation import Representation
+
 
     parser = argparse.ArgumentParser(
         "Redundant list of inequalities for the moment cone",
         description="""This software computes the moment cone for QMP (Kronecker) and fermion""",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,    
     )
-    parser.add_argument(
-        "representation",
-        type=lambda s: to_literal(Literal["Kronecker", "Fermion", "Boson"], s),
-        choices=("Kronecker", "Fermion", "Boson"),
-        help="Representation type",
-    )
-    parser.add_argument(
-        "N",
-        type=int,
-        nargs='+',
-        help="Dimensions of the linear groups",
-    )
-    parser.add_argument(
-        "--particle_cnt",
-        type=int,
-        default=None,
-        help="Number of particles in Fermion and Boson representation",
-    )
-    parser.add_argument(
+
+    Representation.add_arguments(parser)
+
+    group = parser.add_argument_group("Development tools")
+    group.add_argument(
         "--line_profiler",
         type=str,
         nargs="*",
         default=[],
         help="Profile given function by line",
     )
-    parser.add_argument(
+    group.add_argument(
         "--cprofile",
         type=str,
         default=None,
         help="Profile function calls and output results in given file name (pstats and kcachegrind format)",
     )
-    parser.add_argument(
+    group.add_argument(
         "--logging_level",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         type=str.upper,
@@ -109,24 +97,7 @@ def moment_cone_from_cmd() -> None:
         print()
 
     # Creating the representation
-    from .linear_group import LinearGroup
-    from .representation import Representation
-    G = LinearGroup(config.N)
-    V: Representation
-    match config.representation.lower():
-        case "kronecker":
-            from .representation import KroneckerRepresentation
-            V = KroneckerRepresentation(G)
-        case "fermion":
-            assert config.particle_cnt is not None, "particle_cnt is mandatory for Fermion representation"
-            from .representation import FermionRepresentation
-            V = FermionRepresentation(G, particle_cnt=config.particle_cnt)
-        case "boson":
-            assert config.particle_cnt is not None, "particle_cnt is mandatory for Boson representation"
-            from .representation import BosonRepresentation
-            V = BosonRepresentation(G, particle_cnt=config.particle_cnt)
-        case _:
-            raise ValueError(f"Invalid representation name {config.representation}")
+    V = Representation.from_config(config)
     
     # Creating the overall cone computational step
     step = MomentConeStep.from_config(V, config)

@@ -12,6 +12,7 @@ import itertools
 import numpy as np
 from numpy.typing import NDArray
 from typing import NamedTuple
+from argparse import ArgumentParser, Namespace
 
 from .typing import *
 from .linear_group import LinearGroup
@@ -31,7 +32,7 @@ class TPi3DResult(NamedTuple):
     line_Q: NDArray[Any]
     line_QV: NDArray[Any]
     dict_Q: list[dict[Polynomial, Polynomial]]
-    dict_QV: list[dict[Polynomial, Polynomial]]
+    dict_QV: list[dict[Polynomial, Polynomial]] # FIXME: name and type is not correct anymore
 
     @overload
     def __call__(
@@ -223,6 +224,53 @@ class Representation(CachedClass, ABC):
     @cached_property
     def fixed_random_line_in(self) -> Polynomial:
         return self.random_element() * self.QZ('z') + self.random_element()
+    
+    @staticmethod
+    def add_arguments(parent_parser: ArgumentParser, defaults: Mapping[str, Any] = {}) -> None:
+        """ Add command-line arguments that defines the representation """
+        from .utils import to_literal
+        group = parent_parser.add_argument_group(
+            "Representation"
+        )
+        group.add_argument(
+            "representation",
+            type=lambda s: to_literal(Literal["Kronecker", "Fermion", "Boson"], s),
+            choices=("Kronecker", "Fermion", "Boson"),
+            help="Representation type",
+        )
+        group.add_argument(
+            "N",
+            type=int,
+            nargs='+',
+            help="Dimensions of the linear groups",
+        )
+        group.add_argument(
+            "--particle_cnt",
+            type=int,
+            default=None,
+            help="Number of particles in Fermion and Boson representation",
+        )
+
+    @classmethod
+    def from_config(cls: type[Self], config: Namespace, **kwargs: Any) -> "Representation":
+        """ Build a step from the representation and the command-line arguments """
+        G = LinearGroup(config.N)
+        V: Representation
+        match config.representation.lower():
+            case "kronecker":
+                from .representation import KroneckerRepresentation
+                V = KroneckerRepresentation(G)
+            case "fermion":
+                assert config.particle_cnt is not None, "particle_cnt is mandatory for Fermion representation"
+                from .representation import FermionRepresentation
+                V = FermionRepresentation(G, particle_cnt=config.particle_cnt)
+            case "boson":
+                assert config.particle_cnt is not None, "particle_cnt is mandatory for Boson representation"
+                from .representation import BosonRepresentation
+                V = BosonRepresentation(G, particle_cnt=config.particle_cnt)
+            case _:
+                raise ValueError(f"Invalid representation name {config.representation}")
+        return V
     
 
 class KroneckerRepresentation(Representation):
