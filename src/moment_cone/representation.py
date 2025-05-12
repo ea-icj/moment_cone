@@ -71,13 +71,21 @@ class Representation(CachedClass, ABC):
     """ Base class of a representation """
     Weight: ClassVar[type[WeightBase]] = WeightBase # Weight class
     G: LinearGroup
-    random_deep: int
+    random_deep: int # Deepness of the probabilistic methods
+    seed: int # Seed for the pseudo-random generators
 
-    def __init__(self, G: LinearGroup | Iterable[int], *, random_deep: int = 1):
+    def __init__(self, 
+                 G: LinearGroup | Iterable[int],
+                 *,
+                 random_deep: int = 1,
+                 seed: Optional[int] = None):
         if not isinstance(G, LinearGroup):
             G = LinearGroup(G)
         self.G = G
         self.random_deep = random_deep
+
+        from .utils import generate_seed
+        self.seed = generate_seed(seed, str(self))
 
     def weight(self, *args: Any, **kwargs: Any) -> WeightBase:
         """ Creates a weight for the given representation """
@@ -215,15 +223,21 @@ class Representation(CachedClass, ABC):
     
     @cached_property
     def fixed_random_element_Q(self) -> NDArray[np.int64]:
+        from .utils import manual_seed
+        manual_seed(self.seed, "fixed_random_element_Q")
         return self.random_element()
     
     @cached_property
     def fixed_random_element_QI(self) -> Polynomial:
         from .rings import I
+        from .utils import manual_seed
+        manual_seed(self.seed, "fixed_random_element_QI")
         return self.random_element() + I * self.random_element()
 
     @cached_property
     def fixed_random_line_in(self) -> Polynomial:
+        from .utils import manual_seed
+        manual_seed(self.seed, "fixed_random_line_in")
         return self.random_element() * self.QZ('z') + self.random_element()
     
     @staticmethod
@@ -295,7 +309,7 @@ class Representation(CachedClass, ABC):
 class KroneckerRepresentation(Representation):
     Weight = WeightAsList
     
-    def __init__(self, G: LinearGroup | Iterable[int], **kwargs):
+    def __init__(self, G: LinearGroup | Iterable[int], **kwargs: Any):
         """ Kronecker representation
 
         The last dimension of the linear group must be one for consistency reason.
@@ -387,8 +401,9 @@ class KroneckerRepresentation(Representation):
         The first entry are indexed by all_rootsK using the dictionary dict_rootK of the class LinearGroup.
         The other entries are indexed by self.all_Weights using self.index_of_weight(chi).
         """
+        from .utils import manual_seed
+        manual_seed(self.seed, "T_Pi_3D")
 
-        #from .rings import QQ
         # Computation made once
         result_Q = np.zeros((self.random_deep,self.dim, self.dim, self.G.dimU), dtype=np.int64)
         result_QI = np.zeros((2*self.random_deep,self.dim, self.dim, self.G.dimU), dtype=np.int64) #first index is used for real and imaginary part.
@@ -515,8 +530,8 @@ class ParticleRepresentation(Representation):
     particle_cnt: int
 
     def __init__(self, G: LinearGroup | Iterable[int], *, particle_cnt: int, **kwargs: Any):
-        super().__init__(G, **kwargs)
         self.particle_cnt = particle_cnt
+        super().__init__(G, **kwargs)
         if len(self.G) != 1:
             raise NotImplementedError("Product of GL not supported for particle representation")
 
@@ -619,7 +634,9 @@ class ParticleRepresentation(Representation):
         The first entry are indexed by all_rootsK using the dictionary dict_rootK of the class LinearGroup.
         The other entries are indexed by self.all_Weights using self.index_of_weight(chi).
         """
-        
+        from .utils import manual_seed
+        manual_seed(self.seed, "T_Pi_3D")
+
         # Computation made once
         result_Q = np.zeros((self.random_deep,self.dim, self.dim, self.G.dimU), dtype=np.int64)
         result_QI = np.zeros((2*self.random_deep,self.dim, self.dim, self.G.dimU), np.int64)
@@ -697,7 +714,6 @@ class ParticleRepresentation(Representation):
         # FIXME: not proof to change in Representation construction...
         Vred = type(self)(
             LinearGroup([self.G[0] - shiftrank]),
-            random_deep=self.random_deep,
             particle_cnt=self.particle_cnt - 1,
         )
 

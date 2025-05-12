@@ -778,7 +778,7 @@ def find_1PS(V: Representation, quiet: bool = False) -> Iterator[Tau]:
             umax=floor((V.G.dim-sum([x**2 for x in partS]))/2) # dim of P^u(tau)
             weights=[chi for chi in V.weights_of_S(partS)]
             Gred=LinearGroup([len(partS)])
-            Vred = type(V)(Gred, V.particle_cnt)
+            Vred = type(V)(Gred, particle_cnt=V.particle_cnt)
             sym=list(symmetries(partS))
             for H in find_hyperplanes_reg_mod_outer(weights, Vred, umax, sym):
                 taured=Tau.from_zero_weights(H, Vred)

@@ -29,6 +29,8 @@ __all__ = (
     "fl_dic",
     "getLogger",
     "FilteredSet",
+    "generate_seed",
+    "manual_seed",
 )
 
 if TYPE_CHECKING:
@@ -590,3 +592,60 @@ class IterableHook(Generic[T]):
     def __getattr__(self, name: str) -> Any:
         """ Forward access to missing attributes & methods to the iterable """
         return getattr(self.iterable, name)
+    
+
+def generate_seed(
+        seed: Optional[int] = None,
+        names: str | Sequence[str] = [],
+        nbytes: int = 8
+    ) -> int:
+    """ Generate a random generator seed
+
+    If a name is given, a kind of sub-seed is generated from seed and for this
+    specific name.
+
+    Returns the generated seed.
+    """
+    if seed is None:
+        import random
+        random.seed()
+        seed = int.from_bytes(random.randbytes(nbytes))
+    
+    if isinstance(names, str):
+        names = [names]
+
+    if len(names):
+        import random
+        random.seed(str(seed) + '|'.join(names))
+        seed = int.from_bytes(random.randbytes(nbytes))
+    
+    return seed
+
+    
+def manual_seed(
+        seed: Optional[int] = None,
+        names: str | Sequence[str] = [],
+        nbytes: int = 8,
+    ) -> int:
+    """ Generate and set the random generator seed
+
+    If a name is given, a kind of sub-seed is generated from seed and for this
+    specific name.
+
+    Returns the used seed. 
+    """
+    seed = generate_seed(seed, names, nbytes)
+
+    import random
+    random.seed(generate_seed(seed, "Python", nbytes))
+    
+    import numpy as np
+    # Numpy seed is limited to 2**32 - 1
+    np.random.seed(generate_seed(seed, "Numpy", min(4, nbytes)))
+
+    from sage.all import set_random_seed # type: ignore
+    set_random_seed(generate_seed(seed, "Sage", nbytes))
+
+    return seed
+
+        

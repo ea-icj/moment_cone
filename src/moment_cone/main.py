@@ -53,6 +53,12 @@ def moment_cone_from_cmd() -> None:
         description="""This software computes the moment cone for QMP (Kronecker) and fermion""",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,    
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Seed for the pseudo-random generators",
+    )
 
     Representation.add_arguments(parser)
 
@@ -84,6 +90,10 @@ def moment_cone_from_cmd() -> None:
     # Parsing command-line arguments
     config = parser.parse_args()
 
+    # Seed
+    from .utils import manual_seed
+    config.seed = manual_seed(config.seed)
+    
     # Configuring the logging level
     from .utils import getLogger
     import logging
