@@ -71,12 +71,13 @@ class Representation(CachedClass, ABC):
     """ Base class of a representation """
     Weight: ClassVar[type[WeightBase]] = WeightBase # Weight class
     G: LinearGroup
+    random_deep: int
 
-    def __init__(self, G: LinearGroup | Iterable[int], random_deep: np.int8 = np.int8(1)):
+    def __init__(self, G: LinearGroup | Iterable[int], *, random_deep: int = 1):
         if not isinstance(G, LinearGroup):
             G = LinearGroup(G)
         self.G = G
-        self.random_deep = np.int8(random_deep)
+        self.random_deep = random_deep
 
     def weight(self, *args: Any, **kwargs: Any) -> WeightBase:
         """ Creates a weight for the given representation """
@@ -250,33 +251,51 @@ class Representation(CachedClass, ABC):
             default=None,
             help="Number of particles in Fermion and Boson representation",
         )
+        group.add_argument(
+            "--random_deep",
+            type=int,
+            default=1,
+            help="Deepness of the check for probabilistic methods",
+        )
 
     @classmethod
     def from_config(cls: type[Self], config: Namespace, **kwargs: Any) -> "Representation":
         """ Build a step from the representation and the command-line arguments """
         G = LinearGroup(config.N)
         V: Representation
+
+        common_args = dict(
+            G=G,
+            random_deep=config.random_deep,
+        )
+        specific_args: dict[str, Any] = {}
+        repr_class: type[Representation]
+
         match config.representation.lower():
             case "kronecker":
                 from .representation import KroneckerRepresentation
-                V = KroneckerRepresentation(G)
+                repr_class = KroneckerRepresentation
             case "fermion":
                 assert config.particle_cnt is not None, "particle_cnt is mandatory for Fermion representation"
                 from .representation import FermionRepresentation
-                V = FermionRepresentation(G, particle_cnt=config.particle_cnt)
+                repr_class = FermionRepresentation
+                specific_args["particle_cnt"] = config.particle_cnt
             case "boson":
                 assert config.particle_cnt is not None, "particle_cnt is mandatory for Boson representation"
                 from .representation import BosonRepresentation
-                V = BosonRepresentation(G, particle_cnt=config.particle_cnt)
+                repr_class = BosonRepresentation
+                specific_args["particle_cnt"] = config.particle_cnt
             case _:
                 raise ValueError(f"Invalid representation name {config.representation}")
+        
+        V = repr_class(**common_args, **specific_args)
         return V
     
 
 class KroneckerRepresentation(Representation):
     Weight = WeightAsList
     
-    def __init__(self, G: LinearGroup | Iterable[int]):
+    def __init__(self, G: LinearGroup | Iterable[int], **kwargs):
         """ Kronecker representation
 
         The last dimension of the linear group must be one for consistency reason.
@@ -292,7 +311,7 @@ class KroneckerRepresentation(Representation):
             logger = getLogger("KroneckerRepresentation")
             logger.warning("Dimension 1 appended to the linear group of the Kronecker representation")
             G = LinearGroup(tuple(G) + (1,))
-        super().__init__(G)
+        super().__init__(G, **kwargs)
 
     @cached_property
     def dim_cone(self) -> int:
@@ -393,7 +412,7 @@ class KroneckerRepresentation(Representation):
             #dict_QV[0][self.QV.variable(chi)]= vchi_a*ring_R0('z') + vchi_b # type: ignore
             #homs_QV[0][self.QV.variable(chi)]= vchi_a*ring_R0('z') + vchi_b # type: ignore
             #_QV.append(vchi_a*ring_R0('z') + vchi_b)#coucou
-            dict_QV[0][self.QV.variable(chi)]=vchi_a*ring_R0('z') + vchi_b
+            dict_QV[0][self.QV.variable(chi)]=vchi_a*ring_R0('z') + vchi_b # type: ignore
             for k,b in enumerate(chi.as_list):
                 for i in range(b):
                     chi_i = WeightAsList(
@@ -495,8 +514,8 @@ class ParticleRepresentation(Representation):
     """ Representation specific to physical particles """
     particle_cnt: int
 
-    def __init__(self, G: LinearGroup | Iterable[int], particle_cnt: int):
-        super().__init__(G)
+    def __init__(self, G: LinearGroup | Iterable[int], *, particle_cnt: int, **kwargs: Any):
+        super().__init__(G, **kwargs)
         self.particle_cnt = particle_cnt
         if len(self.G) != 1:
             raise NotImplementedError("Product of GL not supported for particle representation")
@@ -675,9 +694,11 @@ class ParticleRepresentation(Representation):
         else :
             shiftrank = 0
 
+        # FIXME: not proof to change in Representation construction...
         Vred = type(self)(
             LinearGroup([self.G[0] - shiftrank]),
-            self.particle_cnt - 1
+            random_deep=self.random_deep,
+            particle_cnt=self.particle_cnt - 1,
         )
 
         for alpha in roots:
