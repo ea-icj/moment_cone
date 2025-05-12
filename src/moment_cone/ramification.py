@@ -7,8 +7,7 @@ from random import randint
 import itertools
 import numpy as np
 from numpy.typing import NDArray
-from sage.all import NumberField, fast_callable
-from sage.misc.fpickle import pickle_function
+from sage.all import NumberField # type: ignore
 
 from .typing import *
 from .tau import Tau
