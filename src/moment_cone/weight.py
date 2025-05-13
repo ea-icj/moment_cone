@@ -44,6 +44,9 @@ class Weight:
             return NotImplemented
         return self.G == other.G and self.as_vector == other.as_vector
 
+    def __hash__(self) -> int:
+        return hash((self.G, tuple(self.as_vector)))
+    
     def leq(self,
             other: "Weight",
             symmetries: Optional[Iterable[int]] = None) -> bool:
@@ -156,6 +159,9 @@ class WeightAsList(Weight):
             return NotImplemented
         return self.G == other.G and self.as_list == other.as_list
 
+    def __hash__(self) -> int:
+        return hash((self.G, self.as_list))
+
     def __repr__(self) -> str:
         return f"WeightAsList({self.as_list}" + (f", idx: {self.index}" if self.index is not None else "") + ")"
 
@@ -219,6 +225,9 @@ class WeightAsListOfList(Weight):
         if not isinstance(other, WeightAsListOfList):
             return NotImplemented
         return self.G == other.G and self.as_list_of_list == other.as_list_of_list
+
+    def __hash__(self) -> int:
+        return hash((self.G, self.as_list_of_list))
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.as_list_of_list}" + (f", idx: {self.index}" if self.index is not None else "") + ")"
