@@ -4,6 +4,7 @@ import itertools
 import functools
 import operator
 import logging
+from collections.abc import Hashable
 
 __all__ = (
     "is_decreasing",
@@ -596,27 +597,40 @@ class IterableHook(Generic[T]):
 
 def generate_seed(
         seed: Optional[int] = None,
-        names: str | Sequence[str] = [],
+        extra: Optional[Hashable] = None,
         nbytes: int = 8
     ) -> int:
     """ Generate a random generator seed
 
-    If a name is given, a kind of sub-seed is generated from seed and for this
-    specific name.
+    If extra is given, a kind of sub-seed is generated from seed and for this
+    specific extra (need to be hashable).
 
     Returns the generated seed.
+
+    Examples :
+
+    >>> seed = generate_seed()
+    >>> seed1 = generate_seed(seed, ("Dummy", 1))
+    >>> seed == seed1
+    False
+    >>> seed2 = generate_seed(seed, ("Dummy", 2))
+    >>> seed1 == seed2
+    False
+    >>> seed3 = generate_seed(seed, ("Dummy", 1))
+    >>> seed1 == seed3
+    True
+    >>> seed4 = generate_seed(seed)
+    >>> seed == seed4
+    True
     """
     if seed is None:
         import random
         random.seed()
         seed = int.from_bytes(random.randbytes(nbytes))
     
-    if isinstance(names, str):
-        names = [names]
-
-    if len(names):
+    if extra is not None:
         import random
-        random.seed(str(seed) + '|'.join(names))
+        random.seed(hash((seed, extra)))
         seed = int.from_bytes(random.randbytes(nbytes))
     
     return seed
@@ -624,7 +638,7 @@ def generate_seed(
     
 def manual_seed(
         seed: Optional[int] = None,
-        names: str | Sequence[str] = [],
+        extra: Optional[Hashable] = None,
         nbytes: int = 8,
     ) -> int:
     """ Generate and set the random generator seed
@@ -634,7 +648,7 @@ def manual_seed(
 
     Returns the used seed. 
     """
-    seed = generate_seed(seed, names, nbytes)
+    seed = generate_seed(seed, extra, nbytes)
 
     import random
     random.seed(generate_seed(seed, "Python", nbytes))
