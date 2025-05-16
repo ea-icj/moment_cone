@@ -26,7 +26,6 @@ __all__ = (
     "to_literal",
     "get_function_by_name",
     "line_profiler",
-    "CachedClass",
     "fl_dic",
     "getLogger",
     "FilteredSet",
@@ -452,27 +451,6 @@ def fl_dic(D : dict[int, list["Root"]], L: list[int])-> dict[int, int]:
         result[j] = length_D[i_max] if i_max is not None else 0
     return(result)    
     
-
-class CachedClass:
-    """ Base class that ensure instance uniqueness relatively to the construction arguments 
-    
-    It relies on a private class dictionary that maps the construction arguments
-    to a corresponding instance. In order to work, all arguments must be hashable.
-
-    Remark that when mixing positional and keyword arguments, it may leads to
-    different instances of a same object depending on the order and the type
-    of the arguments.
-    """
-    __all_instances: ClassVar[
-        dict[tuple[tuple[Any, ...], tuple[tuple[str, Any], ...]], Self]
-    ] = {}
-
-    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-        return cls.__all_instances.setdefault(
-            (args, tuple(kwargs.items())),
-            super().__new__(cls),
-        )
-
 
 class IndentedLogger(logging.LoggerAdapter[logging.Logger]):
     def __init__(

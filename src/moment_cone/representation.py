@@ -20,7 +20,6 @@ from .weight import Weight as WeightBase, WeightAsList, WeightAsListOfList
 from .partition import Partition
 from .rings import Matrix, Vector, Ring, PolynomialRingForWeights,PolynomialRing, Polynomial, Variable, I
 from .root import Root
-from .utils import CachedClass
 
 
 class TPi3DResult(NamedTuple):
@@ -66,26 +65,94 @@ class TPi3DResult(NamedTuple):
             case 'dict', 'symbolic': return self.dict_QV
             case _: raise ValueError(f"Unknown method {method} and kind {kind}")
 
-
-class Representation(CachedClass, ABC):
+    
+class Representation(ABC):
     """ Base class of a representation """
-    Weight: ClassVar[type[WeightBase]] = WeightBase # Weight class
-    G: LinearGroup
-    random_deep: int # Deepness of the probabilistic methods
-    seed: int # Seed for the pseudo-random generators
+    #: Cache of instances of Representation
+    __all_instances: ClassVar[
+        dict[Any, Self]
+    ] = {}
 
-    def __init__(self, 
-                 G: LinearGroup | Iterable[int],
-                 *,
-                 random_deep: int = 1,
-                 seed: Optional[int] = None):
+    Weight: ClassVar[type[WeightBase]] = WeightBase #: Weight class
+    G: LinearGroup
+    random_deep: int #: Deepness of the probabilistic methods
+    seed: int #: Seed for the pseudo-random generators
+
+    def __new__(cls: type[Self], 
+                G: LinearGroup | Iterable[int],
+                *,
+                random_deep: int = 1,
+                seed: Optional[int] = None,
+                extra: Optional[Hashable] = None) -> Self:
+        """ Custom instance construction in order to reuse previous instance """
         if not isinstance(G, LinearGroup):
             G = LinearGroup(G)
-        self.G = G
-        self.random_deep = random_deep
 
+        # Generate specific seed
         from .utils import generate_seed
-        self.seed = generate_seed(seed, str(self))
+        seed = generate_seed(seed)
+
+        # Get or create unique instance
+        self_keys = (cls.__name__, tuple(G), seed, random_deep, extra)
+        try:
+            self = cls.__all_instances[self_keys]
+        except KeyError:
+            self = super().__new__(cls)
+            self.G = G
+            self.random_deep = random_deep
+            self.seed = seed
+            cls.__all_instances[self_keys] = self
+        return self
+    
+    def _generate_seed(self, extra: Optional[Hashable] = None, nbytes: int = 8) -> int:
+        """ Generate sub-seed specific to the representation
+        
+        >>> V1 = KroneckerRepresentation((3, 3, 3, 1), seed=888)
+        >>> seed1 = V1._generate_seed("doctest")
+        >>> seed2 = V1._generate_seed("other")
+        >>> seed1 == seed2
+        False
+
+        >>> V2 = KroneckerRepresentation((3, 3, 3, 1), seed=777)
+        >>> seed3 = V2._generate_seed("doctest")
+        >>> seed1 == seed3
+        False
+
+        >>> V3 = KroneckerRepresentation((3, 3, 3, 1), seed=888)
+        >>> seed4 = V3._generate_seed("doctest")
+        >>> seed1 == seed4
+        True
+        """
+        from .utils import generate_seed
+        self_keys = (
+            type(self).__name__,
+            tuple(self.G),
+            self.random_deep,
+            extra
+        )
+        return generate_seed(self.seed, self_keys, nbytes)
+
+    def _manual_seed(self, extra: Optional[Hashable] = None, nbytes: int = 8) -> None:
+        """ Set the seed for used pseudo-random generators
+        
+        >>> import random
+        >>> V = KroneckerRepresentation((3, 3, 3, 1))
+        >>> V._manual_seed("doctest")
+        >>> r1 = random.random()
+
+        >>> V._manual_seed("other")
+        >>> r2 = random.random()
+        >>> r1 == r2
+        False
+
+        >>> V._manual_seed("doctest")
+        >>> r3 = random.random()
+        >>> r1 == r3
+        True
+        """
+        from .utils import manual_seed
+        seed = self._generate_seed(extra, nbytes)
+        manual_seed(seed)
 
     def weight(self, *args: Any, **kwargs: Any) -> WeightBase:
         """ Creates a weight for the given representation """
@@ -224,20 +291,20 @@ class Representation(CachedClass, ABC):
     @cached_property
     def fixed_random_element_Q(self) -> NDArray[np.int64]:
         from .utils import manual_seed
-        manual_seed(self.seed, "fixed_random_element_Q")
+        self._manual_seed("fixed_random_element_Q")
         return self.random_element()
     
     @cached_property
     def fixed_random_element_QI(self) -> Polynomial:
         from .rings import I
         from .utils import manual_seed
-        manual_seed(self.seed, "fixed_random_element_QI")
+        self._manual_seed("fixed_random_element_QI")
         return self.random_element() + I * self.random_element()
 
     @cached_property
     def fixed_random_line_in(self) -> Polynomial:
         from .utils import manual_seed
-        manual_seed(self.seed, "fixed_random_line_in")
+        self._manual_seed("fixed_random_line_in")
         return self.random_element() * self.QZ('z') + self.random_element()
     
     @staticmethod
@@ -309,7 +376,7 @@ class Representation(CachedClass, ABC):
 class KroneckerRepresentation(Representation):
     Weight = WeightAsList
     
-    def __init__(self, G: LinearGroup | Iterable[int], **kwargs: Any):
+    def __new__(cls: type[Self], G: LinearGroup | Iterable[int], **kwargs: Any) -> Self:
         """ Kronecker representation
 
         The last dimension of the linear group must be one for consistency reason.
@@ -325,7 +392,7 @@ class KroneckerRepresentation(Representation):
             logger = getLogger("KroneckerRepresentation")
             logger.warning("Dimension 1 appended to the linear group of the Kronecker representation")
             G = LinearGroup(tuple(G) + (1,))
-        super().__init__(G, **kwargs)
+        return super().__new__(cls, G, **kwargs)
 
     @cached_property
     def dim_cone(self) -> int:
@@ -402,7 +469,7 @@ class KroneckerRepresentation(Representation):
         The other entries are indexed by self.all_Weights using self.index_of_weight(chi).
         """
         from .utils import manual_seed
-        manual_seed(self.seed, "T_Pi_3D")
+        self._manual_seed("T_Pi_3D")
 
         # Computation made once
         result_Q = np.zeros((self.random_deep,self.dim, self.dim, self.G.dimU), dtype=np.int64)
@@ -529,12 +596,25 @@ class ParticleRepresentation(Representation):
     """ Representation specific to physical particles """
     particle_cnt: int
 
-    def __init__(self, G: LinearGroup | Iterable[int], *, particle_cnt: int, **kwargs: Any):
-        self.particle_cnt = particle_cnt
-        super().__init__(G, **kwargs)
-        if len(self.G) != 1:
+    def __new__(
+            cls: type[Self],
+            G: LinearGroup | Iterable[int],
+            *,
+            particle_cnt: int,
+            **kwargs: Any) -> Self:
+        G = LinearGroup(G)
+        if len(G) != 1:
             raise NotImplementedError("Product of GL not supported for particle representation")
+        self = super().__new__(cls, G, **kwargs, extra=particle_cnt)
+        self.particle_cnt = particle_cnt
+        return self
 
+    def _generate_seed(self, extra: Optional[Hashable] = None, nbytes: int = 8) -> int:
+        return super()._generate_seed(
+            extra=(self.particle_cnt, extra),
+            nbytes=nbytes
+        )
+    
     @cached_property
     def dim_cone(self) -> int:
         return self.G.rank
@@ -635,7 +715,7 @@ class ParticleRepresentation(Representation):
         The other entries are indexed by self.all_Weights using self.index_of_weight(chi).
         """
         from .utils import manual_seed
-        manual_seed(self.seed, "T_Pi_3D")
+        self._manual_seed("T_Pi_3D")
 
         # Computation made once
         result_Q = np.zeros((self.random_deep,self.dim, self.dim, self.G.dimU), dtype=np.int64)
