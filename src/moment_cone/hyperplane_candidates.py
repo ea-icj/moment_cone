@@ -114,7 +114,7 @@ def find_hyperplanes_reg_mod_outer(weights: Sequence[Weight], V: Representation,
     Returns the subsets of weights, each set generating an hyperplane in X^*(T) likely to be the orthogonal of a dominant 1-parameter subgroup tau, such that there is at most u weights we of V with tau(we)>0
 
     Example:
-    >>> from cone import *
+    >>> from moment_cone import *
     >>> G = LinearGroup((4, 4, 4))
     >>> V = KroneckerRepresentation(G)
     >>> hp = list(find_hyperplanes_reg_mod_outer(V.all_weights, V, 4**3))
@@ -171,7 +171,6 @@ def find_hyperplanes_reg_mod_outer(weights: Sequence[Weight], V: Representation,
         for choices in product((False, True), repeat=N):
             yield from find_hyperplanes_reg_inner(
                 choices,
-                weights,
                 weights_free,
                 V,
                 u,
@@ -185,7 +184,6 @@ def find_hyperplanes_reg_mod_outer(weights: Sequence[Weight], V: Representation,
 
 def find_hyperplanes_reg_inner(
         choices: tuple[bool, ...], #: chosen branch
-        weights: Sequence[Weight],
         weights_free: Sequence[Weight],
         V: Representation,
         u: int,
@@ -197,7 +195,7 @@ def find_hyperplanes_reg_inner(
         ) -> Iterable[list[Weight]]:
     
     St = init_sieve_for_family(choices, weights_free, V, MO, weights_free_mod_outer, orbit_as_dic_idx)
-    return find_hyperplanes_reg_impl(weights, MW, St, u, exp_dim, MO)
+    return find_hyperplanes_reg_impl(weights_free, MW, St, u, exp_dim, MO)
 
 
 def init_sieve_for_family(choices: tuple[bool, ...], weights_free: Sequence[Weight], V: Representation, MO: NDArray[np.int8], weights_free_mod_outer: list[int], orbit_as_dic_idx: Optional[dict[int, list[int]]] = None) -> WeightSieve:
