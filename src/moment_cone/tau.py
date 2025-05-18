@@ -713,7 +713,7 @@ def full_under_symmetry_list_of_tau(seq_tau: Iterable[Tau]) -> Iterable[Tau]:
     return itertools.chain.from_iterable(tau.orbit_symmetries() for tau in seq_tau)
 
 
-def find_1PS(V: Representation, quiet: bool = False) -> Iterator[Tau]:
+def find_1PS(V: Representation, flatten_level: int = 0, quiet: bool = False) -> Iterator[Tau]:
     """
     Same as find_1PS_reg_mod_sym_dim without regularity condition
     Computed by 
@@ -743,7 +743,7 @@ def find_1PS(V: Representation, quiet: bool = False) -> Iterator[Tau]:
             umax=V.G.u_max(Vred.G)
             #Recover by induction all candidates 1-PS mod symmetry
             List_1PS_Vred_reg=[]
-            for H in find_hyperplanes_reg_mod_outer(list(Vred.all_weights), Vred, umax): # Important to keep sym at None
+            for H in find_hyperplanes_reg_mod_outer(list(Vred.all_weights), Vred, umax, flatten_level=flatten_level): # Important to keep sym at None
                 taured=Tau.from_zero_weights(H, Vred)
                 if taured.is_dom_reg : # We keep only dominant regular 1-PS
                     List_1PS_Vred_reg+=[t for t in taured.orbit_symmetries()]
@@ -780,7 +780,7 @@ def find_1PS(V: Representation, quiet: bool = False) -> Iterator[Tau]:
             Gred=LinearGroup([len(partS)])
             Vred = V.reduce(Gred, particle_cnt=V.particle_cnt)
             sym=list(symmetries(partS))
-            for H in find_hyperplanes_reg_mod_outer(weights, Vred, umax, sym):
+            for H in find_hyperplanes_reg_mod_outer(weights, Vred, umax, sym, flatten_level=flatten_level):
                 taured=Tau.from_zero_weights(H, Vred)
                 tau=taured.extend_from_S(partS)
                 # dominant 1-PS corresponding to tau and -tau

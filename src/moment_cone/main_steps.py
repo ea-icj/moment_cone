@@ -284,11 +284,41 @@ class TauCandidatesStep(GeneratorStep[Tau]):
     
     It generates only pending Taus.
     """
+    flatten_level: int
+
+    def __init__(self, V: Representation, flatten_level: Optional[int] = None, **kwargs: Any):
+        super().__init__(V, **kwargs)
+        # TODO when merged with dev_parallel2: compute so that 2^L > max_workers * chunk_size
+        self.flatten_level = flatten_level or 0
+
     def apply(self) -> ListDataset[Tau]:
         from .tau import find_1PS
         return ListDataset(
-            pending=list(self._tqdm(find_1PS(self.V, quiet=self.quiet), unit="tau")),
+            pending=list(self._tqdm(find_1PS(self.V, flatten_level=self.flatten_level, quiet=self.quiet), unit="tau")),
             validated=[]
+        )
+
+    @staticmethod
+    def add_arguments(parent_parser: ArgumentParser, defaults: Mapping[str, Any] = {}) -> None:
+        """ Add command-line arguments specific to this step """
+        group = parent_parser.add_argument_group(
+            "First list of dominent 1-PS whose kernel is supported at hyperplanes of weights"
+        )
+        group.add_argument(
+            "--flatten_level",
+            type=int,
+            default=None,
+            help="Flatten search graph up to given level. If the level L is specified, it should so that 2^L is greater that max_workers * chunk_size.",
+        )
+
+    @classmethod
+    def from_config(cls: type[Self], V: Representation, config: Namespace, **kwargs: Any) -> "TauCandidatesStep":
+        """ Build a step from the representation and the command-line arguments """
+        return super().from_config(
+            V=V,
+            config=config,
+            flatten_level=config.flatten_level,
+            **kwargs,
         )
 
 

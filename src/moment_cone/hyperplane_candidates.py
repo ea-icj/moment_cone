@@ -109,7 +109,13 @@ def has_too_much_geq_weights(chi: Weight, weights: Sequence[Weight], V: Represen
         leq_cnt-=chi.mult
         return leq_cnt > u
     
-def find_hyperplanes_reg_mod_outer(weights: Sequence[Weight], V: Representation, u: int, sym: Optional[Sequence[int]] = None) -> Iterable[list[Weight]]:
+def find_hyperplanes_reg_mod_outer(
+        weights: Sequence[Weight],
+        V: Representation,
+        u: int,
+        sym: Optional[Sequence[int]] = None,
+        flatten_level: int = 0, #: Flatten search graph up to given level
+    ) -> Iterable[list[Weight]]:
     """
     Returns the subsets of weights, each set generating an hyperplane in X^*(T) likely to be the orthogonal of a dominant 1-parameter subgroup tau, such that there is at most u weights we of V with tau(we)>0
 
@@ -121,7 +127,7 @@ def find_hyperplanes_reg_mod_outer(weights: Sequence[Weight], V: Representation,
     >>> print("Number of raw hyperplanes:", len(hp))
     Number of raw hyperplanes: 1604
     """
-    exp_dim=V.dim_cone-1
+    exp_dim = V.dim_cone - 1
     
     ## TODO : améliorer has_too_much_geq_weights dans le cas Kronecker pour ordonner les poids de V.weights_mod_outer par #{\chi'>\chi} décroissant
     # La fonction qui calcule ce cardinal est leq_cnt = short_prod(c + 1 for c in chi.as_list) - 1
@@ -163,12 +169,9 @@ def find_hyperplanes_reg_mod_outer(weights: Sequence[Weight], V: Representation,
             mult_chi_tab,
             St, V.G, u,exp_dim,dom_order_matrix, orbit_as_dic_idx)
                                                  
-
     else : # Kronecker
-        #for chi in V.weights_mod_outer:
         from itertools import product
-        N: int = 2
-        for choices in product((False, True), repeat=N):
+        for choices in product((False, True), repeat=flatten_level):
             yield from find_hyperplanes_reg_inner(
                 choices,
                 weights_free,
