@@ -98,22 +98,27 @@ def compare_ineq_mod_sym_dim(
         list2_ineq: Iterable[Inequality],
         source1: str = "1",
         source2: str = "2"
-    ) -> Comparison[Tau]:
-    #assumes that list1 and list2 are lists of inequalities in a Kronecker representation
-    list1_tau=unique_modulo_symmetry_list_of_tau([ineq.wtau.end0_representative for ineq in list1_ineq])
-    list2_tau=unique_modulo_symmetry_list_of_tau([ineq.wtau.end0_representative for ineq in list2_ineq])
-    return compare(list1_tau, list2_tau, "inequalities (up to S3-sym)", source1, source2)
-    
+    ) -> Comparison[Inequality]:
+    list1_ineq = set(list1_ineq)
+    list2_ineq = set(list2_ineq)
 
-@overload
-def compare_to_reference(list_ineq: Sequence[Inequality], V: KroneckerRepresentation, source: str = "user") ->  Comparison[Tau]:
-    ...
+    from collections import defaultdict
+    from itertools import chain
+    tau_ineq: dict[Tau, set[Inequality]] = defaultdict(set)
+    for ineq in chain(list1_ineq, list2_ineq):
+        tau = ineq.wtau.end0_representative.sort_mod_sym_dim
+        tau_ineq[tau].add(ineq)
 
-@overload
-def compare_to_reference(list_ineq: Sequence[Inequality], V: ParticleRepresentation, source: str = "user") ->  Comparison[Inequality]:
-    ...
+    unique_ineq1: set[Inequality] = set()
+    unique_ineq2: set[Inequality] = set()
+    for ineqs in tau_ineq.values():
+        if ineqs & list1_ineq: unique_ineq1.add(next(iter(ineqs)))
+        if ineqs & list2_ineq: unique_ineq2.add(next(iter(ineqs)))
 
-def compare_to_reference(list_ineq: Sequence[Inequality], V: Representation, source: str = "user") -> Comparison[Inequality] | Comparison[Tau]:
+    return compare(unique_ineq1, unique_ineq2, "inequalities (up to S3-sym)", source1, source2)
+        
+
+def compare_to_reference(list_ineq: Sequence[Inequality], V: Representation, source: str = "user") -> Comparison[Inequality]:
     """
     list_ineq is a list of Inequalities computed for a certain representation V.
     If exists, it will be compared to a reference list of inequalities (currently only the cases of Klyachko.py for fermions and Vergne_Walter.py for kronecker)
