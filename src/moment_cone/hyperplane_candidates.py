@@ -142,7 +142,8 @@ def find_hyperplanes_reg_mod_outer(
     # Orbit as a dictionary
     orbit_as_dic_idx: Optional[dict[int, list[int]]] = None
     if isinstance(V, KroneckerRepresentation):
-        orbit_as_dic_idx = {i: [weights_free.index(chi2) for chi2 in chi.orbit_symmetries(V.G.outer)] for i, chi in enumerate(weights_free)}
+        #orbit_as_dic_idx = {i: [weights_free.index(chi2) for chi2 in chi.orbit_symmetries(V.G.outer)] for i, chi in enumerate(weights_free)}
+        orbit_as_dic_idx = {i: [weights_free.index(chi2) for chi2 in weights_free[i].orbit_symmetries(V.G.outer)] for i in weights_free_mod_outer}
 
     # Preparatory: compute the incidence matrix of the dominance order
     #               and put the multiplicities in an nparray
