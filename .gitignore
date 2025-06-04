@@ -7,3 +7,6 @@ html*
 *.prof
 *.pstats
 docs/source/moment_cone
+*.txt
+*.log
+.ipynb_checkpoints
