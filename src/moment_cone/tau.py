@@ -792,8 +792,6 @@ def find_1PS(V: Representation, flatten_level: int = 0, quiet: bool = False) -> 
                                     for taured in find_hyperplanes_reg_mod_outer(list(Vred.all_weights), Vred, umax, flatten_level=flatten_level)
                                     for tau in taured.orbit_symmetries_excepted_ones()
                                     })
-            #if Vred.G==LinearGroup([2,2,1,1]):
-            #    print('tau reg 2211',List_1PS_Vred_reg)
             if not quiet:
                 from .utils import getLogger
                 logger = getLogger("tau.find_1PS")
@@ -804,22 +802,9 @@ def find_1PS(V: Representation, flatten_level: int = 0, quiet: bool = False) -> 
             for permut in Permutation.embeddings_mod_sym(V.G, Vred.G):
                 for tau in List_1PS_Vred_reg:
                     tau_twist=Tau([tau.components[i] for i in permut])
-                    #list_tau_extended=tau_twist.m_extend_with_repetitions(V.G)
                     List_1PS_Vred_extended+=tau_twist.m_extend_with_repetitions(V.G)
-            #yield from List_1PS.yield_update(unique_modulo_symmetry_list_of_tau(List_1PS_Vred_extended))
-            #L=unique_modulo_symmetry_list_of_tau(List_1PS_Vred_extended)
-            #Ln={tau.sort_blocks() for tau in List_1PS_Vred_extended}
-            #print('New',len(Ln))
-            #L=[tau for tau in List_1PS.yield_update(unique_modulo_symmetry_list_of_tau(List_1PS_Vred_extended))]
-            #print('Old',len(L))
-            #print(L)
-            #for tau in Ln : 
-            #    if tau not in L :
-            #        print(tau)
             yield from {tau.sort_blocks() for tau in List_1PS_Vred_extended}
-            #yield from unique_modulo_symmetry_list_of_tau(List_1PS_Vred_extended)
-        #print(unique_modulo_symmetry_list_of_tau(find_hyperplanes_reg_mod_outer(list(V.all_weights), V, V.G.dimU,flatten_level=flatten_level)))    
-        #yield from unique_modulo_symmetry_list_of_tau(find_hyperplanes_reg_mod_outer(list(V.all_weights), V, V.G.dimU,flatten_level=flatten_level))
+            
         yield from {tau.sort_blocks() for tau in find_hyperplanes_reg_mod_outer(list(V.all_weights), V, V.G.dimU,flatten_level=flatten_level)}
             
 

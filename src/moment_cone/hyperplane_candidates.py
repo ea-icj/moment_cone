@@ -57,42 +57,8 @@ def smart_remove(l: list[T], idx: int) -> None:
     """
     l[idx]=l[-1]
     l.pop()         
-    #if idx < len(l) - 1:
-    #    l[idx] = l.pop()
-    #else:
-    #    l.pop()
+    
 
-
-def sign_assignment(id_chi: int,
-                    S_ex: list[int],
-                    S_ind: list[int],
-                    nb_positive: list[int],
-                    MO: NDArray[np.int8],
-                    MW: NDArray[np.int8],
-                    V) -> None:
-    """ Determining the sign of weight from S_input by comparing it to the curring weight chi """
-    idx = 0
-    while idx < len(S_ex): # Loop on S_input with while since S_input changes
-        j = S_ex[idx]
-        if MO[id_chi,j] == 1 :
-            nb_positive[0]+=MW[j]
-            smart_remove(S_ex, idx)
-            
-        elif MO[j,id_chi] == 1 :
-            smart_remove(S_ex, idx) 
-        else:
-            idx += 1 # index incremented only when not element where removed
-
-    idx = 0
-    while idx < len(S_ind): # Loop on S_input with while since S_input changes
-        j = S_ind[idx]
-        if MO[id_chi,j] == 1 :
-            nb_positive[0]+=MW[j]
-            smart_remove(S_ind, idx)
-        elif MO[j,id_chi] == 1 :
-            smart_remove(S_ind, idx) 
-        else:
-            idx += 1 # index incremented only when not element where removed                    
 
 def sign_assignment(id_chi: int,
                     S_ex: list[int],
@@ -136,19 +102,14 @@ def put_negative(S_ex: list[int],
     NbSup = MO[np.ix_(S_ex+S_ind,S_ex+S_ind)].sum(axis=1)
     l_ex=len(S_ex) 
     upu=current_u+1
-    #To_be_deleted_ex=[idx for idx,nb in enumerate(NbSup[:l_ex]) if nb > upu]
     
     To_be_deleted_ex = np.flatnonzero(NbSup[:l_ex] > upu)
     To_be_deleted_ind = np.flatnonzero(NbSup[l_ex:] > upu)
 
-    #print(current_u,NbSup)
-    #print(S_ex,S_ind)
-
     for idx in To_be_deleted_ex[::-1]:
         smart_remove(S_ex,idx) 
     for idx in To_be_deleted_ind[::-1]:
-        smart_remove(S_ind,idx) 
-    #print(S_ex,S_ind)      
+        smart_remove(S_ind,idx)     
 
 def check_hyperplane_dim(weights: Sequence[Weight], exp_dim: int) -> bool:
     """ 
@@ -189,31 +150,26 @@ def best_index_for_sign(L: list[int],MO: NDArray[np.int8],coeff: int) -> tuple[i
     """
     A = MO[np.ix_(L, L)]
     scores = coeff * A.sum(axis=1) + A.sum(axis=0) # coef 2 to insist on poitive weights because of u
-    #scores = 2 * MO[L][:, L].sum(axis=1) + MO[L][:, L].sum(axis=0)
+    #scores = coeff * MO[L][:, L].sum(axis=1) + MO[L][:, L].sum(axis=0)
     #scores = MO[L][:, L].sum(axis=1) + MO[L][:, L].sum(axis=0)
     best_i = int(np.argmax(scores))
     return best_i,L[best_i]
 
-def best_index_for_sign2(L: list[int],MO: NDArray[np.int8]) -> tuple[int]:
+def best_index_for_sign2(S_ind: list[int],S_ex: list[int],MO: NDArray[np.int8],coeff: int) -> tuple[int]:
     """
     Return the index of an element of L such that nb_inf + nb_sup is maximal
     """
-    A = MO[np.ix_(L, L)]
-    #scores= 10000 * A.sum(axis=1) + 10001 * A.sum(axis=0)
-    #scores= np.array(10000 * A.sum(axis=1) + 10001 * A.sum(axis=0), dtype=np.uint32)
-    #scores2 = A.sum(axis=1)
-    #scores= np.uint32((A.sum(axis=1)+scores2)<<16 | scores2)
-    #scores= (A.sum(axis=1)+scores2)<<16 | scores2
-    #best_i = int(np.argmax(scores))
-    #scores = A.sum(axis=1) + A.sum(axis=0)
-    
-    scores2 = A.sum(axis=1)
-    scores1 = scores2 + A.sum(axis=0)
-    Scores=list(zip(scores1,scores2))
-    val_max=max(Scores)
-    best_i=Scores.index(val_max)
-    #best_i = int(np.argmax(scores))
-    return best_i,L[best_i]
+    A = MO[np.ix_(S_ind, S_ind)]
+    if coeff==1 : 
+        scores = coeff * A.sum(axis=1) + A.sum(axis=0) # coef 2 to insist on poitive weights because of u
+    else : 
+        B = MO[np.ix_(S_ind, S_ex)]
+        scores = coeff * A.sum(axis=1) + A.sum(axis=0)+ 0.1*B.sum(axis=1)  
+    #scores = 2 * MO[L][:, L].sum(axis=1) + MO[L][:, L].sum(axis=0)
+    #scores = MO[L][:, L].sum(axis=1) + MO[L][:, L].sum(axis=0)
+    best_i = int(np.argmax(scores))
+    return best_i,S_ind[best_i]
+
 
 def find_hyperplanes_reg_mod_outer(
         weights: Sequence[Weight],
@@ -257,20 +213,22 @@ def find_hyperplanes_reg_mod_outer(
             if chi1.leq(chi2,sym) :
                 dom_order_matrix[i,j]=1
              
+    #n = len(weights)
+    #from sage.all import Matrix, GF
+    #MO = Matrix(GF(2), n, n, False)
+    #for i, chi1 in enumerate(weights):
+    #    for j, chi2 in enumerate(weights):
+    #        if chi1.leq(chi2,sym)  and i != j:
+    #            MO[i,j]=1
+    #from sage.all import Poset, DiGraph 
+    #Pos = Poset(DiGraph(MO))
+    #print('Antichaines',V)
+    #print(Pos.width())
+    #print(len(Pos.maximal_antichains()))
+
 
     #print('V',V,'we have ',len(weights_free),'free weoghts over',len(weights))
     
-    ### A CONSERVER CAR PAS COMPRIS
-    #weights_free_mod_outer = []
-    #L_ind = list(range(len(weights_free)))
-    #for i in range(len(weights_free_mod_outer)):
-    #while L_ind != []:    
-    #    idx,id_chi = best_index_for_sign(L_ind,dom_order_matrix)
-    #    weights_free_mod_outer.append(id_chi)      
-    #    for chi2 in weights_free[id_chi].orbit_symmetries(V.G.outer):
-    #        L_ind.remove(weights_free.index(chi2))
-    ### FIN A CONSERVER
-
     weights_free_mod_outer = [weights_free.index(chi) for chi in V.weights_mod_outer if chi in weights_free]
     # For parallel : plus lent mais mieux équilibré
     weights_free_mod_outer.sort(key=lambda id_chi:sort_criterium(id_chi,weights_free,V,dom_order_matrix),reverse=True)
@@ -283,7 +241,6 @@ def find_hyperplanes_reg_mod_outer(
 
 
     # Sort the weights
-    #print(V)
     
     if isinstance(V, ParticleRepresentation):
         Choices=[tuple([False]*nb_false+[True]) for nb_false in range(min(flatten_level-1,len(weights_free)))]
@@ -461,15 +418,10 @@ def find_hyperplanes_reg_impl(weights: Sequence[Weight],V: Representation,MW: ND
         else :
             taured_test_dom=Tau.from_flatten(taured.flattened,LinearGroup(sym))
         if taured_test_dom.is_dom_reg : # We keep only dominant regular 1-PS
-            #yield from taured.orbit_symmetries()
             yield taured
         elif taured_test_dom.opposite.is_dom_reg :
-            #yield from taured.opposite.orbit_symmetries()
             yield from taured.opposite
-        #else :
-        #    print('tau',taured_test_dom)
-        #    for idx in St.zero :
-        #        print(weights[idx])    
+        
 
     elif len(St.zero) + len(St.indeterminate) >= exp_dim and len(St.indeterminate) > 0:
         if len(St.indeterminate)+len(St.excluded)>u-St.nb_positive[0] :
