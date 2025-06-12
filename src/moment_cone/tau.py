@@ -754,14 +754,6 @@ def find_1PS(V: Representation, flatten_level: int = 0, quiet: bool = False) -> 
     from .hyperplane_candidates import find_hyperplanes_reg_mod_outer, check_hyperplane_dim
     from .utils import symmetries, FilteredSet
 
-    # Initialisation with regular 1-PS
-    # We use here a FilteredSet that allows to iterate through the unique added
-    # elements while filtering them using a predicate.
-    # The predicate checks that the candidates really give a candidate
-    List_1PS = FilteredSet[Tau](
-        lambda tau: check_hyperplane_dim(tau.orthogonal_weights(V), V.dim_cone - 1)
-    )
-
     # Reduced representation
     Vred: Representation
     
@@ -783,33 +775,66 @@ def find_1PS(V: Representation, flatten_level: int = 0, quiet: bool = False) -> 
                          [i*[0] for i in V.G[t+1:-1]]+
                          [[-1]]))
         #print(L)             
-        yield from unique_modulo_symmetry_list_of_tau(L)             
+        yield from unique_modulo_symmetry_list_of_tau(L)      
+
+        # Initialisation with regular 1-PS
+        # We use here a FilteredSet that allows to iterate through the unique added
+        # elements while filtering them using a predicate.
+        # The predicate checks that the candidates really give a candidate
+        List_1PS = FilteredSet[Tau](
+            lambda tau: check_hyperplane_dim(tau.orthogonal_weights(V), V.dim_cone - 1)
+        )
+
         for Vred in sub_rep[:-1]:
             #print(Vred)
             umax=V.G.u_max(Vred.G)
+
             #Recover by induction all candidates 1-PS mod symmetry
-            List_1PS_Vred_reg=list({tau 
-                                    for taured in find_hyperplanes_reg_mod_outer(list(Vred.all_weights), Vred, umax, flatten_level=flatten_level)
-                                    for tau in taured.orbit_symmetries_excepted_ones()
-                                    })
+            List_1PS_Vred_reg = FilteredSet[Tau]().yield_update((
+                    tau 
+                    for taured in find_hyperplanes_reg_mod_outer(Vred.all_weights, Vred, umax, flatten_level=flatten_level)
+                    for tau in taured.orbit_symmetries_excepted_ones()
+            ))
+
+            # Generator of extended Tau set
+            permutations = list(Permutation.embeddings_mod_sym(V.G, Vred.G))
+            def gen_Vred_extented(tau_reg: Tau) -> Iterator[Tau]:
+                for permut in permutations:
+                    tau_twist = Tau([tau_reg.components[i] for i in permut])
+                    for tau in tau_twist.m_extend_with_repetitions(V.G):
+                        yield tau.sort_blocks()
+        
+            # Set of unique extended Tau
+            List_1PS_Vred_extended = FilteredSet[Tau]()
+            cnt_tau_reg: int = 0
+            for tau_reg in List_1PS_Vred_reg:
+                cnt_tau_reg += 1
+                yield from List_1PS_Vred_extended.yield_update(
+                    gen_Vred_extented(tau_reg)
+                )
+
             if not quiet:
                 from .utils import getLogger
                 logger = getLogger("tau.find_1PS")
-                logger.debug(f'For G={Vred.G} we get {len(List_1PS_Vred_reg)} candidates regular dominant')
-
-            #List_1PS_smalld_reg=sum([list(tau.orbit_symmetries()) for tau in List_1PS_smalld_reg_mod_sym]  ,[])
-            List_1PS_Vred_extended: list[Tau] = []
-            for permut in Permutation.embeddings_mod_sym(V.G, Vred.G):
-                for tau in List_1PS_Vred_reg:
-                    tau_twist=Tau([tau.components[i] for i in permut])
-                    List_1PS_Vred_extended+=tau_twist.m_extend_with_repetitions(V.G)
-            yield from {tau.sort_blocks() for tau in List_1PS_Vred_extended}
-            
-        yield from {tau.sort_blocks() for tau in find_hyperplanes_reg_mod_outer(list(V.all_weights), V, V.G.dimU,flatten_level=flatten_level)}
+                logger.debug(f'For G={Vred.G} we get {cnt_tau_reg} candidates regular dominant')
+        
+        # Unique Tau from the original representation
+        yield from FilteredSet[Tau]().yield_update((
+            tau.sort_blocks() for tau in find_hyperplanes_reg_mod_outer(list(V.all_weights), V, V.G.dimU,flatten_level=flatten_level)
+        ))
             
 
     else:
         assert isinstance(V, ParticleRepresentation)
+
+        # Initialisation with regular 1-PS
+        # We use here a FilteredSet that allows to iterate through the unique added
+        # elements while filtering them using a predicate.
+        # The predicate checks that the candidates really give a candidate
+        List_1PS = FilteredSet[Tau](
+            lambda tau: check_hyperplane_dim(tau.orthogonal_weights(V), V.dim_cone - 1) # filter predicate FIXME: to be removed since it is done in find_hyperplanes_reg_mod_outer
+        )
+
         list_partS=[p for p in Partition.all_for_integer(V.G.rank)][1:] #[1:] excludes n, so S is the center of G
         for partS in list_partS :
             from math import floor
