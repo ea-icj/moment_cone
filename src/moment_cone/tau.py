@@ -745,7 +745,7 @@ def unique_modulo_symmetry_list_of_tau(seq_tau: Iterable[Tau]) -> set[Tau]:
 #    return itertools.chain.from_iterable(tau.orbit_symmetries() for tau in seq_tau)
 
 
-def find_1PS(V: Representation, flatten_level: int = 0, quiet: bool = False) -> Iterator[Tau]:
+def find_1PS(V: Representation, flatten_cnt: int = 0, quiet: bool = False) -> Iterator[Tau]:
     """
     Same as find_1PS_reg_mod_sym_dim without regularity condition
     Computed by 
@@ -783,7 +783,7 @@ def find_1PS(V: Representation, flatten_level: int = 0, quiet: bool = False) -> 
             #Recover by induction all candidates 1-PS mod symmetry
             List_1PS_Vred_reg = FilteredSet[Tau]().yield_update((
                     tau 
-                    for taured in find_hyperplanes_reg_mod_outer(Vred.all_weights, Vred, umax, flatten_level=flatten_level)
+                    for taured in find_hyperplanes_reg_mod_outer(Vred.all_weights, Vred, umax, flatten_cnt=flatten_cnt)
                     for tau in taured.orbit_symmetries_excepted_ones()
             ))
 
@@ -811,7 +811,7 @@ def find_1PS(V: Representation, flatten_level: int = 0, quiet: bool = False) -> 
         
         # Unique Tau from the original representation
         yield from FilteredSet[Tau]().yield_update((
-            tau.sort_blocks() for tau in find_hyperplanes_reg_mod_outer(list(V.all_weights), V, V.G.dimU,flatten_level=flatten_level)
+            tau.sort_blocks() for tau in find_hyperplanes_reg_mod_outer(list(V.all_weights), V, V.G.dimU,flatten_cnt=flatten_cnt)
         ))
             
 
@@ -832,7 +832,7 @@ def find_1PS(V: Representation, flatten_level: int = 0, quiet: bool = False) -> 
             Gred=LinearGroup([len(partS)])
             Vred = V.reduce(Gred, particle_cnt=V.particle_cnt)
             sym=list(symmetries(partS))
-            for taured in find_hyperplanes_reg_mod_outer(weights, Vred, umax, sym, flatten_level=flatten_level):
+            for taured in find_hyperplanes_reg_mod_outer(weights, Vred, umax, sym, flatten_cnt=flatten_cnt):
                 tau=taured.extend_from_S(partS)
                 # dominant 1-PS corresponding to tau and -tau
                 l1=list(tau.flattened)

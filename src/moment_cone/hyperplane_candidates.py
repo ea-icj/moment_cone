@@ -172,7 +172,7 @@ def find_hyperplanes_reg_mod_outer(
         V: Representation,
         umax: int,
         sym: Optional[Sequence[int]] = None,
-        flatten_level: int = 1, #: Flatten search graph up to given level
+        flatten_cnt: int = 1, #: Flatten search graph with given number of branches
     ) -> Iterable[Tau] : #Iterable[list[Weight]]:
     """
     Returns the subsets of weights, each set generating an hyperplane in X^*(T) likely to be the orthogonal of a dominant 1-parameter subgroup tau, such that there is at most u weights we of V with tau(we)>0
@@ -238,15 +238,15 @@ def find_hyperplanes_reg_mod_outer(
     # Sort the weights
     
     if isinstance(V, ParticleRepresentation):
-        Choices=[tuple([False]*nb_false+[True]) for nb_false in range(min(flatten_level-1,len(weights_free)))]
+        Choices=[tuple([False]*nb_false+[True]) for nb_false in range(min(flatten_cnt-1,len(weights_free)))]
     else :    
-        Choices=[tuple([False]*nb_false+[True]) for nb_false in range(min(flatten_level-1,len(weights_free_mod_outer)))]
-    Nb_False=min(flatten_level-1,len(weights_free_mod_outer))    
-    new_flatten_level=flatten_level-len(Choices)
-    if new_flatten_level>2 :  #Some binary choices can still be done.
+        Choices=[tuple([False]*nb_false+[True]) for nb_false in range(min(flatten_cnt-1,len(weights_free_mod_outer)))]
+    Nb_False=min(flatten_cnt-1,len(weights_free_mod_outer))    
+    flatten_cnt -= len(Choices)
+    if flatten_cnt > 2 :  #Some binary choices can still be done.
         from math import floor
         from itertools import product
-        free_choices = new_flatten_level.bit_length() - 1
+        free_choices = flatten_cnt.bit_length() - 1
         b = floor((len(Choices)+1)/2)
         q, r = divmod(free_choices, b)
         Choices = (
