@@ -8,6 +8,10 @@ __all__ = (
 
 import itertools
 from functools import cached_property
+from flint import fmpz_mat
+import numpy as np
+from numpy.typing import NDArray
+
 
 from .typing import *
 from .utils import *
@@ -68,30 +72,26 @@ class Tau:
         return LinearGroup([len(c) for c in self.components])
 
     @staticmethod
-    def from_zero_weights(weights: Sequence[Weight], V: Representation) -> "Tau":
+    def from_zero_weights(weights: Sequence[int], M_weights : NDArray[np.int8], V: Representation) -> "Tau":
         """
         From a set of weights generating an hyperplane in X^*(T), returns a primitive Tau orthogonal to the hyperplane
 
         TODO: doctest
         """
-
-        M = matrix([v.as_vector.list() for v in weights]).transpose()
-        if isinstance(V, KroneckerRepresentation): # In this case we add conditions of normalization because tau is defined in X_*(T/Z)
-                           # We choose each block ends by 0
-            M = M.augment(matrix(ZZ, [(len(V.G)-1) * [0] for i in range(V.G.rank)]))
-            shift_i = 0
-            shift_j = len(weights)
-            for j, d in enumerate(V.G[:-1]):           
-               M[shift_i + d-1,shift_j+j] = 1
-               shift_i += d
-
-        #b = M.kernel().basis()
-        #b = M.kernel(algorithm='pari').basis()
-        b = M.kernel(algorithm='flint').basis()
-        if len(b) != 1:
+        if isinstance(V, KroneckerRepresentation):
+            L = list(weights).copy()
+            L+= [M_weights.shape[1] - i -1 for i in range(len(V.G)-1)]
+        else :
+            L = weights
+        M_np = M_weights[:, L]
+        M_flint = fmpz_mat(M_np.tolist())    
+        
+        b = M_flint.transpose().nullspace()
+        
+        if b[1] != 1:
            raise ValueError("Given set of weights does not generates an hyperplane")
         else:
-           return Tau.from_flatten(b[0], V.G)
+           return Tau.from_flatten([b[0][i, 0] for i in range(b[0].nrows())], V.G)
 
     @property
     def opposite(self) -> "Tau":

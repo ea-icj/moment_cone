@@ -37,6 +37,7 @@ requires-python = ">=3.11"
 dependencies = [
    "tqdm", # Progress bar
    "numpy>=2", # Numpy with proper type handling
+   "python-flint", # Python wrapper around FLINT (Fast Library for Number Theory)
 ]
 
 [project.optional-dependencies]
