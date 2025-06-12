@@ -136,20 +136,18 @@ def has_too_much_geq_weights(chi: Weight, weights: Sequence[Weight], V: Represen
         leq_cnt-=chi.mult
         return leq_cnt > u
     
-def sort_criterium(id_chi: int, weights_free: list[Weight],V: Representation,MO: NDArray[np.int8]) -> tuple[int, int]:
+def sort_criterium(id_chi: int, weights_free: list[int],V: Representation,MO: NDArray[np.int8]) -> tuple[int, int]:
     nb_sup = MO[id_chi, :].sum() - 1
     nb_inf = MO[:, id_chi].sum() - 1
     nb_orbit=len(list(weights_free[id_chi].orbit_symmetries(V.G.outer)))
-    return nb_orbit, -nb_sup-nb_inf
+    return nb_orbit, -1.8 * nb_sup - nb_inf
 
 def best_index_for_sign(L: list[int],MO: NDArray[np.int8],coeff: float) -> tuple[int, int]:
     """
     Return the index of an element of L such that nb_inf + nb_sup is maximal
     """
     A = MO[np.ix_(L, L)]
-    scores = coeff * A.sum(axis=1) + A.sum(axis=0) # coef 2 to insist on poitive weights because of u
-    #scores = coeff * MO[L][:, L].sum(axis=1) + MO[L][:, L].sum(axis=0)
-    #scores = MO[L][:, L].sum(axis=1) + MO[L][:, L].sum(axis=0)
+    scores = coeff * A.sum(axis=1) + A.sum(axis=0) # coef 2 to insist on positive weights because of u
     best_i = int(np.argmax(scores))
     return best_i, L[best_i]
 
@@ -229,7 +227,7 @@ def find_hyperplanes_reg_mod_outer(
     
     weights_free_mod_outer = [weights_free.index(chi) for chi in V.weights_mod_outer if chi in weights_free]
     # For parallel : plus lent mais mieux équilibré
-    weights_free_mod_outer.sort(key=lambda id_chi:sort_criterium(id_chi, weights_free,V,dom_order_matrix),reverse=True)
+    weights_free_mod_outer.sort(key=lambda id_chi: sort_criterium(id_chi, weights_free,V,dom_order_matrix),reverse=True)
            
 
     # Orbit as a dictionary
@@ -262,7 +260,7 @@ def find_hyperplanes_reg_mod_outer(
             Choices[r:]
         )
 
-    # Tâche 0 
+    # Initialisation of St
     St = WeightSieve([], [], [], [0],[0])
     St.indeterminate=[i for i in range(len(weights_free))]
     
@@ -282,12 +280,17 @@ def find_hyperplanes_reg_mod_outer(
         for id_chi in weights_free_mod_outer[:Nb_False]: # One more False.            
             for id_chi2 in orbit_as_dic_idx[id_chi]:        
                 St.indeterminate.remove(id_chi2)
-                St.excluded.append(id_chi2)        
-        for id_chi in weights_free_mod_outer[Nb_False:]:        
+                St.excluded.append(id_chi2)
+        for i in range(len(weights_free_mod_outer[Nb_False:])):
+            if len(St.indeterminate)+len(St.excluded)>u-St.nb_positive[0] :
+                coeff_best = 1.8
+            else :
+                coeff_best = 1             
             # If so, we explore the branch where id_chi is  defined as a zero element (on the hyperplane)
+            idx,id_chi = best_index_for_sign(St.indeterminate,dom_order_matrix,coeff_best)
             St2 = St.copy()
             St2.zero.append(id_chi)# put chi in the hyperplane
-            St2.indeterminate.remove(id_chi)
+            smart_remove(St2.indeterminate, idx)
             
             # Deducing sign of lower and upper elements
             sign_assignment(id_chi, St2.excluded, St2.indeterminate, St2.nb_positive,dom_order_matrix,mult_chi_tab,V)
@@ -295,7 +298,7 @@ def find_hyperplanes_reg_mod_outer(
             yield from find_hyperplanes_reg_impl(weights_free,V,mult_chi_tab,St2, u,exp_dim,dom_order_matrix)    
             
             # Now we exclude id_chi and its orbit
-            for id_chi2 in orbit_as_dic_idx[id_chi]:        
+            for id_chi2 in [lst for lst in orbit_as_dic_idx.values() if id_chi in lst][0]:        
                 St.indeterminate.remove(id_chi2)
                 St.excluded.append(id_chi2)
     
