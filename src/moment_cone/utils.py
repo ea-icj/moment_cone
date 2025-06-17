@@ -29,6 +29,7 @@ __all__ = (
     "fl_dic",
     "getLogger",
     "YieldableSet",
+    "UniqueFilter",
     "generate_seed",
     "manual_seed",
 )
@@ -539,6 +540,49 @@ class YieldableSet(Generic[T]):
     def __repr__(self) -> str:
         return repr(self.data)
 
+
+class UniqueFilter(Generic[T]):
+    """ Filter an iterator by unique elements
+    
+    The elements must be hashable or a function must be given that returns a
+    unique identifier per element.
+
+    It uses internally a set of the unique identifiers (hash or custom)
+
+    Examples :
+
+    >>> list(filter(UniqueFilter(), (1, 2, 3, 1, -1, 10, 3, -1, 4, 5, 2)))
+    [1, 2, 3, -1, 10, 4, 5]
+    >>> uf = UniqueFilter()
+    >>> list(filter(uf, range(5)))
+    [0, 1, 2, 3, 4]
+    >>> list(filter(uf, range(7)))
+    [5, 6]
+
+    >>> uf = UniqueFilter(lambda n: n % 4)
+    >>> list(filter(uf, range(7)))
+    [0, 1, 2, 3]
+    """
+    data: set[int]
+    transform: Callable[[T], int]
+
+    def __init__(self, transform: Callable[[T], int] = hash):
+        self.data = set()
+        self.transform = transform
+
+    def __len__(self) -> int:
+        return len(self.data)
+    
+    def __iter__(self) -> Iterable[int]:
+        return iter(self.data)
+    
+    def __call__(self, element: T) -> bool:
+        element_id = self.transform(element)
+        if element_id not in self.data:
+            self.data.add(element_id)
+            return True
+        else:
+            return False
 
 class IterableHook(Generic[T]):
     """ Add a hook at each read of an iterable while preserving methods
