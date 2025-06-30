@@ -25,7 +25,7 @@ def bench(step: TauCandidatesStep, display_step: int = 100) -> tuple[float, floa
     def get_time() -> float:
         return time.perf_counter() - initial_time
     
-    with step._tqdm(find_1PS(step.V, flatten_cnt=step.flatten_cnt, quiet=step.quiet), unit="tau") as pb:
+    with step._tqdm(find_1PS(step.V, flatten_cnt=step.flatten_cnt, quiet=step.quiet), unit="tau", leave=True) as pb:
         for i, _ in enumerate(pb):
             if i % display_step == 0:
                 mem = get_mem()
