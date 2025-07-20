@@ -23,9 +23,9 @@ from .utils import prod,fl_dic
     
 from itertools import combinations
 
-def compute_d_minus_2_minors_via_adjugate(A: Matrix):
+def compute_d_minus_2_minors_via_adjugate(A: Matrix) -> dict[tuple[tuple[int, ...], tuple[int, ...]], int]:
     d = A.nrows()
-    minors_dict = {}
+    minors_dict: dict[tuple[tuple[int, ...], tuple[int, ...]], int] = {}
     
     # Générer toutes les sous-matrices B en supprimant une ligne i et une colonne j
     for i in range(1,d):
@@ -59,7 +59,7 @@ def compute_d_minus_2_minors_via_adjugate(A: Matrix):
     
     return minors_dict
 
-def taylor_det_psi(k: int, A: Matrix, psi: Matrix, h_symbolic=True):
+def taylor_det_psi(k: int, A: Matrix, psi: Matrix, h_symbolic: bool = True) -> Polynomial:
     """
     Compute the Taylor expansion of det(A + ψ(h)) up to order k_max,
     as a polynomial in symbolic variables h_0, ..., h_{s-1}.
@@ -73,21 +73,25 @@ def taylor_det_psi(k: int, A: Matrix, psi: Matrix, h_symbolic=True):
     Returns:
         Dict[int, Polynomial]: Dictionary mapping orders k to their polynomial terms in h.
     """
+    assert k >= 2
     d = A.nrows()  # Deduce size from A
     term = 0
         
+    dic_minors: dict[tuple[tuple[int, ...], tuple[int, ...]], int] = {}
+    B: Matrix = A
     if k == 2 :
         dic_minors = compute_d_minus_2_minors_via_adjugate(A)
+
     for rows in combinations(range(d), k):
-        if k>2 : 
+        if k > 2 : 
             B = A.delete_rows(rows)
         for cols in combinations(range(d), k):    
             
             # Minor of A (delete rows/cols)
-            if k >2 : 
+            if k > 2: 
                 minor_A = B.delete_columns(cols).det()
             else :
-                minor_A =  dic_minors[(rows,cols)] 
+                minor_A = dic_minors[(rows,cols)] 
         
             if minor_A != 0 :     
                 # Product of H entries: ψ(h)[i1,j1] * ... * ψ(h)[ik,jk]
