@@ -46,6 +46,7 @@ def moment_cone_from_cmd() -> None:
     import argparse
     from .utils import to_literal
     from .representation import Representation
+    from .parallel import Parallel
 
 
     parser = argparse.ArgumentParser(
@@ -66,6 +67,7 @@ def moment_cone_from_cmd() -> None:
     )
 
     Representation.add_arguments(parser)
+    Parallel.add_arguments(parser)
 
     group = parser.add_argument_group("Development tools")
     group.add_argument(
