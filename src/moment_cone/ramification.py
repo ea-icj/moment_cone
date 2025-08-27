@@ -320,36 +320,17 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
                             
                             taylor_term=taylor_det_psi(mult_min, Aredj, psi)
                             
-                            # Normalization of taylor_term
+                            # Computation of L0 such that L0^mult_min = constant * taylor_term
                             variables = [V.QV.variable(chi) for chi in tau.orthogonal_weights(V)]
-                            if mult_min ==2 :
-                                vars = taylor_term.variables()
-                                n = len(vars)
-    
-                                # Matrice associée à Q_poly
-                                MQ = matrix(K, n, n)
-    
-                                for r in range(n):
-                                    for s in range(r, n):
-                                        monomial = vars[r] * vars[s]
-                                        coeff = taylor_term.coefficient(monomial)
-                                        if r == s:
-                                            MQ[r, s] = coeff  # Terme diagonal
-                                        else:
-                                            MQ[r, s] = coeff / 2  # Terme croisé divisé par 2
-                                            MQ[s, r] = coeff / 2   # Symétrie
-                                i0 = next(r for r in range(n) if MQ[r, r] != 0)
-                                vv = vector(K, [1 if s == i0 else 0 for s in range(n)]) 
-                        
-                                coeffs = [vv.dot_product(MQ *vector(K, [1 if r == s else 0 for r in range(n)])) for s in range(n)]
-                                coeffs_extended = [dict(zip(vars,coeffs)).get(var, 0) for var in variables]
-                                L0 = vector(K, coeffs_extended)
-                                
-                            else :               
-                                coef_norm = next(taylor_term.coefficient({v: (mult_min if v == var else 0) for v in variables}) for var in variables if taylor_term.coefficient({v: (mult_min if v == var else 0) for v in variables}) != 0)
-                                taylor_term = taylor_term/coef_norm                     
-                                L0 = taylor_term.nth_root(mult_min)
-                                #coeffs = [L0.coefficient({v: 1}) for v in variables]
+                            vars = taylor_term.variables()
+                            var0 = vars[0]
+                            coef_norm = taylor_term.coefficient({var0: mult_min})
+                            taylor_term = taylor_term/coef_norm 
+                            coeffs = [1]
+                            for var in vars[1:]:
+                                coeffs.append(taylor_term.coefficient({var0: mult_min-1,var:1})/mult_min)
+                            coeffs_extended = [dict(zip(vars,coeffs)).get(var, 0) for var in variables]
+                            L0 = vector(K, coeffs_extended)
 
                         B0z_red=B0z.matrix_from_columns(range(sizeblocks[i], Az.ncols())).change_ring(K)
                         
