@@ -100,7 +100,10 @@ def moment_cone_from_cmd() -> None:
     # Seed
     from .utils import manual_seed
     config.seed = manual_seed(config.seed)
-    
+
+    # Parallel context
+    Parallel.from_config(config)
+
     # Configuring the logging level
     from .utils import getLogger
     import logging
