@@ -29,6 +29,7 @@ from .representation import Representation
 from .linear_group import LinearGroup
 from .tau import Tau
 from .inequality import Inequality
+from .root import Root
 from .kronecker import KroneckerCoefficient, KroneckerCoefficientMLCache
 from .bkr import PlethysmCache
 from .utils import to_literal
@@ -515,8 +516,16 @@ class SubModuleConditionStep(FilterStep[Tau]):
     It only reject pending Taus and doesn't modified the validated ones.
     """
     def apply(self, tau_dataset: Dataset[Tau]) -> Dataset[Tau]:
+        from .parallel import Parallel
+        executor = Parallel().executor
+        pending_tau = executor.filter(
+            Tau.is_sub_module,
+            self._tqdm(tau_dataset.pending(), unit="tau"),
+            self.V,
+            chunk_size=executor.chunk_size * 32,
+        )
         return self.TDataset.from_separate(
-            pending=(tau for tau in self._tqdm(tau_dataset.pending(), unit="tau") if tau.is_sub_module(self.V)),
+            pending=pending_tau,
             validated=tau_dataset.validated(),
         )
     
@@ -528,21 +537,30 @@ class StabilizerConditionStep(FilterStep[Tau]):
     
     It only reject pending Taus and doesn't modified the validated ones.
     """
-    def apply(self, tau_dataset: Dataset[Tau]) -> Dataset[Tau]:
+    @staticmethod
+    def tau_filter(tau: Tau, V: Representation) -> bool:
         from .stabK import dim_gen_stab_of_K
-        Ms = self.V.actionK
-        output: list[Tau] = []
 
-        def tau_filter(tau: Tau) -> bool:
-            if  tau.is_dom_reg :
-                return True
-            else: 
-                ListK=[beta.index_in_all_of_K(self.G) for beta in tau.orthogonal_rootsB]+[beta.opposite.index_in_all_of_K(self.G) for beta in tau.orthogonal_rootsU]
-                ListChi=[self.V.index_of_weight(chi) for chi in tau.orthogonal_weights(self.V)]+[self.V.dim+self.V.index_of_weight(chi) for chi in tau.orthogonal_weights(self.V)]
-                return dim_gen_stab_of_K(Ms,ListK,ListChi) == self.G.rank - self.V.dim_cone + 1
+        Ms = V.actionK
+        if  tau.is_dom_reg :
+            return True
+        else: 
+            ListK=[beta.index_in_all_of_K(V.G) for beta in tau.orthogonal_rootsB]+[beta.opposite.index_in_all_of_K(V.G) for beta in tau.orthogonal_rootsU]
+            ListChi=[V.index_of_weight(chi) for chi in tau.orthogonal_weights(V)]+[V.dim+V.index_of_weight(chi) for chi in tau.orthogonal_weights(V)]
+            return dim_gen_stab_of_K(Ms,ListK,ListChi) == V.G.rank - V.dim_cone + 1
+        
+    def apply(self, tau_dataset: Dataset[Tau]) -> Dataset[Tau]:
+        from .parallel import Parallel
 
+        executor = Parallel().executor
+        pending_tau = executor.filter(
+            StabilizerConditionStep.tau_filter,
+            self._tqdm(tau_dataset.pending(), unit="tau"),
+            self.V,
+        )
+        
         return self.TDataset.from_separate(
-            pending=filter(tau_filter, self._tqdm(tau_dataset.pending(), unit="tau")),
+            pending=pending_tau,
             validated=tau_dataset.validated(),
         )
 
@@ -554,13 +572,29 @@ class InequalityCandidatesStep(TransformerStep[Tau, Inequality]):
     
     It generates only pending inequalities.
     """
+    @staticmethod
+    def List_Inv_Ws_Mod(tau: Tau, V: Representation) -> tuple[Tau, list[dict[int,list[Root]]]]:
+        """ Helper method to avoid iterating two times on the tau """
+        from .list_of_W import List_Inv_Ws_Mod
+        return tau, List_Inv_Ws_Mod(tau, V)
+
     def apply(self, tau_dataset: Dataset[Tau]) -> Dataset[Inequality]:
         from .list_of_W import List_Inv_Ws_Mod
+        from .parallel import Parallel
+        from itertools import repeat
+
+        executor = Parallel().executor
         pending_tau = self._tqdm(tau_dataset.pending(), unit="tau")
-        def ineq_generator() -> Iterator[Inequality]:
-            for tau in pending_tau:
-                Lw = List_Inv_Ws_Mod(tau, self.V)
-                yield from (Inequality(tau,gr_inversions=gr_inv) for gr_inv in Lw)
+
+        def ineq_generator():
+            inversions = executor.map(
+                InequalityCandidatesStep.List_Inv_Ws_Mod,
+                pending_tau,
+                repeat(self.V),
+                chunk_size=executor.chunk_size * 2,
+            )
+            for tau, Lw in inversions:
+                yield from (Inequality(tau, gr_inversions=gr_inv) for gr_inv in Lw)
 
         return self.TDataset.from_separate(
             pending=ineq_generator(),
@@ -598,15 +632,14 @@ class PiDominancyStep(FilterStep[Inequality]):
 
     def apply(self, ineq_dataset: Dataset[Inequality]) -> Dataset[Inequality]:
         from .list_of_W import Check_Rank_Tpi
-        from .parallel import Parallel, SequentialExecutor
-        executor = SequentialExecutor()
+        from .parallel import Parallel
+        executor = Parallel().executor
         inequalities = executor.filter(
             Check_Rank_Tpi,
             self._tqdm(ineq_dataset.pending(), unit="ineq"),
             self.V, self.tpi_method,
-            unordered=True,
+            chunk_size=executor.chunk_size * 32,
         )
-        #print("PiDo :", next(inequalities)) # DEBUG
         return self.TDataset.from_separate(
             pending=inequalities,
             validated=ineq_dataset.validated(),
@@ -784,23 +817,12 @@ class BirationalityStep(FilterStep[Inequality]):
             self.V,
             self.ram_schub_method,
             self.ram0_method,
-            unordered=True,
         )
-        # DEBUG
-        #print("BiRat before:", next(ineq_dataset.pending()))
-        #print("BiRat after :", next(inequalities))
 
         return self.TDataset.from_separate(
             pending=[],
             validated=chain(inequalities, ineq_dataset.validated()),
         )
-        #return self.TDataset.from_all(
-        #    map(
-        #        lambda ineq: (ineq, True),
-        #        #chain(inequalities, ineq_dataset.validated())
-        #        inequalities
-        #    )
-        #)
     
     @staticmethod
     def add_arguments(parent_parser: ArgumentParser, defaults: Mapping[str, Any] = {}) -> None:

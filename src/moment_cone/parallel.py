@@ -73,7 +73,7 @@ class ParallelExecutor(AbstractContextManager["ParallelExecutor"], ABC):
                /,
                *args: Unpack[Ts],
                chunk_size: Optional[int] = None,
-               unordered: bool = False) -> Iterator[T]:
+               unordered: bool = False) -> Iterable[T]:
         """ Filter the given iterable by fn
         
         Additional arguments may be given through args. Results may be yielded
