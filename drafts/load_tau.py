@@ -12,6 +12,7 @@ def main_from_cmd() -> None:
     from moment_cone import Step, InequalityCandidatesStep, ExportStep
     from moment_cone.main_steps import InequalityFilterStr, inequalities_filter_dict, default_inequalities_filters
     from moment_cone.utils import to_literal
+    from moment_cone.parallel import Parallel
 
     parser = argparse.ArgumentParser(
         "Reload saved tau and resume computation after StabilizerCondition step",
@@ -62,6 +63,7 @@ def main_from_cmd() -> None:
 
 
     Representation.add_arguments(parser)
+    Parallel.add_arguments(parser)
     InequalityCandidatesStep.add_arguments(parser)
 
     # Adding command-line options from inequality filtering steps
@@ -75,6 +77,9 @@ def main_from_cmd() -> None:
     # Seed
     from moment_cone.utils import manual_seed
     config.seed = manual_seed(config.seed)
+
+    # Parallel context
+    Parallel.from_config(config)
     
     # Configuring the logging level
     from moment_cone.utils import getLogger
