@@ -205,6 +205,12 @@ class FutureParallelExecutor(ParallelExecutor, ABC):
     def shutdown(self, wait: bool = True) -> None:
         self.executor.shutdown(wait=wait, cancel_futures=not wait)
 
+    @staticmethod
+    def chunk_task(fn: Callable[Concatenate[Any, ...], T],
+                   chunk_args: Iterable[tuple[Any, ...]],
+                   ) -> list[T]:
+        return [fn(*args) for args in chunk_args]
+
     def map(self, 
             fn: Callable[Concatenate[Any, ...], T],
             /,
@@ -229,23 +235,30 @@ class FutureParallelExecutor(ParallelExecutor, ABC):
             computation now works.
             """
             from concurrent.futures import Future
-            not_done: set[Future[T]] = set()
+            from itertools import islice
+            not_done: set[Future[list[T]]] = set()
             all_args = iter(zip(*iterables))
             max_workers: int = self.executor._max_workers # type: ignore
             for _ in range(max_workers):
-                try:
-                    not_done.add(self.executor.submit(fn, *next(all_args)))
-                except StopIteration:
-                    pass
+                chunk_args = list(islice(all_args, chunk_size))
+                if not chunk_args: break
+                not_done.add(self.executor.submit(
+                    FutureParallelExecutor.chunk_task,
+                    fn,
+                    chunk_args,
+                ))
 
             while not_done:
                 done, not_done = futures.wait(not_done, return_when=futures.FIRST_COMPLETED)
                 for future in done:
-                    yield future.result()
-                    try:
-                        not_done.add(self.executor.submit(fn, *next(all_args)))
-                    except StopIteration:
-                        pass
+                    yield from future.result()
+                    chunk_args = list(islice(all_args, chunk_size))
+                    if not chunk_args: continue
+                    not_done.add(self.executor.submit(
+                        FutureParallelExecutor.chunk_task,
+                        fn,
+                        chunk_args,
+                    ))
 
 
 class FutureProcessExecutor(FutureParallelExecutor):
