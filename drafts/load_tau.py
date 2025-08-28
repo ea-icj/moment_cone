@@ -110,13 +110,12 @@ def main_from_cmd() -> None:
     if config.file_name is None:
         config.file_name = f"tau_{V}.csv"
 
-    def load_tau(file_name: str) -> Iterable[Tau]:        
-        import csv
-        fh = open(file_name, "r")
-        csvr = csv.reader(fh, quoting=csv.QUOTE_NONNUMERIC)
-        for row in csvr:
-            yield Tau.from_flatten(map(int, row), V.G)
-        fh.close()
+    # Loading all tau
+    import csv
+    fh = open(config.file_name, "r")
+    csvr = csv.reader(fh, quoting=csv.QUOTE_NONNUMERIC)
+    all_tau = [Tau.from_flatten(map(int, row), V.G) for row in csvr]
+    fh.close()
 
     from moment_cone.task import Task
     from moment_cone import Inequality, Dataset
@@ -125,7 +124,7 @@ def main_from_cmd() -> None:
     with Task("Import") as task:
         dataset_type = LazyDataset[Tau] if config.lazy else ListDataset[Tau]
         tau_candidates = dataset_type.from_separate(
-            tqdm(load_tau(config.file_name),  desc="Import", unit="tau")
+            tqdm(all_tau,  desc="Import", unit="tau")
         )
 
     # Transform tau to inequality
