@@ -598,11 +598,15 @@ class PiDominancyStep(FilterStep[Inequality]):
 
     def apply(self, ineq_dataset: Dataset[Inequality]) -> Dataset[Inequality]:
         from .list_of_W import Check_Rank_Tpi
-        inequalities = (
-            ineq
-            for ineq in self._tqdm(ineq_dataset.pending(), unit="ineq")
-            if Check_Rank_Tpi(ineq, self.V, self.tpi_method)
+        from .parallel import Parallel, SequentialExecutor
+        executor = SequentialExecutor()
+        inequalities = executor.filter(
+            Check_Rank_Tpi,
+            self._tqdm(ineq_dataset.pending(), unit="ineq"),
+            self.V, self.tpi_method,
+            unordered=True,
         )
+        #print("PiDo :", next(inequalities)) # DEBUG
         return self.TDataset.from_separate(
             pending=inequalities,
             validated=ineq_dataset.validated(),
@@ -770,19 +774,33 @@ class BirationalityStep(FilterStep[Inequality]):
 
     def apply(self, ineq_dataset: Dataset[Inequality]) -> Dataset[Inequality]:
         from .ramification import Is_Ram_contracted
+        from .parallel import Parallel
         from itertools import chain
-        inequalities = (
-            ineq
-            for ineq in self._tqdm(ineq_dataset.pending(), unit="ineq")
-            if Is_Ram_contracted(ineq,
-                                 self.V,
-                                 self.ram_schub_method,
-                                 self.ram0_method)
+
+        executor = Parallel().executor
+        inequalities = executor.filter(
+            Is_Ram_contracted,
+            self._tqdm(ineq_dataset.pending(), unit="ineq"),
+            self.V,
+            self.ram_schub_method,
+            self.ram0_method,
+            unordered=True,
         )
+        # DEBUG
+        #print("BiRat before:", next(ineq_dataset.pending()))
+        #print("BiRat after :", next(inequalities))
+
         return self.TDataset.from_separate(
             pending=[],
             validated=chain(inequalities, ineq_dataset.validated()),
         )
+        #return self.TDataset.from_all(
+        #    map(
+        #        lambda ineq: (ineq, True),
+        #        #chain(inequalities, ineq_dataset.validated())
+        #        inequalities
+        #    )
+        #)
     
     @staticmethod
     def add_arguments(parent_parser: ArgumentParser, defaults: Mapping[str, Any] = {}) -> None:
