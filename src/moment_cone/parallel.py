@@ -334,6 +334,7 @@ class Parallel(AbstractContextManager["Parallel"]):
     executor_class: ClassVar[type[ParallelExecutor]] = SequentialExecutor
     max_workers: ClassVar[Optional[int]] = None
     chunk_size: ClassVar[int] = 1
+    unordered: ClassVar[bool] = False
     kwargs: ClassVar[dict[str, Any]] = dict()
     __executor: ClassVar[Optional[ParallelExecutor]] = None
 
@@ -341,9 +342,10 @@ class Parallel(AbstractContextManager["Parallel"]):
         self.start()
 
     @staticmethod
-    def configure(executor_class: type[ParallelExecutor] | ParallelExecutorStr,
+    def configure(executor_class: type[ParallelExecutor] | ParallelExecutorStr = "FutureProcess",
                   max_workers: Optional[int] = None,
                   chunk_size: int = 1,
+                  unordered: bool = False,
                   **kwargs: Any) -> None:
         """ Configure the parallel executor class and it's init parameters """
         if isinstance(executor_class, str):
@@ -354,6 +356,7 @@ class Parallel(AbstractContextManager["Parallel"]):
         Parallel.executor_class = executor_class
         Parallel.max_workers = max_workers
         Parallel.chunk_size = chunk_size
+        Parallel.unordered = unordered
         Parallel.kwargs = kwargs
 
     @staticmethod
@@ -363,6 +366,7 @@ class Parallel(AbstractContextManager["Parallel"]):
             Parallel.__executor = Parallel.executor_class(
                 max_workers=Parallel.max_workers,
                 chunk_size=Parallel.chunk_size,
+                unordered=Parallel.unordered,
                 **Parallel.kwargs,
             )
 
