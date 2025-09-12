@@ -444,19 +444,16 @@ class TauCandidatesStep(GeneratorStep[Tau]):
     
     It generates only pending Taus.
     """
-    flatten_cnt: int
     unique_tau: UniqueTauStr
 
     def __init__(
             self,
             V: Representation,
-            flatten_cnt: Optional[int] = None,
             unique_tau: UniqueTauStr = "SetOfTauCpp",
             **kwargs: Any
             ):
         super().__init__(V, **kwargs)
         # TODO when merged with dev_parallel2: compute so that 2^L > max_workers * chunk_size
-        self.flatten_cnt = flatten_cnt or 1
         self.unique_tau = unique_tau
 
     def apply(self) -> Dataset[Tau]:
@@ -465,7 +462,6 @@ class TauCandidatesStep(GeneratorStep[Tau]):
             pending=self._tqdm(
                 find_1PS(
                     self.V,
-                    flatten_cnt=self.flatten_cnt,
                     unique_tau=self.unique_tau,
                     quiet=self.quiet
                 ),
@@ -483,7 +479,6 @@ class TauCandidatesStep(GeneratorStep[Tau]):
             "First list of dominent 1-PS whose kernel is supported at hyperplanes of weights"
         )
         group.add_argument(
-            "--flatten_cnt",
             type=int,
             default=None,
             help="Flatten search graph with given number of branches. If specified, it should be greater that max_workers * chunk_size.",
@@ -502,7 +497,6 @@ class TauCandidatesStep(GeneratorStep[Tau]):
         return super().from_config(
             V=V,
             config=config,
-            flatten_cnt=config.flatten_cnt,
             unique_tau=config.unique_tau,
             **kwargs,
         )

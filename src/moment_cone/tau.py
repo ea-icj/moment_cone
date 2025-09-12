@@ -801,7 +801,7 @@ def find_1PS(
                 tau_filter_reg,
                 (
                     tau 
-                    for taured in find_hyperplanes_reg_mod_outer(Vred.all_weights, Vred, umax, flatten_cnt=flatten_cnt)
+                    for taured in find_hyperplanes_reg_mod_outer(Vred.all_weights, Vred, umax)
                     for tau in taured.orbit_symmetries_excepted_ones()
                 )
             )
@@ -835,7 +835,7 @@ def find_1PS(
         tau_filter_last = create_tau_filter(V.G)
         yield from filter(
             tau_filter_last,
-            map(Tau.sort_blocks, find_hyperplanes_reg_mod_outer(list(V.all_weights), V, V.G.dimU,flatten_cnt=flatten_cnt))
+            map(Tau.sort_blocks, find_hyperplanes_reg_mod_outer(list(V.all_weights), V, V.G.dimU))
         )
         tau_filter_last.clear()
             
@@ -857,7 +857,7 @@ def find_1PS(
             Gred=LinearGroup([len(partS)])
             Vred = V.reduce(Gred, particle_cnt=V.particle_cnt)
             sym=list(symmetries(partS))
-            for taured in find_hyperplanes_reg_mod_outer(weights, Vred, umax, sym, flatten_cnt=flatten_cnt):
+            for taured in find_hyperplanes_reg_mod_outer(weights, Vred, umax, sym):
                 tau=taured.extend_from_S(partS)
                 # dominant 1-PS corresponding to tau and -tau
                 l1=list(tau.flattened)

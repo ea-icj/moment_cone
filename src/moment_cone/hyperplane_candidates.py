@@ -31,8 +31,7 @@ class WeightSieve:
     zero: list[int] # Weights considered as zero
     nb_positive: list[int] # Number of Positive weights. List of length 1 used to pass the data by address
     nb_pos_checked: list[int]
-    #nb_negative: list[int] # Number of Negative weights. List of length 1 used to pass the data by address
-
+    
     def copy(self) -> "WeightSieve":
         return WeightSieve(
             self.indeterminate.copy(),
@@ -40,13 +39,16 @@ class WeightSieve:
             self.zero.copy(),
             self.nb_positive.copy(),
             self.nb_pos_checked.copy(),
-            #self.nb_negative.copy(),
         )
 
+
+def is_parallelizable(St: WeightSieve,nbTrue,nbFalse) -> bool :
+    return(len(St.zero)>=nbTrue or len(St.excluded)>=nbFalse)
 
 def smart_remove(l: list[T], idx: int) -> None:
     """
     Remove an element of a list by swapping it with the last element
+    idx is the index in l of the element to be removed
 
     It saves the O(N) cost of shift all the remaining elements.
 
@@ -126,7 +128,7 @@ def has_too_much_geq_weights(chi: Weight, weights: Sequence[Weight], V: Represen
     """
     if isinstance(V, KroneckerRepresentation):
         assert(isinstance(chi, WeightAsList))
-        leq_cnt = short_prod(c + 1 for c in chi.as_list) - 1 #TODO : short est inutile ici
+        leq_cnt = short_prod(c + 1 for c in chi.as_list) - 1 
         return leq_cnt > u
     else : 
         leq_cnt=0
@@ -136,43 +138,22 @@ def has_too_much_geq_weights(chi: Weight, weights: Sequence[Weight], V: Represen
         leq_cnt-=chi.mult
         return leq_cnt > u
     
-def sort_criterium(id_chi: int, weights_free: list[Weight],V: Representation,MO: NDArray[np.int8]) -> tuple[int, int]:
-    nb_sup = MO[id_chi, :].sum() - 1
-    nb_inf = MO[:, id_chi].sum() - 1
-    nb_orbit=len(list(weights_free[id_chi].orbit_symmetries(V.G.outer)))
-    return nb_orbit, -1.8 * nb_sup - nb_inf
-
+    
 def best_index_for_sign(L: list[int],MO: NDArray[np.int8],coeff: float) -> tuple[int, int]:
     """
-    Return the index of an element of L such that nb_inf + nb_sup is maximal
+    Return the tuple (index,value) of an element of L such that nb_inf + nb_sup is maximal
     """
     A = MO[L][:,L]
-    scores = coeff * A.sum(axis=1) + A.sum(axis=0) # coef 2 to insist on positive weights because of u
+    scores = coeff * A.sum(axis=1) + A.sum(axis=0) # coeff to insist on positive weights because of u
     best_i = int(np.argmax(scores))
     return best_i, L[best_i]
-
-def best_index_for_sign2(S_ind: list[int],S_ex: list[int],MO: NDArray[np.int8],coeff: int) -> tuple[int, int]:
-    """
-    Return the index of an element of L such that nb_inf + nb_sup is maximal
-    """
-    A = MO[np.ix_(S_ind, S_ind)]
-    if coeff==1 : 
-        scores = coeff * A.sum(axis=1) + A.sum(axis=0) # coef 2 to insist on poitive weights because of u
-    else : 
-        B = MO[np.ix_(S_ind, S_ex)]
-        scores = coeff * A.sum(axis=1) + A.sum(axis=0)+ 0.1*B.sum(axis=1)  
-    #scores = 2 * MO[L][:, L].sum(axis=1) + MO[L][:, L].sum(axis=0)
-    #scores = MO[L][:, L].sum(axis=1) + MO[L][:, L].sum(axis=0)
-    best_i = int(np.argmax(scores))
-    return best_i,S_ind[best_i]
 
 
 def find_hyperplanes_reg_mod_outer(
         weights: Sequence[Weight],
         V: Representation,
         umax: int,
-        sym: Optional[Sequence[int]] = None,
-        flatten_cnt: int = 1, #: Flatten search graph with given number of branches
+        sym: Optional[Sequence[int]] = None
     ) -> Iterable[Tau] : #Iterable[list[Weight]]:
     """
     Returns the subsets of weights, each set generating an hyperplane in X^*(T) likely to be the orthogonal of a dominant 1-parameter subgroup tau, such that there is at most u weights we of V with tau(we)>0
@@ -187,16 +168,25 @@ def find_hyperplanes_reg_mod_outer(
     """
 
     exp_dim = V.dim_cone - 1
-    #print(V,umax)
+
     # We cancel weights that are necessarily negative
     weights_almost_free = [chi for chi in weights if not has_too_much_geq_weights(chi, weights, V, umax, sym)]
     
+    # We cancel weights that are necessarily positive
+    # and we adjust umax in u accordingly
+
     weights_free: list[Weight] = []
     for chi1 in weights_almost_free:
         nb_sup=len([chi2 for chi2 in weights_almost_free if chi2.leq(chi1,sym)]) 
         if nb_sup+exp_dim<=len(weights_almost_free)+1 :
             weights_free.append(chi1)
     u=umax-len(weights_almost_free)+len(weights_free)
+
+    
+
+    # Initialisation of the criterium to be parallelizable
+    NbTrue = 2
+    NbFalse = len(weights_free) //10
     
     #Preparatory: Matrix of weights_free
 
@@ -215,7 +205,8 @@ def find_hyperplanes_reg_mod_outer(
 
     #Preparatory: compute the incidence matrix of the dominance order
     #               and put the multiplicities in an nparray
-    #               we use the index in weights_free
+    #               we use the indeces in weights_free
+
     dom_order_matrix = np.zeros((len(weights_free),len(weights_free)), dtype=np.int8)
     mult_chi_tab = np.zeros((len(weights_free),), dtype=np.int8)
     for i, chi1 in enumerate(weights_free):
@@ -224,182 +215,37 @@ def find_hyperplanes_reg_mod_outer(
             if chi1.leq(chi2,sym) :
                 dom_order_matrix[i,j]=1
 
-    
+    # List of weights (their indices in weights_free) modulo outer   
     weights_free_mod_outer = [weights_free.index(chi) for chi in V.weights_mod_outer if chi in weights_free]
-    # For parallel : plus lent mais mieux équilibré
-    weights_free_mod_outer.sort(key=lambda id_chi:sort_criterium(id_chi,weights_free,V,dom_order_matrix),reverse=True)
 
-    # Orbit as a dictionary
+    # Orbit as a dictionary using indices in weights_free
     orbit_as_dic_idx: Optional[dict[int, list[int]]] = None
     if isinstance(V, KroneckerRepresentation):
         orbit_as_dic_idx = {i: [weights_free.index(chi2) for chi2 in weights_free[i].orbit_symmetries(V.G.outer)] for i in weights_free_mod_outer}
+    else :
+        orbit_as_dic_idx = {i: [i] for i in weights_free_mod_outer}    
 
-
-    # Sort the weights
-    
-    if isinstance(V, ParticleRepresentation):
-        Choices=[tuple([False]*nb_false+[True]) for nb_false in range(min(flatten_cnt-1,len(weights_free)))]
-    else :    
-        Choices=[tuple([False]*nb_false+[True]) for nb_false in range(min(flatten_cnt-1,len(weights_free_mod_outer)))]
-    Nb_False=min(flatten_cnt-1,len(weights_free_mod_outer))    
-    flatten_cnt -= len(Choices)
-    if flatten_cnt > 2 :  #Some binary choices can still be done.
-        from math import floor
-        from itertools import product
-        free_choices = flatten_cnt.bit_length() - 1
-        b = floor((len(Choices)+1)/2)
-        q, r = divmod(free_choices, b)
-        Choices = (
-            Choices[:r] + 
-            [x + p for x in Choices[r:b] for p in product((False, True), repeat=q)] + 
-            Choices[b:]
-        )
-        Choices = (
-            [x + p for x in Choices[:r] for p in product((False, True), repeat=q+1)] + 
-            Choices[r:]
-        )
 
     # Initialisation of St
     St = WeightSieve([], [], [], [0],[0])
-    St.indeterminate=[i for i in range(len(weights_free))]
-    
-    # Task corresponding to [False]*Nb_False
-    if isinstance(V, ParticleRepresentation): #Trivial outer
-        for id_chi in weights_free_mod_outer[:Nb_False]: # One more False. 
-            St.indeterminate.remove(id_chi)
-            St.excluded.append(id_chi)
-        yield from find_hyperplanes_reg_impl(
-            weights_free,
-            V,
-            mult_chi_tab,
-            St,u,exp_dim,dom_order_matrix, M_weights, sym=sym)
-                                                 
-    else : # Kronecker
-        assert orbit_as_dic_idx is not None
-        for id_chi in weights_free_mod_outer[:Nb_False]: # One more False.            
-            for id_chi2 in orbit_as_dic_idx[id_chi]:        
-                St.indeterminate.remove(id_chi2)
-                St.excluded.append(id_chi2)
-        for i in range(len(weights_free_mod_outer[Nb_False:])):
-            if len(St.indeterminate)+len(St.excluded)>u-St.nb_positive[0] :
-                coeff_best = 1.8
-            else :
-                coeff_best = 1             
-            # If so, we explore the branch where id_chi is  defined as a zero element (on the hyperplane)
-            idx,id_chi = best_index_for_sign(St.indeterminate,dom_order_matrix,coeff_best)
-            St2 = St.copy()
-            St2.zero.append(id_chi)# put chi in the hyperplane
-            smart_remove(St2.indeterminate, idx)
-            
-            # Deducing sign of lower and upper elements
-            sign_assignment(id_chi, St2.excluded, St2.indeterminate, St2.nb_positive,dom_order_matrix,mult_chi_tab,V)
+    # Some weights that are necessarily excluded: if there are not enough incomparable weights to span an hyperplane.
+    Excluded = []
+    Indeterminate=[]
+    for id_chhi1, chi1 in enumerate(weights_free):
+        nb_comp=len([chi2 for chi2 in weights_free if chi2.leq(chi1,sym) or chi1.leq(chi2,sym)])
+        if len(weights_free)-nb_comp<exp_dim-1 :
+            St.excluded.append(id_chi1)
+        else :
+            St.indeterminate.append(id_chi1)    
 
-            yield from find_hyperplanes_reg_impl(weights_free,V,mult_chi_tab,St2, u,exp_dim,dom_order_matrix, M_weights)    
-            
-            # Now we exclude id_chi and its orbit
-            for id_chi2 in [lst for lst in orbit_as_dic_idx.values() if id_chi in lst][0]:        
-                St.indeterminate.remove(id_chi2)
-                St.excluded.append(id_chi2)
-    
-    # Autres tâches
-    for choices in Choices:  # Liste de tâches    
-        yield from find_hyperplanes_reg_inner(
-            choices,
-            weights_free,
-            V,
-            u,
-            exp_dim,
-            mult_chi_tab,
-            dom_order_matrix,
-            M_weights,
-            weights_free_mod_outer,
-            orbit_as_dic_idx=orbit_as_dic_idx,sym=sym
-            )                  
-    
+    #St.indeterminate=[i for i in range(len(weights_free))]
 
     
-
-def find_hyperplanes_reg_inner(
-        choices: tuple[bool, ...], #: chosen branch
-        weights_free: Sequence[Weight],
-        V: Representation,
-        u: int,
-        exp_dim: int,
-        MW: NDArray[np.int8],
-        MO: NDArray[np.int8],
-        M_weights : NDArray[np.int8],
-        weights_free_mod_outer: list[int],
-        orbit_as_dic_idx: Optional[dict[int, list[int]]] = None, sym: Optional[Sequence[int]] = None
-        ) -> Iterable[Tau]: 
-    
-    St = init_sieve_for_family(choices, weights_free, V, MO, MW, weights_free_mod_outer, orbit_as_dic_idx)
-    return find_hyperplanes_reg_impl(weights_free, V, MW, St, u, exp_dim, MO, M_weights, sym=sym)
+    yield from find_hyperplanes_reg_impl(weights_free,V,mult_chi_tab,St, u,exp_dim,dom_order_matrix, M_weights,orbit_as_dic_idx, NbTrue,NbFalse,sym=sym) 
 
 
-def init_sieve_for_family(choices: tuple[bool, ...], weights_free: Sequence[Weight], V: Representation, MO: NDArray[np.int8], MW: NDArray[np.int8], weights_free_mod_outer: list[int], orbit_as_dic_idx: Optional[dict[int, list[int]]] = None) -> WeightSieve:
-    St = WeightSieve([], [], [], [0], [0])
-    St.indeterminate=[i for i in range(len(weights_free))]
-    
-    if isinstance(V, ParticleRepresentation): 
-        for j, test in enumerate(choices):
-            if len(St.indeterminate) == 0: break
-            # Checking if the element is indeterminate
-            id_chi = St.indeterminate.pop()
-            
-            if test:
-                # We put chi in the hyperplane
-                St.zero.append(id_chi)
 
-                # Deducing sign of lower and upper elements
-                sign_assignment(id_chi, St.excluded, St.indeterminate, St.nb_positive, MO,MW,V)
-            else:
-                # We exclude chi from the hyperplane
-                St.excluded.append(id_chi)    
-        
-    else: # KroneckerRepresentation
-        assert isinstance(V, KroneckerRepresentation) and orbit_as_dic_idx is not None
-        N = len(choices)
-        try:
-            first_true = choices.index(True)  
-        except ValueError:
-            first_true = N
-
-        for id_chi in weights_free_mod_outer[:first_true]: # The False at the beginning    
-            for id_chi2 in orbit_as_dic_idx[id_chi]:        
-                St.indeterminate.remove(id_chi2)
-                St.excluded.append(id_chi2)
-            
-        if  first_true == N or len(weights_free_mod_outer) <= first_true  : # Only false or no more free weights #next_chi == None :
-            return St
-        
-        next_id_chi = weights_free_mod_outer[first_true]        
-        # Put next_chi in the hyperplane
-        St.zero.append(next_id_chi)# put chi in the hyperplane
-        St.indeterminate.remove(next_id_chi)
-        
-        # Deducing sign of lower and upper elements
-        sign_assignment(next_id_chi, St.excluded, St.indeterminate, St.nb_positive, MO,MW,V)
-           
-        for j, test in enumerate(choices[first_true+1:]):
-            if len(St.indeterminate) == 0: 
-                break
-            # Checking if the element is indeterminate
-            id_chi = St.indeterminate.pop()
-            if test:
-                # We put chi in the hyperplane
-                St.zero.append(id_chi)
-
-                # Deducing sign of lower and upper elements
-                sign_assignment(id_chi, St.excluded, St.indeterminate, St.nb_positive,MO,MW,V)
-            else:
-                # We exclude chi from the hyperplane
-                St.excluded.append(id_chi)
-    return St    
-        
-            
-
-
-def find_hyperplanes_reg_impl(weights: Sequence[Weight],V: Representation,MW: NDArray[np.int8], St: WeightSieve, u: int, exp_dim: int, MO: NDArray[np.int8], M_weights : NDArray[np.int8], sym: Optional[Sequence[int]] = None) -> Iterable[Tau]: # Tau for V.G
+def find_hyperplanes_reg_impl(weights: Sequence[Weight],V: Representation,MW: NDArray[np.int8], St: WeightSieve, u: int, exp_dim: int, MO: NDArray[np.int8], M_weights : NDArray[np.int8], orbit_as_dic_idx:dict[int, list[int]], NbTrue: int,NbFalse: int, sym: Optional[Sequence[int]] = None) -> Iterable[Tau]: # Tau for V.G
     """ 
     Recursive part to find the hyperplane candidates.
     u is the maximal number of positive weights
@@ -413,6 +259,7 @@ def find_hyperplanes_reg_impl(weights: Sequence[Weight],V: Representation,MW: ND
     The weights have a multiplicity.
     """
     
+    # Case when St.zero determines an hyperplane
     if len(St.zero) >= exp_dim and check_hyperplane_dim(St.zero, exp_dim, M_weights):
         # Candidate hyperplane if the dimension is appropriate. Computation of the dominant equation if there exists.
         taured=Tau.from_zero_weights(St.zero, M_weights, V)
@@ -427,27 +274,40 @@ def find_hyperplanes_reg_impl(weights: Sequence[Weight],V: Representation,MW: ND
         elif taured_test_dom.opposite.is_dom_reg :
             yield taured.opposite
         
-
+    # Case when St.indeterminate is sufficiently big to get hyperplanes
     elif len(St.zero) + len(St.indeterminate) >= exp_dim and len(St.indeterminate) > 0:
+        # check if u is still a restrictive condition
         if len(St.indeterminate)+len(St.excluded)>u-St.nb_positive[0] :
             coeff_best = 1.8
         else :
-            coeff_best = 1    
+            coeff_best = 1  
+
         # Next element to consider
         idx,id_chi = best_index_for_sign(St.indeterminate,MO,coeff_best)
-        smart_remove(St.indeterminate, idx)
+        
         St2 = St.copy()
         
         # Two possible actions with this element:
 
-        # 1. We explore the branch where it is excluded from the possible zero elements
-        
-        St.excluded.append(id_chi)
-        St2.zero.append(id_chi)
-        
-        yield from find_hyperplanes_reg_impl(weights, V, MW, St, u,exp_dim, MO, M_weights, sym=sym)
+        # 1. We explore the branch where id_chi is excluded from the possible zero elements
+        # If no weight is still selected we exclude the orbit of id_chi1
+        if len(St.zero) > 0 :
+            smart_remove(St.indeterminate, idx)
+            St.excluded.append(id_chi)
+        else : 
+            for id_chi2 in orbit_as_dic_idx[id_chi]:
+                #smart_remove(St.indeterminate, id_chi2)        
+                St.indeterminate.remove(id_chi2)
+                St.excluded.append(id_chi2)
+
+        if is_parallelizable(St: WeightSieve,NbTrue,NbFalse) : #parallel
+            yield from find_hyperplanes_reg_impl(weights, V, MW, St, u,exp_dim, MO, M_weights,NbTrue,NbFalse, sym=sym)
+        else : # sequential 
+            yield from find_hyperplanes_reg_impl(weights, V, MW, St, u,exp_dim, MO, M_weights,NbTrue,NbFalse, sym=sym)
 
         # 2. We explore the branch where it is defined as a zero element (on the hyperplane)
+        St2.zero.append(id_chi)
+        smart_remove(St2.indeterminate, idx)
         
         # 2.1 Deducing sign of lower and upper elements
         sign_assignment(id_chi, St2.excluded, St2.indeterminate, St2.nb_positive,MO,MW,V)
@@ -457,7 +317,11 @@ def find_hyperplanes_reg_impl(weights: Sequence[Weight],V: Representation,MW: ND
 
         # 2.2 Continuing if there are not too much positive elements
         
-        if St2.nb_positive[0] <=u:    
-            yield from find_hyperplanes_reg_impl(weights, V, MW, St2, u, exp_dim, MO, M_weights, sym=sym)    
+        if St2.nb_positive[0] <=u:
+            if is_parallelizable(St: WeightSieve,NbTrue,NbFalse) : #parallel
+                yield from find_hyperplanes_reg_impl(weights, V, MW, St2, u,exp_dim, MO, M_weights,NbTrue,NbFalse, sym=sym)
+            else : # sequential 
+                yield from find_hyperplanes_reg_impl(weights, V, MW, St2, u,exp_dim, MO, M_weights,NbTrue,NbFalse, sym=sym)    
+            
 
 
