@@ -479,11 +479,6 @@ class TauCandidatesStep(GeneratorStep[Tau]):
             "First list of dominent 1-PS whose kernel is supported at hyperplanes of weights"
         )
         group.add_argument(
-            type=int,
-            default=None,
-            help="Flatten search graph with given number of branches. If specified, it should be greater that max_workers * chunk_size.",
-        )
-        group.add_argument(
             "--unique_tau",
             type=lambda s: to_literal(UniqueTauStr, s),
             choices=get_args(UniqueTauStr),
