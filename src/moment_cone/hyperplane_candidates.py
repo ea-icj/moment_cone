@@ -221,7 +221,8 @@ def find_hyperplanes_reg_mod_outer(
     # Orbit as a dictionary using indices in weights_free
     orbit_as_dic_idx: Optional[dict[int, list[int]]] = None
     if isinstance(V, KroneckerRepresentation):
-        orbit_as_dic_idx = {i: [weights_free.index(chi2) for chi2 in weights_free[i].orbit_symmetries(V.G.outer)] for i in weights_free_mod_outer}
+        List_orbits=[[weights_free.index(chi2) for chi2 in weights_free[i].orbit_symmetries(V.G.outer)] for i in weights_free_mod_outer]
+        orbit_as_dic_idx = {i: orbit for orbit in List_orbits for i in orbit}
     else :
         orbit_as_dic_idx = {i: [i] for i in weights_free_mod_outer}    
 
@@ -231,7 +232,7 @@ def find_hyperplanes_reg_mod_outer(
     # Some weights that are necessarily excluded: if there are not enough incomparable weights to span an hyperplane.
     Excluded = []
     Indeterminate=[]
-    for id_chhi1, chi1 in enumerate(weights_free):
+    for id_chi1, chi1 in enumerate(weights_free):
         nb_comp=len([chi2 for chi2 in weights_free if chi2.leq(chi1,sym) or chi1.leq(chi2,sym)])
         if len(weights_free)-nb_comp<exp_dim-1 :
             St.excluded.append(id_chi1)
@@ -295,15 +296,15 @@ def find_hyperplanes_reg_impl(weights: Sequence[Weight],V: Representation,MW: ND
             smart_remove(St.indeterminate, idx)
             St.excluded.append(id_chi)
         else : 
-            for id_chi2 in orbit_as_dic_idx[id_chi]:
+            for id_chi2 in orbit_as_dic_idx[id_chi]:#coucou
                 #smart_remove(St.indeterminate, id_chi2)        
                 St.indeterminate.remove(id_chi2)
                 St.excluded.append(id_chi2)
 
-        if is_parallelizable(St: WeightSieve,NbTrue,NbFalse) : #parallel
-            yield from find_hyperplanes_reg_impl(weights, V, MW, St, u,exp_dim, MO, M_weights,NbTrue,NbFalse, sym=sym)
+        if is_parallelizable(St,NbTrue,NbFalse) : #parallel
+            yield from find_hyperplanes_reg_impl(weights, V, MW, St, u,exp_dim, MO, M_weights,orbit_as_dic_idx,NbTrue,NbFalse, sym=sym)
         else : # sequential 
-            yield from find_hyperplanes_reg_impl(weights, V, MW, St, u,exp_dim, MO, M_weights,NbTrue,NbFalse, sym=sym)
+            yield from find_hyperplanes_reg_impl(weights, V, MW, St, u,exp_dim, MO, M_weights,orbit_as_dic_idx,NbTrue,NbFalse, sym=sym)
 
         # 2. We explore the branch where it is defined as a zero element (on the hyperplane)
         St2.zero.append(id_chi)
@@ -318,10 +319,10 @@ def find_hyperplanes_reg_impl(weights: Sequence[Weight],V: Representation,MW: ND
         # 2.2 Continuing if there are not too much positive elements
         
         if St2.nb_positive[0] <=u:
-            if is_parallelizable(St: WeightSieve,NbTrue,NbFalse) : #parallel
-                yield from find_hyperplanes_reg_impl(weights, V, MW, St2, u,exp_dim, MO, M_weights,NbTrue,NbFalse, sym=sym)
+            if is_parallelizable(St,NbTrue,NbFalse) : #parallel
+                yield from find_hyperplanes_reg_impl(weights, V, MW, St2, u,exp_dim, MO, M_weights,orbit_as_dic_idx,NbTrue,NbFalse, sym=sym)
             else : # sequential 
-                yield from find_hyperplanes_reg_impl(weights, V, MW, St2, u,exp_dim, MO, M_weights,NbTrue,NbFalse, sym=sym)    
+                yield from find_hyperplanes_reg_impl(weights, V, MW, St2, u,exp_dim, MO, M_weights,orbit_as_dic_idx,NbTrue,NbFalse, sym=sym)    
             
 
 
