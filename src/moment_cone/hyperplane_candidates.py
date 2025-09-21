@@ -335,7 +335,7 @@ def find_hyperplanes_reg_impl(
         # 2.2 Continuing if there are not too much positive elements
         
         if St2.nb_positive[0] <= u:
-            if is_parallelizable(St): #parallel
+            if is_parallelizable(St2): #parallel
                 yield from find_hyperplanes_reg_impl(weights, V, MW, St2, u,exp_dim, MO, M_weights,orbit_as_dic_idx, is_parallelizable, sym=sym)
             else : # sequential 
                 yield from find_hyperplanes_reg_impl(weights, V, MW, St2, u,exp_dim, MO, M_weights,orbit_as_dic_idx, is_parallelizable, sym=sym)    
