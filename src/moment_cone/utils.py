@@ -32,7 +32,32 @@ __all__ = (
     "UniqueFilter",
     "generate_seed",
     "manual_seed",
+    "merge_factorizations"
 )
+
+def merge_factorizations(List_deltas,sizeblocks : list[int]):
+    """
+    Merge a list of dictionaries (index -> polynomial -> value).
+    Result: dict with polynomial -> [index, min_value, sum_values,degJ].
+    """
+    result = {}
+
+    for i, d in enumerate(List_deltas):
+        for pol, val in d.items():
+            if pol not in result:
+                # first time we see this polynomial
+                result[pol] = [i, val,val,sizeblocks[i+1]-sizeblocks[i]]
+            else:
+                result[pol][2]+=val
+                current_i, current_val,sum_val,current_degJ = result[pol]
+                if val < current_val:
+                    # found a smaller value -> update
+                    result[pol] = [i, val,sum_val,sizeblocks[i+1]-sizeblocks[i]]   
+                if val == current_val and sizeblocks[i+1]-sizeblocks[i]<current_degJ: # In this case, we minimize the size of the matrix
+                    result[pol] = [i, val,sum_val,sizeblocks[i+1]-sizeblocks[i]] 
+
+
+    return result
 
 if TYPE_CHECKING:
     from line_profiler import LineProfiler
