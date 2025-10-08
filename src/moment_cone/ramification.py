@@ -229,9 +229,8 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
         List_C_mult_dec=sorted(gr_inv.keys(),reverse=True)
         # Compute Jz and its factorizations
         #Jz=1
-        Factors_Jz=[]
-        Blocks_Az=[]
-        List_deltas=[]
+        Blocks_Az: list[Matrix] = []
+        List_deltas: list[dict[Polynomial, int]] = []
         shift=0
         for x in List_C_mult_dec : 
             n_block=len(gr_inv[x])
@@ -239,12 +238,11 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
             Ji=Azi.det()
             #Jz*=Ji
             Blocks_Az.append(Azi)
-            #Factors_Jz.append(Ji)
             List_deltas.append(dict(Ji.factor()))
             shift+=n_block
 
-        dict_comat = {} # A dictionnary int : matrices for the backup of the used comatrices      
-        merged_deltas = merge_factorizations(List_deltas,sizeblocks)
+        dict_comat: dict[int, Matrix] = {} # A dictionnary int : matrices for the backup of the used comatrices      
+        merged_deltas = merge_factorizations(List_deltas, sizeblocks)
         
         # Running over the delta. Starting with small multiplicities.
         for delta in sorted(merged_deltas, key=lambda d: (merged_deltas[d][1],merged_deltas[d][3])):
