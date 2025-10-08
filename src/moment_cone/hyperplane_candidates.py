@@ -194,8 +194,8 @@ def find_hyperplanes_reg_mod_outer(
     # Initialisation of the criterium to be parallelizable
     NbTrue = 2
     NbFalse = len(weights_free) // 10
-    NbTrue = 6
-    NbFalse = len(weights_free) // 4
+    NbTrue = 2
+    NbFalse = len(weights_free)
     is_parallelizable = IsParallelizable(NbTrue, NbFalse)
     
     #Preparatory: Matrix of weights_free
@@ -254,7 +254,7 @@ def find_hyperplanes_reg_mod_outer(
 
     executor = Parallel().executor
     if executor.is_parallel:
-        #print("Parallel execution for V =", V)
+        print("Parallel execution for V =", V)
         seq_tau: list[Tau] = []
         def remove_tau(tau_or_sieve: Iterable[Tau | WeightSieve]) -> Iterator[WeightSieve]:
             nonlocal seq_tau
@@ -271,9 +271,9 @@ def find_hyperplanes_reg_mod_outer(
             ),
         )
         for tau_list in tau_list_gen:
-            #print("len(tau_list) =", len(tau_list))
+            print("len(tau_list) =", len(tau_list))
             yield from tau_list
-        #print("len(seq_tau) =", len(seq_tau))
+        print("len(seq_tau) =", len(seq_tau))
         yield from seq_tau
             
     else:
