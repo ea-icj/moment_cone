@@ -49,8 +49,8 @@ class IsParallelizable:
     nb_false: int # Threshold on the number of excluded in the weight sieve
 
     def __call__(self, St: WeightSieve) -> bool:
-        return len(St.zero) >= self.nb_true or len(St.excluded) >= self.nb_false
-    
+        #return len(St.zero) >= self.nb_true or len(St.excluded) >= self.nb_false
+        return len(St.zero) >= self.nb_true or (len(St.zero) >0 and len(St.excluded) >= self.nb_false) or (len(St.excluded) >= 2*self.nb_false)    
 
 def smart_remove(l: list[T], idx: int) -> None:
     """
@@ -193,9 +193,7 @@ def find_hyperplanes_reg_mod_outer(
 
     # Initialisation of the criterium to be parallelizable
     NbTrue = 2
-    NbFalse = len(weights_free) // 10
-    NbTrue = 2
-    NbFalse = len(weights_free)
+    NbFalse = len(weights_free) // 2
     is_parallelizable = IsParallelizable(NbTrue, NbFalse)
     
     #Preparatory: Matrix of weights_free
@@ -253,15 +251,24 @@ def find_hyperplanes_reg_mod_outer(
     seq_kernel = partial(find_hyperplanes_reg_impl, weights_free, V, mult_chi_tab, u, exp_dim, dom_order_matrix, M_weights, orbit_as_dic_idx, is_parallelizable=None, sym=sym)
 
     executor = Parallel().executor
-    if executor.is_parallel:
-        print("Parallel execution for V =", V)
+    if executor.is_parallel or True:
+        #print(f"\nParallel execution for V = {V} with {len(weights_free)} free weights")
+        import time
+        import copy
+        global_tic = time.perf_counter()
+        task_total_duration = 0.
+        task_tic = 0.
+        task_sieve = None
+
         seq_tau: list[Tau] = []
         def remove_tau(tau_or_sieve: Iterable[Tau | WeightSieve]) -> Iterator[WeightSieve]:
-            nonlocal seq_tau
+            nonlocal seq_tau, task_tic
             for elt in tau_or_sieve:
                 if isinstance(elt, Tau):
                     seq_tau.append(elt)
                 else:
+                    #print(f"\tStarting task for: {elt}... ", end='', flush=True)
+                    task_tic = time.perf_counter()
                     yield elt
         
         tau_list_gen = executor.map(
@@ -271,9 +278,14 @@ def find_hyperplanes_reg_mod_outer(
             ),
         )
         for tau_list in tau_list_gen:
-            print("len(tau_list) =", len(tau_list))
+            task_duration = time.perf_counter() - task_tic
+            task_total_duration += task_duration
+            #print(f"Done in {task_duration:.1e}s with {len(tau_list)} taus.")
             yield from tau_list
-        print("len(seq_tau) =", len(seq_tau))
+
+        total_duration = time.perf_counter() - global_tic
+        #print(f"\tSequential task done in {total_duration - task_total_duration:.1e}s with {len(seq_tau)} taus.")
+        #print(f"\tAll completed in {total_duration:.1e}s.")
         yield from seq_tau
             
     else:
