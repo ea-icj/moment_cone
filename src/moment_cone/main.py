@@ -55,12 +55,6 @@ def moment_cone_from_cmd() -> None:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,    
     )
     parser.add_argument(
-        "--seed",
-        type=int,
-        default=None,
-        help="Seed for the pseudo-random generators",
-    )
-    parser.add_argument(
         "--check_inequalities",
         action="store_true",
         help="Check computed inequalities with references datas"

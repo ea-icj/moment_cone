@@ -391,6 +391,12 @@ class Representation(ABC):
             help="Number of particles in Fermion and Boson representation",
         )
         group.add_argument(
+            "--seed",
+            type=int,
+            default=None,
+            help="Seed for the pseudo-random generators",
+        )    
+        group.add_argument(
             "--random_deep",
             type=int,
             default=1,
@@ -406,6 +412,7 @@ class Representation(ABC):
         common_args = dict(
             G=G,
             random_deep=config.random_deep,
+            seed=config.seed,
         )
         specific_args: dict[str, Any] = {}
         repr_class: type[Representation]
