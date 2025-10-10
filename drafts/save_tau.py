@@ -7,6 +7,7 @@ def main_from_cmd() -> None:
     from moment_cone import Representation
     from moment_cone import Step, TauCandidatesStep, SubModuleConditionStep, StabilizerConditionStep
     from moment_cone.task import Task
+    from moment_cone.parallel import Parallel
 
     parser = argparse.ArgumentParser(
         "Backup the tau generated after StabilizerCondition step",
@@ -30,12 +31,20 @@ def main_from_cmd() -> None:
     )
 
     Representation.add_arguments(parser)
+    Parallel.add_arguments(parser)
     TauCandidatesStep.add_arguments(parser)
     SubModuleConditionStep.add_arguments(parser)
     StabilizerConditionStep.add_arguments(parser)
 
     # Parsing command-line arguments
     config = parser.parse_args()
+
+    # Seed
+    from moment_cone.utils import manual_seed
+    config.seed = manual_seed(config.seed)
+
+    # Parallel context
+    Parallel.from_config(config)
 
     # Displaying configuration
     if not config.quiet:
