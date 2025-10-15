@@ -19,6 +19,7 @@ from .inequality import *
 from .permutation import *
 from .rings import QQ, I, matrix, vector, Matrix, Polynomial, PolynomialRing
 from .utils import prod,fl_dic,merge_factorizations
+from sage.interfaces.singular import singular # Used only if ram0_method=symbolic 
 
     
 from itertools import combinations
@@ -166,12 +167,11 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
     dU=len(Inv_w)
     if dU<=1 : 
         return(True)
-    
     if method_R0 == "probabilistic" :
         ring_R0= V.QZ
     elif method_R0 == "symbolic":
-        K=V.QV2.fraction_field()
-        ring_R0 = PolynomialRing(K,"z")
+        K0=V.QV2.fraction_field()
+        ring_R0 = PolynomialRing(K0,"z")
     else:
         raise ValueError(f"Invalid value {method_R0} of the computation method")
 
@@ -214,7 +214,7 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
     
 
     for p in range(V.random_deep):
-        # Construct the matrices Az and B0z 
+        # Construct the matrices Az and B0z
         if  method_R0 == 'probabilistic':   
             Azn = V.T_Pi_3D(method_R0,'line')[np.ix_([2*p, 2*p+1],npw_idx, pw_idx, inv_idx)].sum(axis=1)
             Az = matrix(ring_R0, Azn[0, :, :] * ring_R0('z') + Azn[1, :, :])
@@ -228,37 +228,43 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
 
         List_C_mult_dec=sorted(gr_inv.keys(),reverse=True)
         # Compute Jz and its factorizations
-        #Jz=1
-        Blocks_Az: list[Matrix] = []
-        List_deltas: list[dict[Polynomial, int]] = []
+        Factors_Jz=[]
+        Blocks_Az=[]
+        List_deltas=[]
         shift=0
         for x in List_C_mult_dec : 
             n_block=len(gr_inv[x])
             Azi=Az.submatrix(shift,shift,n_block,n_block)
             Ji=Azi.det()
-            #Jz*=Ji
             Blocks_Az.append(Azi)
             List_deltas.append(dict(Ji.factor()))
             shift+=n_block
 
-        dict_comat: dict[int, Matrix] = {} # A dictionnary int : matrices for the backup of the used comatrices      
-        merged_deltas = merge_factorizations(List_deltas, sizeblocks)
+        dict_comat = {} # A dictionnary int : matrices for the backup of the used comatrices      
+        merged_deltas = merge_factorizations(List_deltas,sizeblocks)
         
         # Running over the delta. Starting with small multiplicities.
         for delta in sorted(merged_deltas, key=lambda d: (merged_deltas[d][1],merged_deltas[d][3])):
             i = merged_deltas[delta][0]
-            K=NumberField(delta, 'a')
-            a = K.gen()
+            if method_R0 == 'symbolic' :
+                K = K0.extension(delta)
+            else :
+                K=NumberField(delta, 'a')
+            #a = K.gen()
             Ared=Az.matrix_from_columns(range(sizeblocks[i], Az.ncols())).change_ring(K)
             # Block used to compoute L0
 
             if merged_deltas[delta][2] == 1  or Ared.rank() == Ared.ncols()-1 :
+                #if method_R0 == 'symbolic' : 
+                #    Ared=singular.matrix(Ared.list(),Ared.ncols()).transpose()
+                #    noyau = Ared.kernel()
+                #else :    
                 noyau=Ared.right_kernel().basis()[0]
                 y_weight = List_C_mult_dec[i]  
                 Ared_i=Blocks_Az[i].change_ring(K) # block jmin modulo delta
                 ### Computation of L0
                 if  merged_deltas[delta][1] == 1 : # valuation of delta in J_i is 1   
-                    L0=matrix(K,1,len(zw_idx))
+                    L0=vector(K,len(zw_idx))
                     if i not in dict_comat: # Compute the comatrix if not known
                         dict_comat[i] = Blocks_Az[i].adjugate().transpose()
                     com_Ared_i=dict_comat[i].change_ring(K)  
@@ -267,7 +273,7 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
                                     np.ix_([idx],[V.index_of_weight(chi) for chi in tau.positive_weights(V)[y_weight]], 
                                     [alpha.index_in_all_of_U(V.G) for alpha in gr_inv[y_weight]])].sum(axis=0)
                         nrow,ncol=Mn.shape
-                        L0[0,col] = sum(
+                        L0[col] = sum(
                                     Mn[r,s] * com_Ared_i[r,s]
                                     for r in range(nrow)
                                     for s in range(ncol)
@@ -281,9 +287,7 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
                             
                     psi = matrix(V.QV, Mn)
                     mult = merged_deltas[delta][1]
-                    taylor_term=taylor_det_psi(mult, Ared_i, psi)
-                    #print(taylor_term)       
-                    
+                    taylor_term=taylor_det_psi(mult, Ared_i, psi)      
                     # Computation of L0 such that L0^mult_min = constant * taylor_term
                     variables = [V.QV.variable(chi) for chi in tau.orthogonal_weights(V)]
                     vars = taylor_term.variables()
@@ -298,8 +302,8 @@ def Is_Ram_contracted(ineq : Inequality, V: Representation, method_S: Method, me
                    
                 B0z_red=B0z.matrix_from_columns(range(sizeblocks[i], Az.ncols())).change_ring(K)
                         
-                if (L0*B0z_red*noyau)[0] != 0 :
-                    return False 
+                if L0*B0z_red*noyau != 0 :
+                    return False         
                   
     return True                    
                 

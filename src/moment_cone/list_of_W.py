@@ -285,7 +285,7 @@ def Check_Rank_Tpi(ineq : Inequality, V: Representation, method: Method) -> bool
         else :
             Mn = V.T_Pi_3D(method, "imaginary")[np.ix_(chi_Vtau_idx, gw_idx, gr_idx)].sum(axis=0) 
             M = matrix(ring,Mn)
-            rank_M = M.rank(algorithm='flint')
+            rank_M = M.rank()
         
         if rank_M < len(gr_idx):
                return False
