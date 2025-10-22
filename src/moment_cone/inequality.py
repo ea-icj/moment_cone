@@ -235,7 +235,7 @@ class Inequality:
             
 
 def full_under_symmetry_list_of_ineq(seq_ineq: Iterable[Inequality]) -> Iterable[Inequality] :
-    # FIXME: unknown function below
+    from .tau import full_under_symmetry_list_of_tau
     seq_tau=full_under_symmetry_list_of_tau([ineq.wtau for ineq in seq_ineq]) # type: ignore
     return([Inequality.from_tau(tau) for tau in seq_tau])
 
