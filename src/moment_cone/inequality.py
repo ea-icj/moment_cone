@@ -25,7 +25,7 @@ class Inequality:
     Example :
 
     >>> from moment_cone import *
-    >>> G = LinearGroup((4, 3, 2,1))
+    >>> G = LinearGroup((4, 3, 2, 1))
     >>> tau = Tau.from_flatten([6,2,1,4,1,2,5,3,1,1], G)
     >>> w = Permutation((1, 0, 3, 2)), Permutation((0, 2, 1)), Permutation((0, 1)),Permutation((0,))
     >>> ineq = Inequality(tau, w=w)
@@ -62,7 +62,7 @@ class Inequality:
     def __setstate__(self, state: tuple[Tau, tuple[Permutation, ...]]) -> None:
         """ Restoring instance from it's serialization state """
         self.tau, self.w = state
-    
+
     @cached_property
     def wtau(self) -> Tau:
         return Tau(tuple(wk.inverse(ck) for wk, ck in zip(self.w, self.tau.components)))

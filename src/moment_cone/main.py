@@ -78,6 +78,23 @@ def moment_cone_from_cmd() -> None:
         help="Profile function calls and output results in given file name (pstats and kcachegrind format)",
     )
     group.add_argument(
+        "--tracemalloc",
+        action="store_true",
+        help="Use tracemalloc library to trace memory allocation during the computation"
+    )
+    group.add_argument(
+        "--tm_frame",
+        type=int,
+        default=1,
+        help="Number of frames to consider when using tracemalloc"
+    )
+    group.add_argument(
+        "--tm_top",
+        type=int,
+        default=10,
+        help="Number of lines to display when using tracemalloc",
+    )
+    group.add_argument(
         "--logging_level",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         type=str.upper,
@@ -135,11 +152,23 @@ def moment_cone_from_cmd() -> None:
             inequalities = list(step())
         return inequalities
 
+    if config.tracemalloc:
+        import tracemalloc
+        tracemalloc.start(config.tm_frame)
+
     if config.cprofile is None:
         inequalities = compute()
     else:
         from .utils import cprofile
         inequalities, stats = cprofile(compute, file_name=config.cprofile)
+
+    if config.tracemalloc:
+        import tracemalloc
+        snapshot = tracemalloc.take_snapshot()
+        tracemalloc.stop()
+        display_top(snapshot, limit=config.tm_top)
+
+
 
     # Checking inequalities
     if config.check_inequalities:
@@ -160,3 +189,30 @@ def moment_cone_from_cmd() -> None:
                 for ineq in cmp.only2:
                     print(f"\t{ineq}")
                 
+
+# From the official documentation: https://docs.python.org/3/library/tracemalloc.html#pretty-top
+def display_top(snapshot, key_type='lineno', limit=10):
+    import tracemalloc
+    import linecache
+
+    snapshot = snapshot.filter_traces((
+        tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+        tracemalloc.Filter(False, "<unknown>"),
+    ))
+    top_stats = snapshot.statistics(key_type)
+
+    print("Top %s lines" % limit)
+    for index, stat in enumerate(top_stats[:limit], 1):
+        frame = stat.traceback[0]
+        print("#%s: %s:%s: %.1f KiB"
+              % (index, frame.filename, frame.lineno, stat.size / 1024))
+        line = linecache.getline(frame.filename, frame.lineno).strip()
+        if line:
+            print('    %s' % line)
+
+    other = top_stats[limit:]
+    if other:
+        size = sum(stat.size for stat in other)
+        print("%s other: %.1f KiB" % (len(other), size / 1024))
+    total = sum(stat.size for stat in top_stats)
+    print("Total allocated size: %.1f KiB" % (total / 1024))

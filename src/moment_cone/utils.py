@@ -32,7 +32,9 @@ __all__ = (
     "UniqueFilter",
     "generate_seed",
     "manual_seed",
-    "merge_factorizations"
+    "merge_factorizations",
+    "PartialFunction",
+    "clear_cached_property",
 )
 
 
@@ -704,3 +706,24 @@ def merge_factorizations(
 
 
     return result
+class PartialFunction:
+    """ Function wrapper with partially defined arguments
+    
+    Like functools.partial except that the arguments at execution are passed
+    at first positions.
+    """
+    def __init__(self, func, *args, **kwargs):
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self, arg):
+        return self.func(arg, *self.args, **self.kwargs)
+    
+
+def clear_cached_property(obj: Any) -> None:
+    """ Clear all cached result of cache_property decorator """
+    # Probably non-consistent way of doing this by comparing
+    # dir and __dict__ so that intersection indicates cached_property
+    for prop in set(dir(obj)) & obj.__dict__.keys():
+        del obj.__dict__[prop]

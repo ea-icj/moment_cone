@@ -506,11 +506,11 @@ class SubModuleConditionStep(FilterStep[Tau]):
     """
     def apply(self, tau_dataset: Dataset[Tau]) -> Dataset[Tau]:
         from .parallel import Parallel
+        from .utils import PartialFunction
         executor = Parallel().executor
         pending_tau = executor.filter(
-            Tau.is_sub_module,
+            PartialFunction(Tau.is_sub_module, self.V),
             self._tqdm(tau_dataset.pending(), unit="tau"),
-            self.V,
             chunk_size=executor.chunk_size * 32,
         )
         return self.TDataset.from_separate(
@@ -540,12 +540,12 @@ class StabilizerConditionStep(FilterStep[Tau]):
         
     def apply(self, tau_dataset: Dataset[Tau]) -> Dataset[Tau]:
         from .parallel import Parallel
+        from .utils import PartialFunction
 
         executor = Parallel().executor
         pending_tau = executor.filter(
-            StabilizerConditionStep.tau_filter,
+            PartialFunction(StabilizerConditionStep.tau_filter, self.V),
             self._tqdm(tau_dataset.pending(), unit="tau"),
-            self.V,
         )
         
         return self.TDataset.from_separate(
@@ -570,16 +570,15 @@ class InequalityCandidatesStep(TransformerStep[Tau, Inequality]):
     def apply(self, tau_dataset: Dataset[Tau]) -> Dataset[Inequality]:
         from .list_of_W import List_Inv_Ws_Mod
         from .parallel import Parallel
-        from itertools import repeat
+        from .utils import PartialFunction
 
         executor = Parallel().executor
         pending_tau = self._tqdm(tau_dataset.pending(), unit="tau")
 
         def ineq_generator() -> Iterator[Inequality]:
             inversions = executor.map(
-                InequalityCandidatesStep.List_Inv_Ws_Mod,
+                PartialFunction(InequalityCandidatesStep.List_Inv_Ws_Mod, self.V),
                 pending_tau,
-                repeat(self.V),
                 chunk_size=executor.chunk_size * 2,
             )
             for tau, Lw in inversions:
@@ -622,11 +621,12 @@ class PiDominancyStep(FilterStep[Inequality]):
     def apply(self, ineq_dataset: Dataset[Inequality]) -> Dataset[Inequality]:
         from .list_of_W import Check_Rank_Tpi
         from .parallel import Parallel
+        from .utils import PartialFunction
+
         executor = Parallel().executor
         inequalities = executor.filter(
-            Check_Rank_Tpi,
+            PartialFunction(Check_Rank_Tpi, self.V, self.tpi_method),
             self._tqdm(ineq_dataset.pending(), unit="ineq"),
-            self.V, self.tpi_method,
             chunk_size=executor.chunk_size * 32,
         )
         return self.TDataset.from_separate(
@@ -797,15 +797,13 @@ class BirationalityStep(FilterStep[Inequality]):
     def apply(self, ineq_dataset: Dataset[Inequality]) -> Dataset[Inequality]:
         from .ramification import Is_Ram_contracted
         from .parallel import Parallel
+        from .utils import PartialFunction
         from itertools import chain
 
         executor = Parallel().executor
         inequalities = executor.filter(
-            Is_Ram_contracted,
+            PartialFunction(Is_Ram_contracted, self.V, self.ram_schub_method, self.ram0_method),
             self._tqdm(ineq_dataset.pending(), unit="ineq"),
-            self.V,
-            self.ram_schub_method,
-            self.ram0_method,
         )
 
         return self.TDataset.from_separate(
@@ -1010,6 +1008,7 @@ class MomentConeStep(GeneratorStep[Inequality]):
     config: Optional[Namespace] # Configuration from the command-line
     options: dict[str, Any] # Additional options passed to the constructor
     lazy: bool # Compute lazilly the inequalities without storing intermediate results
+    store_steps: bool # Store all steps and their input/output datasets
     filters: list[InequalityFilterStr] # List of filters applied to the inequalities
     steps: list[Step] # All executed steps (for logging purpose)
 
@@ -1019,6 +1018,7 @@ class MomentConeStep(GeneratorStep[Inequality]):
         filters: Iterable[str | InequalityFilterStr] = default_inequalities_filters,
         config: Optional[Namespace] = None,
         lazy: bool = False,
+        store_steps: bool = False,
         **kwargs: Any,
     ):
         super().__init__(V, **kwargs)
@@ -1028,6 +1028,7 @@ class MomentConeStep(GeneratorStep[Inequality]):
         ]
         self.config = config
         self.lazy = lazy
+        self.store_steps = store_steps
         self.options = kwargs
         self.steps = []
 
@@ -1038,7 +1039,10 @@ class MomentConeStep(GeneratorStep[Inequality]):
             step = step_type(self.V, dataset_type=dataset_type, **self.options)
         else:
             step = step_type.from_config(self.V, self.config, dataset_type=dataset_type)
-        self.steps.append(step)
+        
+        if self.store_steps:
+            self.steps.append(step)
+
         return step
     
     def clear_steps(self) -> None:
@@ -1136,6 +1140,11 @@ class MomentConeStep(GeneratorStep[Inequality]):
             action="store_true",
             help="Compute lazilly the inequalities (without storing intermediate results). When using --parallel, this option should be set together with --unordered.",
         )
+        group.add_argument(
+            "--store_steps",
+            action="store_true",
+            help="Store all intermediate steps and their input/ouptut datasets"
+        )
 
         # Adding command-line options from other steps
         import sys
@@ -1154,6 +1163,7 @@ class MomentConeStep(GeneratorStep[Inequality]):
             config=config,
             filters=config.filters,
             lazy=config.lazy,
+            store_steps=config.store_steps,
             **kwargs
         )
         

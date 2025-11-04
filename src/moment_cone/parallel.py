@@ -5,14 +5,16 @@ __all__ = (
 
 from contextlib import AbstractContextManager
 import concurrent.futures as futures
+from multiprocessing.pool import Pool
+from multiprocessing import Manager, Queue
+from multiprocessing.managers import SyncManager
 from abc import ABC
 import itertools
 from argparse import ArgumentParser, Namespace
 
 from .typing import *
 
-if TYPE_CHECKING:
-    from multiprocessing.pool import Pool
+
 
 class ParallelExecutor(AbstractContextManager["ParallelExecutor"], ABC):
     """
@@ -39,6 +41,10 @@ class ParallelExecutor(AbstractContextManager["ParallelExecutor"], ABC):
         self.max_workers = max_workers
         self.chunk_size = chunk_size
         self.unordered = unordered
+
+    @property
+    def is_parallel(self) -> bool:
+        return True
 
     def shutdown(self, wait: bool = True) -> None:
         """ Shutdown executor and possibly wait that all tasks are finished """
@@ -101,6 +107,10 @@ class ParallelExecutor(AbstractContextManager["ParallelExecutor"], ABC):
 
 class SequentialExecutor(ParallelExecutor):
     """ Sequential executor (rely on map) """  
+    @property
+    def is_parallel(self) -> bool:
+        return False
+
     def map(self, 
             fn: Callable[Concatenate[Any, ...], T],
             /,
@@ -310,12 +320,105 @@ class FutureMPIExecutor(FutureParallelExecutor):
         )
 
 
+class MultiProcessingQueueExecutor(ParallelExecutor):
+    """ Trying to parallelize using input and output queues
+    
+    Not very efficient in practice...
+    """
+    manager: SyncManager
+
+    def __init__(
+            self,
+            max_workers: Optional[int] = None,
+            chunk_size: int = 1,
+            unordered: bool = False,
+        ):
+        if max_workers is None:
+            from multiprocessing import cpu_count
+            max_workers = cpu_count()
+        super().__init__(max_workers, chunk_size, unordered)
+        self.manager = Manager()
+
+    def shutdown(self, wait: bool = True):
+        self.manager.shutdown()
+
+    def map(self, 
+            fn: Callable[..., T],
+            /,
+            *iterables: Iterable[Any],
+            chunk_size: Optional[int] = None,
+            unordered: Optional[bool] = None) -> Iterable[T]:
+        chunk_size = chunk_size or self.chunk_size
+        if unordered is None: unordered = self.unordered
+
+        # Initializing queues
+        assert self.max_workers is not None
+        max_workers = self.max_workers
+        print("max_workers =", max_workers)
+        queue_max_size = max_workers * chunk_size
+
+        from multiprocessing import Process
+        input_queue = self.manager.Queue(maxsize=queue_max_size)
+        output_queue = self.manager.Queue(maxsize=queue_max_size)
+
+        # Initializing processes
+        processes = [
+            Process(
+                target=MultiProcessingQueueExecutor._worker,
+                args=(input_queue, output_queue, fn)
+            )
+            for _ in range(max_workers)
+        ]
+        for p in processes:
+            p.start()
+
+        # Initial filling of the input queue
+        all_args = iter(zip(*iterables))
+        for _ in range(queue_max_size):
+            try:
+                input_queue.put(next(all_args))
+            except StopIteration:
+                input_queue.put(None)
+                break
+
+        # Getting and yielding results
+        while True:
+            result = output_queue.get()
+            if result is None:
+                max_workers -= 1
+                if max_workers == 0:
+                    break
+            else:
+                yield result
+                try:
+                    input_queue.put(next(all_args))
+                except StopIteration:
+                    input_queue.put(None)
+
+        # Cleaning
+        for p in processes:
+            p.join()
+
+    @staticmethod
+    def _worker(input_queue: "Queue", output_queue: "Queue", fn) -> None:
+        while True:
+            args = input_queue.get()
+            if args is None:
+                break
+            result = fn(*args)
+            output_queue.put(result)
+
+        input_queue.put(None)
+        output_queue.put(None)
+
+    
 ParallelExecutorStr = Literal[
     "Sequential",
     "MultiProcessing",
     "FutureProcess",
     "FutureThread",
     "FutureMPI",
+    "MultiProcessingQueue",
 ]
 
 parallel_executor_dict: Final[dict[ParallelExecutorStr, type[ParallelExecutor]]] = {
@@ -323,7 +426,8 @@ parallel_executor_dict: Final[dict[ParallelExecutorStr, type[ParallelExecutor]]]
     "MultiProcessing": MultiProcessingPoolExecutor,
     "FutureProcess": FutureProcessExecutor,
     "FutureThread": FutureThreadExecutor,
-    "FutureMPI": FutureMPIExecutor,    
+    "FutureMPI": FutureMPIExecutor,
+    "MultiProcessingQueue": MultiProcessingQueueExecutor,
 }
 
 class Parallel(AbstractContextManager["Parallel"]):
