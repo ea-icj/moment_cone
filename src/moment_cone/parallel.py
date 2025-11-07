@@ -29,7 +29,7 @@ class ParallelExecutor(AbstractContextManager["ParallelExecutor"], ABC):
     def __init__(
             self, max_workers: Optional[int] = None,
             chunk_size: int = 1,
-            unordered: bool = False,
+            unordered: bool = True,
         ):
         """ Default parameters for an executor
         
@@ -149,7 +149,7 @@ class MultiProcessingPoolExecutor(ParallelExecutor):
     def __init__(self,
                 max_workers: Optional[int] = None,
                 chunk_size: int = 1,
-                unordered: bool = False,
+                unordered: bool = True,
                 *args: Any,
                 **kwargs: Any):
         """ Starting a parallel computation context
@@ -275,7 +275,7 @@ class FutureProcessExecutor(FutureParallelExecutor):
     def __init__(self,
                 max_workers: Optional[int] = None,
                 chunk_size: int = 1,
-                unordered: bool = False,
+                unordered: bool = True,
                 *args: Any,
                 **kwargs: Any):
         executor = futures.ProcessPoolExecutor(max_workers, *args, **kwargs)
@@ -291,7 +291,7 @@ class FutureThreadExecutor(FutureParallelExecutor):
     def __init__(self,
                 max_workers: Optional[int] = None,
                 chunk_size: int = 1,
-                unordered: bool = False,
+                unordered: bool = True,
                 *args: Any,
                 **kwargs: Any):
         executor = futures.ThreadPoolExecutor(max_workers, *args, **kwargs)
@@ -307,7 +307,7 @@ class FutureMPIExecutor(FutureParallelExecutor):
     def __init__(self,
                 max_workers: Optional[int] = None,
                 chunk_size: int = 1,
-                unordered: bool = False,
+                unordered: bool = True,
                 *args: Any,
                 **kwargs: Any):
         from mpi4py.futures import MPIPoolExecutor
@@ -331,7 +331,7 @@ class MultiProcessingQueueExecutor(ParallelExecutor):
             self,
             max_workers: Optional[int] = None,
             chunk_size: int = 1,
-            unordered: bool = False,
+            unordered: bool = True,
         ):
         if max_workers is None:
             from multiprocessing import cpu_count
@@ -449,7 +449,7 @@ class Parallel(AbstractContextManager["Parallel"]):
     def configure(executor_class: type[ParallelExecutor] | ParallelExecutorStr = "FutureProcess",
                   max_workers: Optional[int] = None,
                   chunk_size: int = 1,
-                  unordered: bool = False,
+                  unordered: bool = True,
                   **kwargs: Any) -> None:
         """ Configure the parallel executor class and it's init parameters """
         if isinstance(executor_class, str):
@@ -529,9 +529,9 @@ class Parallel(AbstractContextManager["Parallel"]):
             help="Number of tasks to pass to each work at once. You should increase this value in order to reduce overhead when there are enough tasks comparing to the number of workers."
         )
         group.add_argument(
-            "--unordered",
+            "--ordered",
             action="store_true",
-            help="Yield elements when ready, possibly out of order. It may slow down the computation but it is necessary to have a working --lazy in parallel."
+            help="Force elements to be yielded in order, even when using lazy computation in parallel. It can increase computational time."
         )
 
     @classmethod
@@ -541,6 +541,6 @@ class Parallel(AbstractContextManager["Parallel"]):
             executor_class=config.parallel,
             max_workers=config.max_workers,
             chunk_size=config.chunk_size,
-            unordered=config.unordered,
+            unordered=not config.ordered,
         )
         return Parallel()
