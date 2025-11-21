@@ -1,9 +1,11 @@
 [build-system]
 requires = [
-    "setuptools>=64",
-    "wheel"
+    "wheel",
+    "scikit-build-core",
+    "pybind11",
 ]
-build-backend = "setuptools.build_meta"
+# See https://learn.scientific-python.org/development/guides/packaging-compiled/
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "moment_cone"
@@ -37,6 +39,7 @@ requires-python = ">=3.11"
 dependencies = [
    "tqdm", # Progress bar
    "numpy>=2", # Numpy with proper type handling
+   "python-flint", # Python wrapper around FLINT (Fast Library for Number Theory)
 ]
 
 [project.optional-dependencies]
@@ -46,6 +49,8 @@ dev = [
    "line_profiler", # Profiling functions by line_profiler
    "pyprof2calltree", # Converter of functions call stats for kcachegrind
    "types-tqdm", # Stubs for tqdm
+   "sphinx", # Documentation
+   "sphinx-autodoc-typehints", # Type annotation in the doc
 ]
 
 [project.scripts]
@@ -58,3 +63,4 @@ repository = "https://github.com/ea-icj/moment_cone"
 
 [tool.mypy]
 plugins = "numpy.typing.mypy_plugin"
+

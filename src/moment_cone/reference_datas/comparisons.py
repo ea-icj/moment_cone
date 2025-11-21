@@ -1,88 +1,137 @@
+__all__ = (
+    "Comparison",
+    "compare",
+    "compare_ineq_mod_sym_dim",
+    "compare_to_reference",
+)
 
-from .ineq_Python_4_4_4_1_kron_Vergne_Walter import *
-from .ineq_Python_7_fermion_3_Klyachko import *
-from .ineq_Python_8_fermion_3_Klyachko import *
-from .ineq_Python_8_fermion_4_Klyachko import *
+from functools import cached_property
 
 from ..tau import *
 from ..representation import *
 from ..inequality import *
 from ..typing import *
 
+class Comparison(Generic[T]):
+    """ Compare two lists of elements """
+    set1: set[T]
+    set2: set[T]
+    element_name: str
+    source1: str
+    source2: str
+
+    def __init__(
+        self,
+        list1: Iterable[T], #: first list
+        list2: Iterable[T], #: second list
+        element_name: Optional[str] = None, #: display name of the elements
+        source1: str = "1", #: origin of the first list
+        source2: str = "2", #: origin of the second list
+    ):
+        self.set1 = set(list1)
+        self.set2 = set(list2)
+
+        if element_name is None:
+            from itertools import chain
+            try:
+                an_element = next(chain(self.set1, self.set2))
+            except StopIteration:
+                element_name = "element"
+            else:
+                element_name = type(an_element).__name__
+        self.element_name = element_name
+
+        self.source1 = source1
+        self.source2 = source2
+
+    def __bool__(self) -> bool:
+        """ Returns true if the two lists are identical """
+        return self.set1 == self.set2
+    
+    @cached_property
+    def intersection(self) -> set[T]:
+        return self.set1 & self.set2
+    
+    @cached_property
+    def only1(self) -> set[T]:
+        return self.set1 - self.set2
+
+    @cached_property
+    def only2(self) -> set[T]:
+        return self.set2 - self.set1
+
+    def __repr__(self) -> str:
+        from textwrap import dedent
+        return dedent(f"""
+        The two lists of {self.element_name} are {"identical" if self else "different"}:
+        {len(self.set1)} {self.element_name} from first list of {self.source1} vs {len(self.set2)} {self.element_name} from second list of {self.source2}
+        {len(self.intersection)} {self.element_name} are in both lists
+        {len(self.only1)} {self.element_name} appearing only in the first list of {self.source1}
+        {len(self.only2)} {self.element_name} appearing only in the second list of {self.source2}
+        """).strip()
+
 
 #TODO check unitary tests
 def compare(
         list1: Iterable[T],
         list2: Iterable[T],
-        comment0: str ="elements",
-        comment1: str = "1",
-        comment2: str ="2"
-    ) -> tuple[set[T], set[T]]:
+        element_name: Optional[str] = None,
+        source1: str = "1",
+        source2: str = "2",
+    ) -> Comparison[T]:
     """ Compares two lists. returns elements from the first one that don't belong to the second one and conversely.
     elements have to be hashable (e.g. tuples) so that set(list1) works
-    optional arguments comments are here to caracterise the nature of elements (comment0) and particularities of the compared lists (cf compareK_ineq and compareVW_ineq below)
-    >>>compare([(1,3,6),(2,4,9)],[(1,3,6),(12,43,24),(1,3,6)])
+    optional arguments comments are here to caracterie the nature of elements (comment0) and particularities of the compared lists (cf compareK_ineq and compareVW_ineq below)
+
+    >>> compare([(1,3,6),(2,4,9)],[(1,3,6),(12,43,24),(1,3,6)])
     2 elements from list 1  vs  2 elements from list 2
     1 elements in both lists
     1 elements appearing only in list 1 {(2, 4, 9)}
     1 elements appearing only in list 2 {(12, 43, 24)}
     [{(2, 4, 9)}, {(12, 43, 24)}]
     """
-    set1=set(list1)
-    set2=set(list2)
-    print(len(list(set1)), comment0, "from list", comment1, " vs ", len(list(set2)), comment0, "from list", comment2)
+    return Comparison(list1, list2, element_name, source1, source2)
 
-    #if not((k,n) in [(3,7),(3,8),(4,8)]:
-    #   print "case not supported by Klyachko"
-    inter=set1.intersection(set2)
-    print(len(list(inter)),comment0," in both lists")
-    only = set1-set2, set2-set1
-    print(len(only[0]), comment0, "appearing only in list",comment1)
-    print(len(only[1]), comment0, "appearing only in list",comment2)
-    return only
 
 def compare_ineq_mod_sym_dim(
         list1_ineq: Iterable[Inequality],
         list2_ineq: Iterable[Inequality],
-        comment1: str = "1",
-        comment2: str = "2"
-    ) -> tuple[set[Tau], set[Tau]]:
-    #assumes that list1 and list2 are lists of inequalities in a Kronecker representation
-    list1_tau=unique_modulo_symmetry_list_of_tau([ineq.wtau.end0_representative for ineq in list1_ineq])
-    list2_tau=unique_modulo_symmetry_list_of_tau([ineq.wtau.end0_representative for ineq in list2_ineq])
-    return compare(list1_tau,list2_tau,"inequalities",comment1,comment2)
-    
+        source1: str = "1",
+        source2: str = "2"
+    ) -> Comparison[Inequality]:
+    list1_ineq = set(list1_ineq)
+    list2_ineq = set(list2_ineq)
 
-def compare_to_reference(list_ineq: Sequence[Inequality], V: Representation) -> Optional[tuple[set[Inequality], set[Inequality]]]:
+    from collections import defaultdict
+    from itertools import chain
+    tau_ineq: dict[Tau, set[Inequality]] = defaultdict(set)
+    for ineq in chain(list1_ineq, list2_ineq):
+        tau = ineq.wtau.end0_representative.sort_mod_sym_dim
+        tau_ineq[tau].add(ineq)
+
+    unique_ineq1: set[Inequality] = set()
+    unique_ineq2: set[Inequality] = set()
+    for ineqs in tau_ineq.values():
+        if ineqs & list1_ineq: unique_ineq1.add(next(iter(ineqs)))
+        if ineqs & list2_ineq: unique_ineq2.add(next(iter(ineqs)))
+
+    return compare(unique_ineq1, unique_ineq2, "inequalities (up to S3-sym)", source1, source2)
+        
+
+def compare_to_reference(list_ineq: Sequence[Inequality], V: Representation, source: str = "user") -> Comparison[Inequality]:
     """
     list_ineq is a list of Inequalities computed for a certain representation V.
     If exists, it will be compared to a reference list of inequalities (currently only the cases of Klyachko.py for fermions and Vergne_Walter.py for kronecker)
     Other references can be added later
     """
-    if isinstance(V,FermionRepresentation):
-        n=V.G[0]
-        k=V.particle_cnt
-        if (k,n)==(3,7):
-            reference=inequalities_K37
-        elif (k,n)==(3,8):
-            reference=inequalities_K38
-        elif (k,n)==(4,8):
-            reference=inequalities_K48
-        else:
-            print("no reference for", V,"included")
-            return None
-        return compare(list_ineq,reference, "inequalities", " computed","of reference (Klyachko)")
-    elif isinstance(V,KroneckerRepresentation):
-        reference_sym=[Inequality.from_tau(ineq.wtau.sort_mod_sym_dim) for ineq in inequalities_VW444]
-        list_ineq_sym= [Inequality.from_tau(ineq.wtau.sl_representative.sort_mod_sym_dim) for ineq in list_ineq]
-        if tuple(V.G)==(4,4,4,1):
-            return compare(list_ineq_sym, reference_sym,"inequalities (up to S3-sym)"," computed","of reference (Vergne-Walter)")
-        else:
-            print("no reference for", V,"included")
-            return None
+    from . import get_reference_ineqs
+    source_ref, reference = get_reference_ineqs(V)
+    element_name = "inequalities"
+    if isinstance(V, KroneckerRepresentation):
+        return compare_ineq_mod_sym_dim(list_ineq, reference, source, source_ref)
     else:
-        print("no reference for", V,"included")
-        return None
+        return compare(list_ineq, reference, element_name, source, source_ref)
+
 
 
 

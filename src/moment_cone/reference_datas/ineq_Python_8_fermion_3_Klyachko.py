@@ -1,16 +1,8 @@
 #Inequalities selected for V of boson type with dimensions [8]with number of particules = 3
-__all__ = (
-    'inequalities_K38',
-)
+from moment_cone import *
 
-
-from ..linear_group import LinearGroup
-from ..representation import *
-from ..inequality import Inequality
-from ..tau import Tau
-
-G=LinearGroup([8]) 
-V= FermionRepresentation(G, particle_cnt=3 )
+G = LinearGroup([8]) 
+V = FermionRepresentation(G, particle_cnt=3 )
  
 brut_inequations=[(2, -1, -1, -1, -1, -1, -1, 2), 
 (-2, 1, 1, 1, 1, -2, -2, -2), 
@@ -46,6 +38,7 @@ brut_inequations=[(2, -1, -1, -1, -1, -1, -1, 2),
  ] 
 
 #inequalities in our formated type Inequality 
-inequalities_K38=[Inequality.from_tau(Tau.from_flatten(brut_ineq,G)) for brut_ineq in brut_inequations] 
- 
+inequalities=[Inequality.from_tau(Tau.from_flatten(brut_ineq,G)) for brut_ineq in brut_inequations] 
+source = "Klyachko"
+
  

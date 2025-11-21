@@ -10,10 +10,10 @@ doctest:
 	python3 -m pytest --doctest-modules --verbose --ignore=src/moment_cone/reference_datas src/moment_cone
 
 mypy:
-	python3 -m mypy --install-types --check-untyped-defs --exclude=src/moment_cone/reference_datas src/moment_cone tests
+	python3 -m mypy --install-types --check-untyped-defs --exclude=src/moment_cone/reference_datas/ineq_ src/moment_cone tests
 
 mypy_strict:
-	python3 -m mypy --install-types --strict --no-warn-unused-ignores src/moment_cone tests
+	python3 -m mypy --install-types --strict --no-warn-unused-ignores --exclude src/moment_cone/reference_datas/ineq_ src/moment_cone tests
 
 
 fixme:

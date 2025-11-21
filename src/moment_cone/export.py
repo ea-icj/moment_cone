@@ -24,6 +24,24 @@ ExportFormat = Literal[
     "None",
 ]
 
+def generate_file_name(V: Representation, extra_info: str = "", extension: str = "") -> str:
+    """ Generate file name where the inequations are exported """
+    repr_str = type(V).__name__[:-len("Representation")]
+
+    dimensions = list(V.G)
+    if isinstance(V, KroneckerRepresentation):
+        dimensions.pop()
+    G_str = "_".join(str(d) for d in dimensions)
+
+    name = f"ineq_{repr_str}_{G_str}"
+    if isinstance(V, ParticleRepresentation):
+        name += f"_p{V.particle_cnt}"
+    if extra_info:
+        name += f"_{extra_info}"
+    if extension:
+        name += f".{extension}"
+
+    return name
 
 #######################################################################
 #I.a Normaliz export
@@ -45,7 +63,7 @@ def Liste_to_Normaliz_string(liste: list[list[int]], sgn: int = 1) -> str: #sgn=
 def info_from_GV(V: Representation) -> str:
     """ V a representation of a LinGroup G. It returns a nomalized string encoding the main information on G and V. To be used in the names of the input files given to Normaliz"""
     G = V.G
-    info = '-'.join(str(d) for d in G)
+    info = '_'.join(str(d) for d in G)
     info += "_" + type(V).__name__
     if isinstance(V, ParticleRepresentation):
         info += "_" + str(V.particle_cnt)
@@ -82,8 +100,8 @@ def export_normaliz(
         sym = add_dominance != "all"
         True_inequations += [list(ineq.wtau.flattened) for ineq in Inequality.dominance(V,sym)]
 
-    info=info_from_GV(V)+extra_info
-    fileO = open('ineq_Normaliz-'+info+'.in','w')
+    file_name = generate_file_name(V, extra_info, "in")
+    fileO = open(file_name, 'w')
     fileO.write('amb_space '+str(r)+'\n\n')
     new_equations=[] #copy of the list
     if add_equations in ["all","sym"] and isinstance(V, KroneckerRepresentation):
@@ -152,7 +170,7 @@ def Latex_string_of_tau(
         lambda_notation: bool = False,
         sgn: int = 1
         ) -> str:
-    chaine=''
+    chaine='$'
     if not lambda_notation:
         for taui in tau.components:
             if len(taui)>1:
@@ -177,7 +195,7 @@ def Latex_string_of_tau(
                 chaine+='\\lambda_{'+str(i+1)+'}'
                 started=True
         chaine+='\\geq 0'
-    return chaine 
+    return chaine+'$'
 
 def Latex_string_of_cluster_dom1PS(
         inequations: Sequence[Inequality],
@@ -187,7 +205,7 @@ def Latex_string_of_cluster_dom1PS(
     """ converts a list of Inequalities (associated to a given dominant 1PS  taudom) to a string describing part of a latex tabular
     """
     n=len(inequations)
-    chaine='\\multirow{'+str(n)+'}{*}{'
+    chaine='\\multirow[t]{'+str(n)+'}{*}{ '
     chaine+=Latex_string_of_tau(inequations[0].tau, False, sgn)+' } ' 
     for ineq in inequations:
         chaine+=' & '+Latex_string_of_tau(ineq.wtau, lambda_notation, sgn)+' & '
@@ -245,16 +263,16 @@ def export_latex(
         if isinstance(V, BosonRepresentation):
             caption="Bosonic case $S^{"+str(V.particle_cnt)+"}\\mathbb{C}^{"+str(V.G[0])+"}$"
     grouped_ineqs=group_by_dom1PS(list(inequations))
-    chaine='$\\begin{array}{|c| c |c|} \n \\hline \n \\textrm{dominant 1-PS} & \\textrm{Inequality} & w \\\\ \n \\hline'
+    chaine='\\hline \n \\textrm{dominant 1-PS} & \\textrm{Inequality} & $w$ \\\\ \n \\hline'
     for taudom_list in grouped_ineqs:
         chaine+=Latex_string_of_cluster_dom1PS(taudom_list,lambda_notation,sgn) 
-    chaine+='\\end{array}$'
-    info=info_from_GV(V)+extra_info
-    file0 = open('ineq_Latex-'+info+'.tex','w')
+    chaine+=''
+    file_name = generate_file_name(V, extra_info, "tex")
+    file0 = open(file_name, 'w')
     
-    file0.write("\\documentclass[12pt]{article} \n \\usepackage{amsmath,amssymb} \n \\usepackage{multirow} \n \\usepackage{graphicx} \n \n  \\begin{document}\n \n \\begin{table}\n \\caption{"+ caption+"}\n")
+    file0.write("\\documentclass[11pt]{article} \n \\usepackage{amsmath,amssymb} \n \\usepackage{multirow} \n \\usepackage{graphicx} \n  \\usepackage{longtable} \n \\usepackage[landscape,left=1cm,right=1cm]{geometry} \n \\usepackage{changepage} \n \n  \\begin{document}\n \n \\begin{longtable}[l]{|c|c|c|} \n \\caption{"+ caption+"} \\\\  \n \n ")
     file0.write(chaine)
-    file0.write("\n \n \\end{table} \n \\end{document}")
+    file0.write("\n  \n \\end{longtable} \n \\end{document}")
     file0.close()
 
 
@@ -267,12 +285,15 @@ def export_python(
         inequations: Iterable[Inequality],
         extra_info: str = ""
         ) -> None:
-    info=info_from_GV(V)+extra_info
-    file0 = open('ineq_Python-'+info+'.py','w')
-    file0.write("#Inequalities selected for V of " + type(V).__name__ + " type with dimensions "+str(list(V.G)))
+    file_name = generate_file_name(V, extra_info, "py")
+    file0 = open(file_name, 'w')
+    file0.write("# Inequalities selected for V of " + type(V).__name__ + " type with dimensions "+str(list(V.G)))
     if isinstance(V, ParticleRepresentation):
-       file0.write("with number of particules = "+str(V.particle_cnt))
-    file0.write("\n \nG=LinearGroup("+str(list(V.G))+") \n")
+       file0.write(f"with number of particules = {V.particle_cnt}")
+    file0.write("\n")
+
+    print("from moment_cone import *", file=file0)
+    print(f"G = LinearGroup({list(V.G)})", file=file0)
     chain = f"V = {type(V).__name__}(G"
     if isinstance(V, ParticleRepresentation):
        chain+=", "+str(V.particle_cnt)
@@ -283,8 +304,9 @@ def export_python(
         chain+=str(ineq.wtau.flattened)+", \n"
     chain=chain[:-2]+" \n ] \n\n"   
     file0.write(chain)
-    file0.write("#inequalities in our formated type Inequality \n")
-    file0.write("inequalities=[Inequality.from_tau(Tau.from_flatten(brut_ineq,G)) for brut_ineq in brut_inequations] \n \n ")
+    file0.write("# inequalities in our formated type Inequality \n")
+    file0.write("inequalities = [Inequality.from_tau(Tau.from_flatten(brut_ineq,G)) for brut_ineq in brut_inequations]\n")
+    file0.write("source = 'moment_cone'\n")
     file0.close()
 
 

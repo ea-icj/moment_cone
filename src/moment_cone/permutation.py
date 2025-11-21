@@ -20,6 +20,7 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
     Using that convention, length computation is faster.
 
     Example:
+
     >>> from moment_cone.permutation import Permutation
     >>> p = Permutation((3, 2, 1, 4, 0, 5))
     >>> p
@@ -43,10 +44,10 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
     Permutation((2, 0, 1))
     Permutation((2, 1, 0))
     """
-    # Cache of instances of Permutation
+    #: Cache of instances of Permutation
     __all_instances: ClassVar[dict["Permutation", "Permutation"]] = {}
 
-    # Cache of permutations returned by Permutation.all_min_rep
+    #: Cache of permutations returned by Permutation.all_min_rep
     __all_min_rep: ClassVar[dict[tuple[int, ...], list["Permutation"]]] = {}
 
     def __new__(cls, indexes: Iterable[int] ) -> "Permutation":
@@ -54,6 +55,18 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         d = super().__new__(cls, indexes)
         return cls.__all_instances.setdefault(d, d)
 
+    def __getnewargs_ex__(self) -> tuple[tuple[tuple[int, ...]], dict[str, Any]]:
+        """ Minimal state that need to be passed to __new__ in order to get the proper instance """
+        return (tuple(self),), {}
+
+    def __getstate__(self) -> tuple[int, ...]:
+        """ Minimal state that reproduce the instance (for serialization) """
+        return tuple(self)
+    
+    def __setstate__(self, state: Any) -> None:
+        """ Restoring instance from it's serialization state """
+        pass
+    
     @staticmethod
     def from_inversions(n: int, inversions: Iterable[tuple[int, int]]) -> "Permutation":
         """
@@ -66,7 +79,6 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         Returns:
             The reconstructed permutation.
 
-        Example:
 
         >>> from moment_cone import Permutation
         >>> p = Permutation((2, 3, 5, 0, 4, 1))
@@ -148,7 +160,6 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         Denote its Weyl group by W_L
         w satisfies is_min_rep if it is a representative of W/W_L of minimal length
 
-        Example:
         >>> p = Permutation((1, 2, 3, 3, 4, 2, 3, 4, 5))
         >>> p.is_min_rep((3, 2, 4))
         True
@@ -183,7 +194,6 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
 
         n is defined by the sum of the block sizes.
 
-        Examples:
         >>> n = 7
         >>> symmetries = (2, 3, 2)
         >>> naive_way = filter(
@@ -280,7 +290,6 @@ class Permutation(tuple[int, ...]): # Remark: hash of p is hash of underlying tu
         Returns the list of permutation of e (each encoded by a permutation of the indices) such that the value in the i-th component of the permuted e is at most d[i]
         Outputs are irredundant modulo symmetries of e and d
         
-        Example:
         >>> d = [4, 4, 3, 3, 2]
         >>> e = [4, 3, 3, 2, 1]
         >>> emb = list(Permutation.embeddings_mod_sym(d, e))
@@ -384,7 +393,6 @@ class AllPermutationsByLength:
     this catalogue can use lot of memory to store each permutation,
     it's list of inversion, it's length, ...
 
-    Examples:
     >>> ap = AllPermutationsByLength(3)
     >>> len(ap) # Number of different lengths
     4
@@ -397,6 +405,7 @@ class AllPermutationsByLength:
 
     It is worth noting that this class ensure uniqueness of an instance for a given n
     so that it can be constructed multiple times for a same n without a computation time penalty.
+    
     >>> ap2 = AllPermutationsByLength(3)
     >>> ap is ap2
     True

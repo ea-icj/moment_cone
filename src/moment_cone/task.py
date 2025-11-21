@@ -3,6 +3,7 @@ import itertools
 import time
 from contextlib import contextmanager
 import logging
+from psutil import Process
 
 from .typing import *
 from .utils import getLogger
@@ -11,29 +12,60 @@ __all__ = (
     "Task",
     "TimeOutException",
     "timeout",
+    "timeout_process",
 )
 
 class Task(contextlib.AbstractContextManager["Task"]):
     """
     Context manager to measure and log task durations
 
-    Example:
-    with Task("Computing stuff"):
-        # do things
-        ...
-        ...
+    Remark that cpu time measurement may be inconsistent if processes
+    are created or destructed during the usage of this class.
 
-    Task.print_all()
+    Example:
+
+    >>> with Task("Computing stuff"):
+    ...    # do things
+    ...    pass
+
+    >>> Task.print_all() # doctest: +SKIP
+        interlude (Wall: 904.569ms, CPU: 892.139ms (99%))
+    Computing stuff: Done (Wall: 0.067ms, CPU: 0.066ms (98%))
+        interlude (Wall: 0.075ms, CPU: 0.075ms (100%))
+
+    Total of 1 tasks: Wall: 0.067ms, CPU: 0.066ms (98%)
+    Total of interludes: Wall: 904.644ms, CPU: 892.213ms (99%)
     """
     name: str
     perf_counter: tuple[Optional[int], Optional[int]]
     process_time: tuple[Optional[int], Optional[int]]
     level: int
 
+    process: Process = Process()
     all_tasks: ClassVar[list["Task"]] = [] # All created tasks (static)
     all_start: ClassVar[tuple[int, int]] = (time.perf_counter_ns(), time.process_time_ns())
     quiet: ClassVar[bool] = False
 
+    @classmethod
+    def current_wall_time(cls) -> int:
+        """ Wall time in ns """
+        return time.perf_counter_ns()
+    
+    @classmethod
+    def current_process_time(cls) -> int:
+        """ Process (including childrens) CPU time (user + system) """
+        from psutil import ZombieProcess, NoSuchProcess
+        all_cpu_times = 0.
+        for p in cls.process.children(recursive=True):
+            try:
+                cpu_times = p.cpu_times()
+            except (ZombieProcess, NoSuchProcess):
+                pass
+            else:
+                all_cpu_times += cpu_times.user + cpu_times.system
+
+        return round(1e9 * all_cpu_times) + time.process_time_ns()
+    
     @staticmethod
     def is_clear(task: "Task") -> TypeGuard["ClearTask"]:
         """ Is a task clear """
@@ -66,7 +98,7 @@ class Task(contextlib.AbstractContextManager["Task"]):
 
         stop: tuple[int, int]
         if t2 is None or not (Task.is_running(t2) or Task.is_finished(t2)):
-            stop = (time.perf_counter_ns(), time.process_time_ns())
+            stop = (cls.current_wall_time(), cls.current_process_time())
         else:
             stop = (t2.perf_counter[0], t2.process_time[0])
 
@@ -91,7 +123,7 @@ class Task(contextlib.AbstractContextManager["Task"]):
     def reset_all(cls) -> None:
         """ Clear the task list """
         cls.all_tasks.clear()
-        cls.all_start = (time.perf_counter_ns(), time.process_time_ns())
+        cls.all_start = (cls.current_wall_time(), cls.current_process_time())
 
     @classmethod
     def print_all(cls, disp_interlude: bool = True) -> None:
@@ -138,18 +170,17 @@ class Task(contextlib.AbstractContextManager["Task"]):
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         """ Leaving context """
         self.stop()
-        if not self.quiet:
-            self.self_log(format="{status} ({duration})", indent=1)
+        self.self_log(format="{status} ({duration})", indent=1)
 
     def start(self) -> None:
         assert Task.is_clear(self)
-        self.perf_counter = (time.perf_counter_ns(), None)
-        self.process_time = (time.process_time_ns(), None)
+        self.perf_counter = (self.current_wall_time(), None)
+        self.process_time = (self.current_process_time(), None)
 
     def stop(self) -> None:
         assert Task.is_running(self)
-        self.perf_counter = (self.perf_counter[0], time.perf_counter_ns())
-        self.process_time = (self.process_time[0], time.process_time_ns())
+        self.perf_counter = (self.perf_counter[0], self.current_wall_time())
+        self.process_time = (self.process_time[0], self.current_process_time())
 
     @property
     def duration(self) -> tuple[int, int]:
@@ -160,8 +191,8 @@ class Task(contextlib.AbstractContextManager["Task"]):
             )
         elif Task.is_running(self):
             return (
-                time.perf_counter_ns() - self.perf_counter[0],
-                time.process_time_ns() - self.process_time[0]
+                self.current_wall_time() - self.perf_counter[0],
+                self.current_process_time() - self.process_time[0]
             )
         else:
             return (0, 0)
@@ -186,9 +217,9 @@ class Task(contextlib.AbstractContextManager["Task"]):
         self.log(msg, level, indent)
 
     def log(self, msg: str, level: int = logging.INFO, indent: int = 0) -> None:
-        logger = getLogger(self.name, indentation_level=self.level + indent)
-        logger.log(level, msg)
-
+        if not self.quiet:
+            logger = getLogger(self.name, indentation_level=self.level + indent)
+            logger.log(level, msg)
 
 
 # Sub-classes to make type check working
@@ -215,6 +246,8 @@ def timeout(t: float, no_raise: bool = True) -> Generator[None]:
     """
     Decorator and context manager to limit wall execution time of a code
     
+    Negative or zero timeout disable the execution time.
+
     Example of usage as a decorator:
 
     >>> @timeout(10)
@@ -236,6 +269,7 @@ def timeout(t: float, no_raise: bool = True) -> Generator[None]:
     1 2 3
 
     Example of usage as a context manager with raised exception:
+    
     >>> a, b, c = 1, 2, 3
     >>> try:
     ...    with timeout(10, no_raise=False):
@@ -246,12 +280,41 @@ def timeout(t: float, no_raise: bool = True) -> Generator[None]:
     ...     pass # Some something when task didn't finished
     1 2 3
     """
-    from cysignals.alarm import alarm, AlarmInterrupt, cancel_alarm # type: ignore
-    try:
-        alarm(t)
+    if t <= 0:
         yield
-    except AlarmInterrupt:
-        if not no_raise:
+    else:
+        from cysignals.alarm import alarm, AlarmInterrupt, cancel_alarm # type: ignore
+        try:
+            alarm(t)
+            yield
+        except AlarmInterrupt:
+            if not no_raise:
+                raise TimeOutException("Time is out!")
+        finally:
+            cancel_alarm()
+
+def timeout_process(
+        f: Callable[[Unpack[Ts]], T],
+        args: tuple[Unpack[Ts]],
+        timeout: Optional[float] = None
+    ) -> T:
+    """
+    Limits tje wall execution time of a given function
+    
+    Negative or zero timeout disable the execution time.
+
+    Raise TimeOutException when execution reach the given limit.
+    This version use a separate process to control the execution time of the
+    function and may be more reliable than the other `timeout` decorator/context
+    that seems to leave Sage in an incorrect state.
+    """
+    if timeout is None or timeout <= 0:
+        return f(*args)
+    
+    from multiprocessing import Pool, TimeoutError
+    with Pool(processes=1) as pool:
+        result = pool.apply_async(f, args)
+        try:
+            return result.get(timeout=timeout)
+        except TimeoutError:
             raise TimeOutException("Time is out!")
-    finally:
-        cancel_alarm()

@@ -184,15 +184,13 @@ def long_calculation(Liste: Iterable[T], function: Callable[..., U], lim: float,
     computes function applied to each element, (and common list of extra_arguments for each call)
     if time of computation exceeds lim seconds, computation is stopped.
     """
-    from .task import timeout, TimeOutException
+    from .task import timeout_process, TimeOutException
     from .utils import getLogger
     logger = getLogger("groebner.long_calculation")
     Res: list[tuple[int, T, Optional[U]]] = []
     for i, l in enumerate(Liste):
         try:
-            with timeout(lim, no_raise=False):
-                logger.debug(f'starting calculation {i}')
-                resl = function(l,*extra_arguments)
+            resl = timeout_process(function, (l, *extra_arguments), timeout=lim)
         except TimeOutException:
            logger.debug(f'{i} did not complete in {lim} seconds!')
            Res.append((i, l, None))

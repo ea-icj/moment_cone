@@ -116,7 +116,6 @@ def List_Inv_W_Mod_rec(
     recursive part for computing the list of inversion sets compatible with W^{P(tau) and with the C^*-module V^{tau>0}.
     
     """
-    #print('sum_sym',sum_sym)
     if len(List_pos)==0: #last position already hit, we thus have a set of inversions compatible with constraints; converted to a format compatible with attribute ._gr_inversions of an element of class Inequality
         #print(Table_part_2_inv_dic(nbs_blocks,sizes_blocks,weights_grid,current_inv))
         return [Table_part_2_inv_dic(nbs_blocks,sizes_blocks,weights_grid,current_inv)]
@@ -203,15 +202,11 @@ def Table_part_2_inv_dic(
             for j in range(i,a):
                 #for i1,k in enumerate(T[pos,i,j][::-1]):
                 for i1 in range(sizes_blocks[pos,i]-1,-1,-1):
-                #for i1 in range(len(T[pos,i,j]),-1,-1):
                     l=T[pos,i,j][i1] 
                     for j1 in range(l):
-                        #if (pos, shift_i+i1,shift_j+j1)==(0,1,3):
-                        #    print(nbs_blocks, sizes_blocks, weights_grid,T)
                         result[weights_grid[pos,i,j]].append( Root( pos, shift_i+sizes_blocks[pos,i]-i1-1,shift_j+j1)) 
                 shift_j+=sizes_blocks[pos,j+1]
             shift_i+=sizes_blocks[pos,i]
-    #print(result.keys())
     """mt=True
     mf=False
     for kk in result.keys():
@@ -277,20 +272,21 @@ def Check_Rank_Tpi(ineq : Inequality, V: Representation, method: Method) -> bool
         gr_idx=[a.index_in_all_of_U(G) for a in gr[x]]
         gw_idx=[V.index_of_weight(chi) for chi in gw[x]]
         if method == "probabilistic" :
-            Mn = V.T_Pi_3D(method, "imaginary")[np.ix_([0, 1], chi_Vtau_idx, gw_idx, gr_idx)].sum(axis=1)
-            M = matrix(
-                len(gr_idx),
-                len(gr_idx),
-                lambda i, j: QQ(Mn[0, i, j]) + I * QQ(Mn[1, i, j])
-            )
-            rank_M = M.rank()
+            for p in range(V.random_deep):
+                Mn = V.T_Pi_3D(method, "imaginary")[np.ix_([2*p, 2*p+1], chi_Vtau_idx, gw_idx, gr_idx)].sum(axis=1)
+                M = matrix(
+                    len(gr_idx),
+                    len(gr_idx),
+                    lambda i, j: QQ(Mn[0, i, j]) + I * QQ(Mn[1, i, j])
+                    )
+                rank_M = M.rank()
+                if rank_M == len(gr_idx):
+                    break
         else :
             Mn = V.T_Pi_3D(method, "imaginary")[np.ix_(chi_Vtau_idx, gw_idx, gr_idx)].sum(axis=0) 
             M = matrix(ring,Mn)
             rank_M = M.rank()
         
-        #M=matrix(ring,Mn)
-        #rank_M = M.change_ring(ring.fraction_field()).rank()
         if rank_M < len(gr_idx):
                return False
     return True       

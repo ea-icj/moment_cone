@@ -14,7 +14,6 @@ class LinearGroup(tuple[int, ...]):
     """
     Product of Linear Groups GL(d_i)
 
-    Examples:
     >>> G = LinearGroup((4, 4, 3, 2))
     >>> G
     GL(4)xGL(4)xGL(3)xGL(2)
@@ -29,6 +28,7 @@ class LinearGroup(tuple[int, ...]):
 
     It should also be noted that this class ensure uniqueness of an instance
     for a given sequence of dimensions:
+    
     >>> G2 = LinearGroup((4, 4, 3, 2))
     >>> G == G2
     True
@@ -74,7 +74,6 @@ class LinearGroup(tuple[int, ...]):
         
         Warning : need d_i and e_i given ordered
 
-        Examples:
         >>> G1 = LinearGroup((5, 3, 2))
         >>> G2 = LinearGroup((2, 2, 1))
         >>> G2.u_max(G2)

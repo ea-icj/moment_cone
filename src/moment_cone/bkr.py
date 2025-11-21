@@ -399,7 +399,7 @@ def multiplicity_SV_tau_particle(
         assert len(ListP) == 0 or all(len(ListPi) == len(ListP[0]) for ListPi in ListP)
         for i in range(len(ListP)):
             for j,nb in enumerate(ListP[i]):
-                max_lengths[i,j] = type(V)(LinearGroup([tau.reduced.mult[0][j]]),particle_cnt=nb).dim
+                max_lengths[i,j] = V.reduce(LinearGroup([tau.reduced.mult[0][j]]),particle_cnt=nb).dim
         #List_of_Lambdas,K=all_lambda_matrix(delta, max_length,1)
         
         # Runnig over the pairs Mu, Lambda #TODO : appelées mutilde et lambdatilde jeudi matin    

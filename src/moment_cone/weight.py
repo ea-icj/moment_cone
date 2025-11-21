@@ -17,8 +17,8 @@ if TYPE_CHECKING:
 class Weight:
     """ A weight on which tau can be applied """
     G: LinearGroup
-    index: Optional[int] # Index for an optional generation order
-    mult: int # Multiplicity of this weight
+    index: Optional[int] #: Index for an optional generation order
+    mult: int #: Multiplicity of this weight
 
     def __init__(self,
                  G: LinearGroup,
@@ -44,6 +44,9 @@ class Weight:
             return NotImplemented
         return self.G == other.G and self.as_vector == other.as_vector
 
+    def __hash__(self) -> int:
+        return hash((self.G, tuple(self.as_vector)))
+    
     def leq(self,
             other: "Weight",
             symmetries: Optional[Iterable[int]] = None) -> bool:
@@ -52,7 +55,9 @@ class Weight:
 
         Used in type boson and fermion
         The convention is 
-                chi2.leq(chi,sym) and tau dominant => <chi2,tau> <= <chi2,tau>
+        
+            chi2.leq(chi,sym) and tau dominant => <chi2,tau> <= <chi2,tau>
+
         sym precise the sense of tau strictly dominant (decreasing on each
         block of sizes given by sym).
         """
@@ -125,12 +130,11 @@ class WeightAsList(Weight):
         """
         Implementation of self <= other (partial ordering)
         
-        Example:
         >>> from .representation import KroneckerRepresentation
-        >>> G = LinearGroup((3, 2))
+        >>> G = LinearGroup((3, 2, 1))
         >>> K = KroneckerRepresentation(G)
-        >>> chi1 = K.weight((2, 1))
-        >>> chi2 = K.weight((2, 0))
+        >>> chi1 = K.weight((2, 1, 0))
+        >>> chi2 = K.weight((2, 0, 0))
         >>> chi1 <= chi2
         True
 
@@ -154,6 +158,9 @@ class WeightAsList(Weight):
         if not isinstance(other, WeightAsList):
             return NotImplemented
         return self.G == other.G and self.as_list == other.as_list
+
+    def __hash__(self) -> int:
+        return hash((self.G, self.as_list))
 
     def __repr__(self) -> str:
         return f"WeightAsList({self.as_list}" + (f", idx: {self.index}" if self.index is not None else "") + ")"
@@ -218,6 +225,9 @@ class WeightAsListOfList(Weight):
         if not isinstance(other, WeightAsListOfList):
             return NotImplemented
         return self.G == other.G and self.as_list_of_list == other.as_list_of_list
+
+    def __hash__(self) -> int:
+        return hash((self.G, self.as_list_of_list))
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.as_list_of_list}" + (f", idx: {self.index}" if self.index is not None else "") + ")"

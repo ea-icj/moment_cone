@@ -76,7 +76,6 @@ class KroneckerCoefficient:
     """
     Base class for computing the Kronecker coefficient of partitions.
 
-    Example:
     >>> kc = KroneckerCoefficient()
     >>> partitions = (3, 1, 1, 1, 1, 1), (4, 3, 1), (2, 2, 2, 2), (5, 1, 1, 1), (4, 2, 1,1)
     >>> partitions = tuple(Partition(p) for p in partitions)
@@ -143,7 +142,6 @@ class KroneckerCoefficientCache(KroneckerCoefficient):
     """
     Kronecker coefficient computation using cache to store the computed decompositions
 
-    Example:
     >>> kc = KroneckerCoefficientCache()
     >>> print(kc)
     KroneckerCoefficientCache(#cache=0 (), #hit=0, #miss=0)
@@ -242,7 +240,6 @@ class KroneckerCoefficientMLCache(KroneckerCoefficientCache):
     optimized from the decompositions of the sequence of partitions splitted
     in two parts.
 
-    Example:
     >>> kc = KroneckerCoefficientMLCache()
     >>> print(kc)
     KroneckerCoefficientMLCache(#cache=0 (), #hit=0, #miss=0)

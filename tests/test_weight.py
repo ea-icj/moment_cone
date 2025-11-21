@@ -43,13 +43,13 @@ class TestWeightAsList(unittest.TestCase):
     def test_all_index(self) -> None:
         import functools
         import operator
-        G = LinearGroup((4, 2, 3))
+        G = LinearGroup((4, 2, 3, 1))
         V = KroneckerRepresentation(G)
 
         all_weights = list(V.all_weights)
 
         self.assertEqual(len(all_weights), functools.reduce(operator.mul, G))
-        self.assertEqual(all_weights[8], WeightAsList(G, [1, 0, 2]))
+        self.assertEqual(all_weights[8], WeightAsList(G, [1, 0, 2, 0]))
         self.assertEqual(all_weights[-1], WeightAsList(G, [di - 1 for di in G]))
 
         for i, w in enumerate(all_weights):

@@ -4,6 +4,7 @@ import itertools
 import functools
 import operator
 import logging
+from collections.abc import Hashable
 
 __all__ = (
     "is_decreasing",
@@ -20,15 +21,22 @@ __all__ = (
     "compare_C_Mod",
     "quotient_C_Mod",
     "dictionary_list_lengths",
+    "orbit_symmetries",
     "unique_combinations",
     "to_literal",
     "get_function_by_name",
     "line_profiler",
-    "CachedClass",
     "fl_dic",
     "getLogger",
-    "FilteredSet",
+    "YieldableSet",
+    "UniqueFilter",
+    "generate_seed",
+    "manual_seed",
+    "merge_factorizations",
+    "PartialFunction",
+    "clear_cached_property",
 )
+
 
 if TYPE_CHECKING:
     from line_profiler import LineProfiler
@@ -61,7 +69,6 @@ def symmetries(values: Iterable[T]) -> Iterable[int]:
     """
     Returns the multiplicities of identical consecutive values in a sequence
     
-    Example:
     >>> tuple(symmetries((4, 4, 3, 2, 2, 2, 1)))
     (2, 1, 3, 1)
     """
@@ -90,8 +97,10 @@ def prod(values: Iterable[int]) -> int:
     6
     >>> prod([1, 2, 3, 0, 5])
     0
+    >>> prod([])
+    1
     """
-    return functools.reduce(operator.mul, values)
+    return functools.reduce(operator.mul, values, 1)
 
 def short_prod(values: Iterable[int]) -> int:
     """
@@ -101,6 +110,8 @@ def short_prod(values: Iterable[int]) -> int:
     6
     >>> short_prod([1, 2, 3, 0, 5])
     0
+    >>> short_prod([])
+    1
 
     Testing short-circuit feature:
     >>> g = iter([1, 2, 3, 0, 5])
@@ -122,7 +133,6 @@ def grading_dictionary(elements: Iterable[T], fn: Callable[[T], U]) -> dict[U, l
     From a sequence of elements and a function that applies on these elements,
     generates a dictionary that maps each image to it's preimage.
 
-    Example:
     >>> elements = range(40)
     >>> fn = lambda e: e % 7
     >>> gd = grading_dictionary(elements, fn)
@@ -145,7 +155,7 @@ def grading_dictionary(elements: Iterable[T], fn: Callable[[T], U]) -> dict[U, l
 def filter_dict_by_key(d: Mapping[T, U], predicate: Callable[[T], bool]) -> dict[T, U]:
     """
     Filter a dictionary using a predicate on its keys
-    Example:
+
     >>> elements = range(40)
     >>> fn = lambda e: e % 7
     >>> gd = grading_dictionary(elements, fn)
@@ -163,7 +173,6 @@ def extend_with_repetitions(seq: Sequence[T], l: int) -> Iterable[tuple[T, ...]]
     """
     From a sequence seq of length <= l with no repetition, returns the list of all expanded sequences of length l obtained from seq by repetitions of some elements.
 
-    Examples:
     >>> for l in extend_with_repetitions([1, 2, 3], 5):
     ...     print(l)
     (1, 2, 3, 3, 3)
@@ -190,7 +199,6 @@ def flatten_dictionary(dic: Mapping[U, Iterable[T]]) -> list[T]:
     """
     Returns the concatenation of all list stored as values in a dict.
     
-    Example:
     >>> d = {0: [1, 2], 1: [4, 5], 2: [3, 6, 7]}
     >>> sorted(flatten_dictionary(d))
     [1, 2, 3, 4, 5, 6, 7]
@@ -202,7 +210,6 @@ def dictionary_list_lengths(dic: Mapping[U, Sequence[T]]) -> dict[U, int]:
     """
     From a dictionary of list, returns the dictionary of the length of each list.
 
-    Example:
     >>> d = {0: [1, 2], 1: [4, 5], 2: [3, 6, 7]}
     >>> dl = dictionary_list_lengths(d)
     >>> for k in sorted(dl.keys()):
@@ -229,7 +236,6 @@ def compare_C_Mod(
 def quotient_C_Mod(M1 : dict[int, int], M2 : dict[int, int]) -> dict[int, int]:
     """ Quotient of two dictionary int -> int.
 
-    Examples:
     >>> d1 = {0: 0, 1: 1, 2: 2}
     >>> d2 = {0: 0, 2: 2}
     >>> quotient_C_Mod(d1, d2)
@@ -274,7 +280,6 @@ def orbit_symmetries(flatten: Iterable[T], symmetries: Iterable[int]) -> Generat
     - https://stackoverflow.com/questions/19676109/how-to-generate-all-the-permutations-of-a-multiset/
     - https://stackoverflow.com/questions/70057504/speed-up-multiset-permutations
 
-    Example:
     >>> orbits = orbit_symmetries((2, 2, 4, 1, 2, 1, 4), (3, 3, 1))
     >>> for p in orbits:
     ...     print(tuple(p))
@@ -300,7 +305,6 @@ def unique_combinations(mylist: Sequence[int], k: int) -> list[tuple[int, ...]]:
     The list is viewed as a multiset. 
     Create the list of multisets contained in list of cardinality k
 
-    Example :
     >>> unique_combinations([3,3,3,2,2,1],3)
     [(3, 3, 3), (3, 3, 2), (3, 3, 1), (3, 2, 2), (3, 2, 1), (2, 2, 1)]
     """
@@ -453,27 +457,6 @@ def fl_dic(D : dict[int, list["Root"]], L: list[int])-> dict[int, int]:
     return(result)    
     
 
-class CachedClass:
-    """ Base class that ensure instance uniqueness relatively to the construction arguments 
-    
-    It relies on a private class dictionary that maps the construction arguments
-    to a corresponding instance. In order to work, all arguments must be hashable.
-
-    Remark that when mixing positional and keyword arguments, it may leads to
-    different instances of a same object depending on the order and the type
-    of the arguments.
-    """
-    __all_instances: ClassVar[
-        dict[tuple[tuple[Any, ...], tuple[tuple[str, Any], ...]], Self]
-    ] = {}
-
-    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-        return cls.__all_instances.setdefault(
-            (args, tuple(kwargs.items())),
-            super().__new__(cls),
-        )
-
-
 class IndentedLogger(logging.LoggerAdapter[logging.Logger]):
     def __init__(
             self,
@@ -516,14 +499,13 @@ logging.basicConfig(level=logging.INFO, format="%(message)-80s {%(name)s}")
 logging.getLogger('asyncio').setLevel(logging.WARNING)
 
 
-class FilteredSet(Generic[T]):
-    """ Set with additional filter
+class YieldableSet(Generic[T]):
+    """ Set with yield support while updating and filtering capability
     
     This implement also allows to iterate through the added elements that were
     not already in the set, using the `yield_update` method.
 
-    Example:
-    >>> s = FilteredSet(lambda v: v % 2 == 0)
+    >>> s = YieldableSet(lambda v: v % 2 == 0)
     >>> list(s.yield_update(range(6)))
     [0, 2, 4]
     >>> list(s.yield_update(range(6))) # Elements are already in the set
@@ -561,4 +543,191 @@ class FilteredSet(Generic[T]):
 
     def __repr__(self) -> str:
         return repr(self.data)
+
+
+class UniqueFilter(Generic[T]):
+    """ Filter an iterator by unique (hashable) elements
+    
+    Examples :
+
+    >>> list(filter(UniqueFilter(), (1, 2, 3, 1, -1, 10, 3, -1, 4, 5, 2)))
+    [1, 2, 3, -1, 10, 4, 5]
+    >>> uf = UniqueFilter()
+    >>> list(filter(uf, range(5)))
+    [0, 1, 2, 3, 4]
+    >>> list(filter(uf, range(7)))
+    [5, 6]
+    """
+    data: set[T]
+
+    def __init__(self) -> None:
+        self.data = set()
+
+    def __len__(self) -> int:
+        return len(self.data)
+    
+    def __iter__(self) -> Iterable[T]:
+        return iter(self.data)
+    
+    def __call__(self, element: T) -> bool:
+        if element not in self.data:
+            self.data.add(element)
+            return True
+        else:
+            return False
+
+    def __repr__(self) -> str:
+        return repr(self.data)
+
+
+class IterableHook(Generic[T]):
+    """ Add a hook at each read of an iterable while preserving methods
+    of the original iterable, like `__len__`
+
+    The hook is a callable that take a T as input and whose return is discarded
+    """
+    iterable: Iterable[T]
+    hook: Callable[[int, T], None]
+
+    def __init__(self, iterable: Iterable[T], hook: Callable[[int, T], Any]):
+        self.iterable = iterable
+        self.hook = hook
+
+    def __iter__(self) -> Iterator[T]:
+        for i, v in enumerate(self.iterable):
+            self.hook(i, v)
+            yield v
         
+    def __len__(self) -> int:
+        """ Length of the iterable (if available) """
+        return len(cast(Sequence[T], self.iterable))
+    
+    def __getitem__(self, idx: int) -> T:
+        """ Access to an element """
+        item = cast(Sequence[T], self.iterable)[idx]
+        self.hook(idx, item)
+        return item
+    
+    def __getattr__(self, name: str) -> Any:
+        """ Forward access to missing attributes & methods to the iterable """
+        return getattr(self.iterable, name)
+    
+
+def generate_seed(
+        seed: Optional[int] = None,
+        extra: Optional[Hashable] = None,
+        nbytes: int = 8
+    ) -> int:
+    """ Generate a random generator seed
+
+    If extra is given, a kind of sub-seed is generated from seed and for this
+    specific extra (need to be hashable).
+
+    Returns the generated seed.
+
+    Examples :
+
+    >>> seed = generate_seed()
+    >>> seed1 = generate_seed(seed, ("Dummy", 1))
+    >>> seed == seed1
+    False
+    >>> seed2 = generate_seed(seed, ("Dummy", 2))
+    >>> seed1 == seed2
+    False
+    >>> seed3 = generate_seed(seed, ("Dummy", 1))
+    >>> seed1 == seed3
+    True
+    >>> seed4 = generate_seed(seed)
+    >>> seed == seed4
+    True
+    """
+    if seed is None:
+        import random
+        random.seed()
+        seed = int.from_bytes(random.randbytes(nbytes))
+    
+    if extra is not None:
+        import random
+        random.seed(hash((seed, extra)))
+        seed = int.from_bytes(random.randbytes(nbytes))
+    
+    return seed
+
+    
+def manual_seed(
+        seed: Optional[int] = None,
+        extra: Optional[Hashable] = None,
+        nbytes: int = 8,
+    ) -> int:
+    """ Generate and set the random generator seed
+
+    If a name is given, a kind of sub-seed is generated from seed and for this
+    specific name.
+
+    Returns the used seed. 
+    """
+    seed = generate_seed(seed, extra, nbytes)
+
+    import random
+    random.seed(generate_seed(seed, "Python", nbytes))
+    
+    import numpy as np
+    # Numpy seed is limited to 2**32 - 1
+    np.random.seed(generate_seed(seed, "Numpy", min(4, nbytes)))
+
+    from sage.all import set_random_seed # type: ignore
+    set_random_seed(generate_seed(seed, "Sage", nbytes))
+
+    return seed
+
+        
+def merge_factorizations(
+        delta_list: list[dict[T, int]],
+        size_blocks : list[int]
+    ) -> dict[T, list[int]]:
+    """
+    Merge a list of dictionaries (index -> polynomial -> value).
+    Result: dict with polynomial -> [index, min_value, sum_values,degJ].
+    """
+    result: dict[T, list[int]] = {}
+
+    for i, d in enumerate(delta_list):
+        for pol, val in d.items():
+            try:
+                curr_result = result[pol]
+            except KeyError:
+                result[pol] = [i, val, val, size_blocks[i+1] - size_blocks[i]]
+            else:
+                curr_result[2] += val
+                curr_i, curr_val, sum_val, curr_degJ = curr_result
+                degJ = size_blocks[i + 1] - size_blocks[i]
+                if val < curr_val or (val == curr_val and degJ < curr_degJ):
+                    curr_result[:] = [i, val, sum_val, degJ]
+
+
+    return result
+
+
+class PartialFunction:
+    """ Function wrapper with partially defined arguments
+    
+    Like functools.partial except that the arguments at execution are passed
+    at first positions.
+
+    TODO: typing
+    """
+    def __init__(self, func, *args, **kwargs):
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self, arg):
+        return self.func(arg, *self.args, **self.kwargs)
+    
+
+def clear_cached_property(obj: Any) -> None:
+    """ Clear all cached result of cache_property decorator """
+    # Probably non-consistent way of doing this by comparing
+    # dir and __dict__ so that intersection indicates cached_property
+    for prop in set(dir(obj)) & obj.__dict__.keys():
+        del obj.__dict__[prop]

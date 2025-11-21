@@ -52,7 +52,6 @@ class Root:
         """
         Returns all possible root from U for given dimensions
         
-        Example:
         >>> G = LinearGroup((2, 3))
         >>> for root in Root.all_of_U(G):
         ...     print(root)
@@ -89,7 +88,6 @@ class Root:
         
         FIXME: verify example
 
-        Example:
         >>> G = LinearGroup((2, 3))
         >>> for root in Root.all_of_B(G):
         ...     print(root)
@@ -139,7 +137,6 @@ class Root:
         """
         Returns all possible roots from G (i != j) for given dimensions
         
-        Example:
         >>> G = LinearGroup((2, 3))
         >>> for root in Root.all(G):
         ...     print(root)
@@ -163,7 +160,6 @@ class Root:
         """
         Returns all possible roots from T (i == j) for given dimensions
         
-        Example:
         >>> G = LinearGroup((2, 3))
         >>> for root in Root.all_of_T(G):
         ...     print(root)

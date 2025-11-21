@@ -188,7 +188,10 @@ class PolynomialRingForWeights:
     
     def __getattr__(self, name: str) -> Any:
         """ Forward access to missing attributes & methods to the internal Sage ring """
-        return getattr(self.sage_ring, name)
+        if name == "sage_ring":
+            return object.__getattribute__(self, "sage_ring")
+        else:
+            return getattr(self.sage_ring, name)
     
     def __getitem__(self, idx: Any) -> Any:
         """ Forward item reading to the internal Sage ring """
