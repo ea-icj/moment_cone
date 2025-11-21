@@ -8,7 +8,7 @@ from random import randint
 import itertools
 import numpy as np
 from numpy.typing import NDArray
-from sage.all import NumberField # type: ignore
+from sage.rings.number_field.number_field import NumberField as NumberField # type: ignore
 
 from .typing import *
 from .tau import Tau

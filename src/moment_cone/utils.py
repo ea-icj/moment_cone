@@ -675,7 +675,7 @@ def manual_seed(
     # Numpy seed is limited to 2**32 - 1
     np.random.seed(generate_seed(seed, "Numpy", min(4, nbytes)))
 
-    from sage.all import set_random_seed # type: ignore
+    from sage.misc.randstate import set_random_seed as set_random_seed # type: ignore
     set_random_seed(generate_seed(seed, "Sage", nbytes))
 
     return seed
