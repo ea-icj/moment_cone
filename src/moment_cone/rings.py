@@ -12,16 +12,16 @@ Remark: it is recommended to import this module instead of importing directly fr
 
 
 """
-from sage.rings.ring import Ring
+from sage.rings.ring import Ring # type: ignore
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing as PolynomialRing # type: ignore
 from sage.rings.polynomial.polynomial_element import Polynomial # type: ignore
 from sage.rings.polynomial.multi_polynomial_element import MPolynomial # type: ignore
 from sage.structure.element import Vector, Matrix # type: ignore
-from sage.modules.free_module_element import free_module_element as sage_vector
+from sage.modules.free_module_element import free_module_element as sage_vector # type: ignore
 from sage.matrix.constructor import Matrix as sage_matrix # type: ignore
-from sage.rings.integer_ring import Z as ZZ
-from sage.rings.rational_field import Q as QQ
-from sage.rings.imaginary_unit import I as I # type: ignore
+from sage.rings.integer_ring import ZZ # type: ignore
+from sage.rings.rational_field import QQ # type: ignore
+from sage.rings.imaginary_unit import I # type: ignore
 
 from .typing import *
 from .weight import *

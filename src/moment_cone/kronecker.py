@@ -10,8 +10,8 @@ __all__ = (
     "KroneckerCoefficientMLCache",
 )
 
-from sage.combinat.sf.sf import SymmetricFunctions
-from sage.rings.rational_field import Q as QQ # type: ignore
+from sage.combinat.sf.sf import SymmetricFunctions # type: ignore
+from sage.rings.rational_field import QQ # type: ignore
 
 from .typing import *
 from .partition import Partition
