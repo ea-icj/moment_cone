@@ -1,7 +1,9 @@
 import unittest
 import random
 
-from sage.all import ZZ, QQ, I # type: ignore
+from sage.rings.integer_ring import ZZ # type: ignore
+from sage.rings.rational_field import QQ # type: ignore
+from sage.rings.imaginary_unit import I # type: ignore
 
 from moment_cone.linear_group import LinearGroup
 from moment_cone.weight import Weight

@@ -52,6 +52,15 @@ dev = [
    "sphinx", # Documentation
    "sphinx-autodoc-typehints", # Type annotation in the doc
 ]
+passagemath = [
+   "lrcalc",
+   "sympy",
+   "passagemath-combinat",
+   "passagemath-modules",
+   "passagemath-polyhedra",
+   "passagemath-repl",
+   "passagemath-singular",
+]
 
 [project.scripts]
 moment_cone = "moment_cone.main:moment_cone_from_cmd"

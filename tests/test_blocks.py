@@ -75,7 +75,7 @@ class TestBlocks(unittest.TestCase):
         self.assertEqual(hash(b), hash(b4))
 
     def test_sage_immutable(self) -> None:
-        from sage.all import Integer # type: ignore
+        from sage.rings.integer import Integer as Integer # type: ignore
         from typing import Iterable
         def to_sage(*s: int) -> tuple[Integer]:
             return tuple(map(Integer, s))
