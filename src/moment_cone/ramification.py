@@ -125,7 +125,7 @@ def Compute_JA_square_free(ineq: Inequality, V: Representation) -> tuple[Polynom
             Jb.derivative(V.QV.variable(chi))
             for chi in zero_weights
         ]
-        from sage.all import gcd as sage_gcd # type: ignore
+        from sage.arith.misc import GCD as sage_gcd # type: ignore
         Jbred_denom: Polynomial = sage_gcd([Jb] + partial_derivatives)
         Jbred: Polynomial
         remainder: Polynomial

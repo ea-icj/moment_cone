@@ -2,7 +2,12 @@ import itertools
 from collections import defaultdict
 
 
-from sage.all import SymmetricFunctions,ZZ,QQ,vector,matrix,Polyhedron # type: ignore
+from sage.combinat.sf.sf import SymmetricFunctions
+from sage.rings.integer_ring import Z as ZZ
+from sage.rings.rational_field import Q as QQ
+from sage.modules.free_module_element import free_module_element as vector
+from sage.matrix.constructor import Matrix as matrix
+from sage.geometry.polyhedron.constructor import Polyhedron as Polyhedron # type: ignore
 import sage.libs.lrcalc.lrcalc as lr # type: ignore
 
 from .typing import *
