@@ -12,12 +12,21 @@ Remark: it is recommended to import this module instead of importing directly fr
 
 
 """
-from sage.all import Ring, PolynomialRing # type: ignore
+try:
+    import sage.all__sagemath_flint
+except ImportError:
+    import sage.all
+
+from sage.rings.ring import Ring # type: ignore
+from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing as PolynomialRing # type: ignore
 from sage.rings.polynomial.polynomial_element import Polynomial # type: ignore
 from sage.rings.polynomial.multi_polynomial_element import MPolynomial # type: ignore
 from sage.structure.element import Vector, Matrix # type: ignore
-from sage.all import vector as sage_vector, matrix as sage_matrix # type: ignore
-from sage.all import ZZ, QQ, I # type: ignore
+from sage.modules.free_module_element import free_module_element as sage_vector # type: ignore
+from sage.matrix.constructor import Matrix as sage_matrix # type: ignore
+from sage.rings.integer_ring import ZZ # type: ignore
+from sage.rings.rational_field import QQ # type: ignore
+from sage.rings.imaginary_unit import I # type: ignore
 
 from .typing import *
 from .weight import *
@@ -100,7 +109,8 @@ class PolynomialRingForWeights:
     Aggregate a Sage PolynomialRing with dedicated function to manage variables associated to weights.
 
     Examples:
-    >>> from sage.all import QQ, I
+    >>> from sage.rings.rational_field import QQ
+    >>> from sage.rings.imaginary_unit import I
     >>> QZ = PolynomialRingForWeights(QQ, "z")
     >>> QZ
     Univariate Polynomial Ring in z over Rational Field
@@ -150,7 +160,7 @@ class PolynomialRingForWeights:
             for s in seed
         ]
 
-        from sage.all import PolynomialRing
+        from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
         self.sage_ring = PolynomialRing(base_ring, variables_names)
         self.ring_gens = self.sage_ring.gens_dict() # Faster if we don't regenerate the dictionary at each variable access
         self.seed = seed

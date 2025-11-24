@@ -1,13 +1,13 @@
 import itertools
 
-from sage.all import  identity_matrix # type: ignore
+from sage.matrix.special import identity_matrix as identity_matrix # type: ignore
 
 from .root import *
 from .weight import *
 from .tau import *
 from .representation import *
 
-       
+
 def is_linear_triangular(V: Representation, tau: Tau, Invs: list[Root]) -> bool:
     """
     Check if a given list of equalities is Linear Trinagular or not.
