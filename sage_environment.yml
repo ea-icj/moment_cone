@@ -1,4 +1,4 @@
-name: sage
+name: moment_cone
 channels:
   - conda-forge
   - defaults
