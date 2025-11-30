@@ -456,7 +456,8 @@ class Parallel(AbstractContextManager["Parallel"]):
             from .utils import to_literal
             executor_class = cast(ParallelExecutorStr, to_literal(ParallelExecutorStr, executor_class))
             executor_class = parallel_executor_dict[executor_class]
-
+            
+        Parallel.shutdown()
         Parallel.executor_class = executor_class
         Parallel.max_workers = max_workers
         Parallel.chunk_size = chunk_size
