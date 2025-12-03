@@ -296,7 +296,7 @@ def export_python(
     print(f"G = LinearGroup({list(V.G)})", file=file0)
     chain = f"V = {type(V).__name__}(G"
     if isinstance(V, ParticleRepresentation):
-       chain+=", "+str(V.particle_cnt)
+       chain+=", particle_cnt="+str(V.particle_cnt)
     file0.write(chain+" )")
     file0.write("\n \nbrut_inequations=[")
     chain=""

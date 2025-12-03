@@ -118,14 +118,14 @@ def compare_ineq_mod_sym_dim(
     return compare(unique_ineq1, unique_ineq2, "inequalities (up to S3-sym)", source1, source2)
         
 
-def compare_to_reference(list_ineq: Sequence[Inequality], V: Representation, source: str = "user") -> Comparison[Inequality]:
+def compare_to_reference(list_ineq: Sequence[Inequality], V: Representation, source: str = "user", source_ref: Optional[str] = None) -> Comparison[Inequality]:
     """
     list_ineq is a list of Inequalities computed for a certain representation V.
     If exists, it will be compared to a reference list of inequalities (currently only the cases of Klyachko.py for fermions and Vergne_Walter.py for kronecker)
     Other references can be added later
     """
     from . import get_reference_ineqs
-    source_ref, reference = get_reference_ineqs(V)
+    source_ref, reference = get_reference_ineqs(V, source_ref)
     element_name = "inequalities"
     if isinstance(V, KroneckerRepresentation):
         return compare_ineq_mod_sym_dim(list_ineq, reference, source, source_ref)

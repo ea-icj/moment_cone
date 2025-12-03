@@ -26,7 +26,7 @@ RepresentationKeys: TypeAlias = tuple[
     Optional[int],   # particle count
 ]
 
-reference_ineqs: dict[RepresentationKeys, tuple[str, list[Inequality]]] = {}
+reference_ineqs: dict[RepresentationKeys, dict[str, list[Inequality]]] = {}
 
 def get_representation_keys(V: Representation) -> RepresentationKeys:
     """ Returns essential properties of the representation
@@ -38,18 +38,41 @@ def get_representation_keys(V: Representation) -> RepresentationKeys:
     else:
         return tuple(V.G), None
     
-def get_reference_ineqs(V: Representation) -> tuple[str, list[Inequality]]:
-    """ Returns reference inequalities for the given Representation 
+def get_reference_ineqs(V: Representation, source: Optional[str] = None) -> tuple[str, list[Inequality]]:
+    """ Returns reference inequalities for the given Representation and optional source
     
     Throw KeyError if no reference exists for this representation.
     """
-    return reference_ineqs[get_representation_keys(V)]
+    V_keys = get_representation_keys(V)
+    if V_keys not in reference_ineqs:
+        load_all_ineq_for_repr(V)
+    ineq_by_source = reference_ineqs[V_keys]
 
+    if source is None:
+        return next(iter(ineq_by_source.items()))
+    else:
+        return source, ineq_by_source[source.lower()]
 
-# Load all reference inequalities found in this folder
-for info in pkgutil.iter_modules(__path__):
-    if not info.name.startswith("ineq_"):
-        continue
-    module = importlib.import_module(f".{info.name}", package=__name__)
+def load_ineq_from_name(name: str) -> None:
+    """ Load inequalities for a given submodule name from reference_datas folder """
+    module = importlib.import_module(f".{name}", package=__name__)
     V = cast(Representation, module.V)
-    reference_ineqs[get_representation_keys(V)] = module.source, module.inequalities
+    source = cast(str, module.source)
+    inequalities = cast(list[Inequality], module.inequalities)
+    ineq_by_source = reference_ineqs.setdefault(get_representation_keys(V), dict())
+    ineq_by_source[source.lower()] = inequalities
+
+def load_all_ineq_for_repr(V: Representation) -> None:
+    """ Load inequalities for all sources of a given representation """
+    from ..export import generate_file_name
+    base_name = generate_file_name(V)[:-1]
+    for info in pkgutil.iter_modules(__path__):
+        # Not specific enough but OK
+        if info.name.lower().startswith(base_name.lower()):
+            load_ineq_from_name(info.name)
+
+def load_all_ineq() -> None:
+    """ Load all reference inequalities from reference_datas folder """
+    for info in pkgutil.iter_modules(__path__):
+        if info.name.lower().startswith("ineq_"):
+            load_ineq_from_name(info.name)

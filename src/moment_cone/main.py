@@ -60,8 +60,10 @@ def moment_cone_from_cmd() -> None:
     )
     parser.add_argument(
         "--check_inequalities",
-        action="store_true",
-        help="Check computed inequalities with references datas"
+        const="any_source",
+        nargs="?",
+        type=str,
+        help="Check computed inequalities with references datas from optionally given source"
     )
 
     Representation.add_arguments(parser)
@@ -175,13 +177,17 @@ def moment_cone_from_cmd() -> None:
 
 
     # Checking inequalities
-    if config.check_inequalities:
+    if config.check_inequalities is not None:
         from .reference_datas import compare_to_reference
+        if config.check_inequalities == "any_source":
+            source_ref = None
+        else:
+            source_ref = cast(str, config.check_inequalities)
         print()
         try:
-            cmp = compare_to_reference(inequalities, V, source="results")
+            cmp = compare_to_reference(inequalities, V, source="results", source_ref=source_ref)
         except KeyError:
-            print(f"There are no reference inequalities for {V}")
+            print(f"There are no reference inequalities for {V} from {config.check_inequalities} source")
         else:
             print("Comparison with the reference inequalities:")
             print(cmp)
